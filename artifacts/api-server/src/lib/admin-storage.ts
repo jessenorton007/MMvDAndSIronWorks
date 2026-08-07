@@ -7,6 +7,7 @@ const PRODUCT_OBJECT = "admin-data/premade-products.json";
 const IMAGE_PREFIX = "admin-images/";
 
 function appStorageEnabled() {
+  if (process.env["NODE_ENV"] === "production") return true;
   if (process.env["IRONWORKS_APP_STORAGE"] === "false") return false;
   return process.env["IRONWORKS_APP_STORAGE"] === "true" || Boolean(process.env["REPL_ID"] || process.env["REPLIT_DEPLOYMENT"]);
 }
@@ -16,7 +17,7 @@ function appStorageClient() {
   const bucketId = process.env["DEFAULT_OBJECT_STORAGE_BUCKET_ID"];
   if (!bucketId) {
     throw new Error(
-      "Replit App Storage is not configured. DEFAULT_OBJECT_STORAGE_BUCKET_ID is missing.",
+      "Persistent image storage is not configured. The storage bucket is missing.",
     );
   }
   client ??= new Client({ bucketId });
@@ -36,7 +37,7 @@ export async function verifyAdminStorage() {
   if (!appStorageEnabled()) return { objectCount: 0 };
 
   const result = await appStorageClient().list();
-  if (!result.ok) throw resultError(result.error, "Replit App Storage is not connected");
+  if (!result.ok) throw resultError(result.error, "Persistent image storage is not connected");
   return { objectCount: result.value.length };
 }
 
@@ -54,7 +55,7 @@ export async function readProductData() {
     await writeProductData(legacy);
     return legacy;
   } catch {
-    throw resultError(result.error, "Could not read product data from Replit App Storage");
+    throw resultError(result.error, "Could not read persistent product data");
   }
 }
 
@@ -66,7 +67,7 @@ export async function writeProductData(contents: string) {
   }
 
   const result = await appStorageClient().uploadFromText(PRODUCT_OBJECT, contents);
-  if (!result.ok) throw resultError(result.error, "Could not save product data to Replit App Storage");
+  if (!result.ok) throw resultError(result.error, "Could not save persistent product data");
 }
 
 export async function readAdminImage(filename: string) {
@@ -84,7 +85,7 @@ export async function readAdminImage(filename: string) {
     await writeAdminImage(filename, legacy);
     return legacy;
   } catch {
-    throw resultError(result.error, `Image ${filename} was not found in Replit App Storage`);
+    throw resultError(result.error, `Image ${filename} was not found in persistent storage`);
   }
 }
 
@@ -96,7 +97,7 @@ export async function writeAdminImage(filename: string, contents: Buffer) {
   }
 
   const result = await appStorageClient().uploadFromBytes(`${IMAGE_PREFIX}${filename}`, contents);
-  if (!result.ok) throw resultError(result.error, "Could not save image to Replit App Storage");
+  if (!result.ok) throw resultError(result.error, "Could not save image to persistent storage");
 }
 
 export async function adminImageExists(filename: string) {
@@ -110,6 +111,6 @@ export async function adminImageExists(filename: string) {
   }
 
   const result = await appStorageClient().exists(`${IMAGE_PREFIX}${filename}`);
-  if (!result.ok) throw resultError(result.error, "Could not inspect Replit App Storage");
+  if (!result.ok) throw resultError(result.error, "Could not inspect persistent image storage");
   return result.value;
 }

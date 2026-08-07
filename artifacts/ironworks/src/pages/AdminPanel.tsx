@@ -959,7 +959,7 @@ export function AdminPanel() {
                   </p>
                   <p className="text-sm text-white/55 font-sans leading-relaxed">
                     {storageStatus.ok
-                      ? `${storageStatus.backend === 'replit-app-storage' ? 'Replit App Storage' : 'Local development storage'} is active. ${storageStatus.availableImages ?? 0} of ${storageStatus.referencedImages ?? 0} uploaded product images are available.`
+                       ? `${storageStatus.backend === 'cloud-storage' ? 'Cloud image storage' : 'Local development storage'} is active. ${storageStatus.availableImages ?? 0} of ${storageStatus.referencedImages ?? 0} uploaded product images are available.`
                       : storageStatus.error || 'The storage service could not be reached.'}
                   </p>
                   {!!storageStatus.missingImages?.length && (

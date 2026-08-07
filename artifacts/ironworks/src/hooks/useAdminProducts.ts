@@ -176,6 +176,59 @@ async function recoverLocalPreMadeProducts() {
   return recovered.map(stripBrowserStoredPreMadeImages).map(recoverLostPreMadeImages);
 }
 
+async function recoverBrowserImagesForServerProducts(serverProducts: PreMadeItem[]) {
+  const stored = readStorage<PreMadeItem[]>(PREMADE_KEY, defaultPreMadeItems);
+  const localById = new Map(stored.map(product => [product.id, product]));
+  let recoveredAny = false;
+
+  const recoverProduct = async (product: PreMadeItem) => {
+    const local = localById.get(product.id);
+    if (!local) return product;
+
+    const recoverImage = async (serverValue: string | undefined, localValue: string | undefined, filename: string) => {
+      if (!isBrowserStoredImage(localValue)) return serverValue ?? '';
+      recoveredAny = true;
+      return uploadRecoveredImage(localValue, filename);
+    };
+
+    const gallery = [...(product.gallery ?? [])];
+    for (const [index, localImage] of (local.gallery ?? []).entries()) {
+      if (!isBrowserStoredImage(localImage.src)) continue;
+      recoveredAny = true;
+      const recovered = await uploadRecoveredImage(localImage.src, `${product.id}-gallery-${index}`);
+      gallery[index] = { ...gallery[index], ...localImage, src: recovered };
+    }
+
+    const videos = [...(product.videos ?? [])];
+    for (const [index, localVideo] of (local.videos ?? []).entries()) {
+      if (!isBrowserStoredImage(localVideo.poster)) continue;
+      recoveredAny = true;
+      const recovered = await uploadRecoveredImage(localVideo.poster, `${product.id}-video-${index}`);
+      videos[index] = { ...videos[index], ...localVideo, poster: recovered };
+    }
+
+    const video = product.video && local.video
+      ? {
+          ...product.video,
+          ...(await recoverImage(product.video.poster, local.video.poster, `${product.id}-video-poster`)
+            .then(poster => ({ poster }))),
+        }
+      : product.video;
+
+    return {
+      ...product,
+      image: await recoverImage(product.image, local.image, `${product.id}-image`),
+      gallery,
+      video,
+      videos,
+    };
+  };
+
+  const recovered = [];
+  for (const product of serverProducts) recovered.push(await recoverProduct(product));
+  return { products: recovered.map(recoverLostPreMadeImages), recoveredAny };
+}
+
 async function readServerPreMadeProducts() {
   const response = await fetch('/api/admin/premade-products');
   const result = await response.json().catch(() => ({}));
@@ -283,8 +336,11 @@ export function usePreMadeProducts() {
       .then(async serverProducts => {
         if (cancelled) return;
         if (serverProducts.length > 0) {
-          setProductsState(serverProducts);
-          mirrorStorage(PREMADE_KEY, serverProducts);
+          const recovery = await recoverBrowserImagesForServerProducts(serverProducts);
+          if (cancelled) return;
+          setProductsState(recovery.products);
+          mirrorStorage(PREMADE_KEY, recovery.products);
+          if (recovery.recoveredAny) await saveServerPreMadeProducts(recovery.products);
           return;
         }
 

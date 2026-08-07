@@ -110,7 +110,7 @@ router.get("/admin/storage-status", async (_req, res) => {
     const checks = await Promise.all([...referenced].map(async filename => ({ filename, exists: await adminImageExists(filename) })));
     res.json({
       ok: true,
-      backend: adminStorageBackend(),
+        backend: adminStorageBackend() === "replit-app-storage" ? "cloud-storage" : "local-filesystem",
       objectCount: storage.objectCount,
       referencedImages: checks.length,
       availableImages: checks.filter(item => item.exists).length,
