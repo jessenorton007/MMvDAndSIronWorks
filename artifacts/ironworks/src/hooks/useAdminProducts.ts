@@ -133,6 +133,49 @@ function readLocalPreMadeProducts() {
     .map(recoverLostPreMadeImages);
 }
 
+async function uploadRecoveredImage(value: string | undefined, filename: string) {
+  if (!isBrowserStoredImage(value)) return value ?? '';
+
+  const response = await fetch('/api/admin/images', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image: value, filename }),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || result?.ok === false || !result?.url) {
+    throw new Error(result?.error || 'Could not recover a browser-stored image.');
+  }
+  return String(result.url);
+}
+
+async function recoverLocalPreMadeProducts() {
+  const stored = readStorage<PreMadeItem[]>(PREMADE_KEY, defaultPreMadeItems);
+  const recovered: PreMadeItem[] = [];
+
+  for (const product of stored) {
+    recovered.push({
+      ...product,
+      image: await uploadRecoveredImage(product.image, `${product.id}-image`),
+      gallery: await Promise.all((product.gallery ?? []).map(async (image, index) => ({
+        ...image,
+        src: await uploadRecoveredImage(image.src, `${product.id}-gallery-${index}`),
+      }))),
+      video: product.video
+        ? {
+            ...product.video,
+            poster: await uploadRecoveredImage(product.video.poster, `${product.id}-video-poster`),
+          }
+        : undefined,
+      videos: await Promise.all((product.videos ?? []).map(async (video, index) => ({
+        ...video,
+        poster: await uploadRecoveredImage(video.poster, `${product.id}-video-${index}`),
+      }))),
+    });
+  }
+
+  return recovered.map(stripBrowserStoredPreMadeImages).map(recoverLostPreMadeImages);
+}
+
 async function readServerPreMadeProducts() {
   const response = await fetch('/api/admin/premade-products');
   const result = await response.json().catch(() => ({}));
@@ -237,7 +280,7 @@ export function usePreMadeProducts() {
   useEffect(() => {
     let cancelled = false;
     readServerPreMadeProducts()
-      .then(serverProducts => {
+      .then(async serverProducts => {
         if (cancelled) return;
         if (serverProducts.length > 0) {
           setProductsState(serverProducts);
@@ -245,8 +288,10 @@ export function usePreMadeProducts() {
           return;
         }
 
-        const localProducts = readLocalPreMadeProducts();
+        const localProducts = await recoverLocalPreMadeProducts();
         setProductsState(localProducts);
+        mirrorStorage(PREMADE_KEY, localProducts);
+        await saveServerPreMadeProducts(localProducts);
       })
       .catch(() => {
         if (!cancelled) setProductsState(readLocalPreMadeProducts());

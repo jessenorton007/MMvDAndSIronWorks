@@ -1,0 +1,1 @@
+- [Ironworks persistence](storage-deployment.md) — App Storage needs an explicit bucket ID in the API client; production PostgreSQL is provisioned by a successful Publish.
