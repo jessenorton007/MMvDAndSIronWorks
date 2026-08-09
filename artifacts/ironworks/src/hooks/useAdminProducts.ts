@@ -78,6 +78,14 @@ function clearLegacy(key: string) {
   try { localStorage.removeItem(storageKey); } catch { /* Browser storage is no longer authoritative. */ }
 }
 
+function hasAdminSession() {
+  try {
+    return sessionStorage.getItem('ds_admin_auth') === '1';
+  } catch {
+    return false;
+  }
+}
+
 async function requestContent<T>(key: string): Promise<ContentResponse<T>> {
   const response = await fetch(`/api/admin/content/${encodeURIComponent(key)}`, { cache: 'no-store' });
   const result = await response.json().catch(() => ({}));
@@ -119,7 +127,7 @@ function useServerContent<T>(key: string, defaults: T) {
         if (writeStartedRef.current) return;
         if (result.content !== null) {
           const legacy = key === 'premade-products' ? null : readLegacy<T>(key);
-          if (legacy !== null && result.version <= 1 && JSON.stringify(legacy) !== JSON.stringify(result.content)) {
+          if (hasAdminSession() && legacy !== null && result.version <= 1 && JSON.stringify(legacy) !== JSON.stringify(result.content)) {
             const migrated = await persistContent(key, legacy, result.version);
             if (cancelled) return;
             versionRef.current = migrated.version;
@@ -134,6 +142,10 @@ function useServerContent<T>(key: string, defaults: T) {
         }
 
         const seed = readLegacy<T>(key) ?? defaultsRef.current;
+        if (!hasAdminSession()) {
+          apply(seed);
+          return;
+        }
         const saved = await persistContent(key, seed);
         if (cancelled) return;
         versionRef.current = saved.version;
@@ -211,8 +223,18 @@ export function usePreMadeProducts() {
 
 export function useAdminServices() {
   const state = useServerContent<ServicePage[]>('services', defaultServices);
-  const updateService = useCallback((service: ServicePage) => state.mutate(current => current.map(item => item.slug === service.slug ? service : item)), [state.mutate]);
-  return { services: state.content, setServices: state.save, updateService, loading: state.loading, error: state.error };
+  const updateServiceFields = useCallback(
+    (slug: string, updater: (service: ServicePage) => ServicePage) =>
+      state.mutate(current => current.map(item => item.slug === slug ? updater(item) : item)),
+    [state.mutate],
+  );
+  return {
+    services: state.content,
+    setServices: state.save,
+    updateServiceFields,
+    loading: state.loading,
+    error: state.error,
+  };
 }
 
 export function useSiteSettings() {

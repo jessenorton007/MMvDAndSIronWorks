@@ -636,10 +636,10 @@ function StatCard({ label, value, icon: Icon }: { label: string; value: number; 
 
 function ServiceImagesPanel({
   services,
-  updateService,
+  updateServiceFields,
 }: {
   services: ServicePage[];
-  updateService: (service: ServicePage) => void;
+  updateServiceFields: (slug: string, updater: (service: ServicePage) => ServicePage) => void;
 }) {
   return (
     <div>
@@ -669,11 +669,11 @@ function ServiceImagesPanel({
               </div>
               <ImageField
                 value={service.heroImage}
-                onChange={(heroImage) => updateService({ ...service, heroImage })}
+                onChange={(heroImage) => updateServiceFields(service.slug, current => ({ ...current, heroImage }))}
               />
               <button
                 type="button"
-                onClick={() => updateService({ ...service, heroImage: '' })}
+                onClick={() => updateServiceFields(service.slug, current => ({ ...current, heroImage: '' }))}
                 className="text-xs font-display uppercase tracking-widest text-white/30 hover:text-red-300 transition-colors"
               >
                 Clear Image
@@ -683,10 +683,10 @@ function ServiceImagesPanel({
                   <p className="text-xs font-display uppercase tracking-widest text-white/40">Detail Gallery</p>
                   <button
                     type="button"
-                    onClick={() => updateService({
-                      ...service,
-                      gallery: [...(service.gallery ?? []), { src: '', alt: service.title }],
-                    })}
+                    onClick={() => updateServiceFields(service.slug, current => ({
+                      ...current,
+                      gallery: [...(current.gallery ?? []), { src: '', alt: current.title }],
+                    }))}
                     className="flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-display uppercase tracking-widest text-orange-300/80 transition-colors hover:text-orange-300"
                     style={{ background: 'rgba(255,140,26,0.08)', border: '1px solid rgba(255,140,26,0.18)' }}
                   >
@@ -702,17 +702,20 @@ function ServiceImagesPanel({
                     {(service.gallery ?? []).map((image, index) => {
                       const gallery = service.gallery ?? [];
                       const updateGalleryItem = (patch: Partial<NonNullable<ServicePage['gallery']>[number]>) => {
-                        updateService({
-                          ...service,
-                          gallery: gallery.map((item, itemIndex) => itemIndex === index ? { ...item, ...patch } : item),
-                        });
+                        updateServiceFields(service.slug, current => ({
+                          ...current,
+                          gallery: (current.gallery ?? []).map((item, itemIndex) => itemIndex === index ? { ...item, ...patch } : item),
+                        }));
                       };
                       const moveGalleryItem = (direction: -1 | 1) => {
-                        const nextIndex = index + direction;
-                        if (nextIndex < 0 || nextIndex >= gallery.length) return;
-                        const updated = [...gallery];
-                        [updated[index], updated[nextIndex]] = [updated[nextIndex], updated[index]];
-                        updateService({ ...service, gallery: updated });
+                        updateServiceFields(service.slug, current => {
+                          const currentGallery = current.gallery ?? [];
+                          const nextIndex = index + direction;
+                          if (nextIndex < 0 || nextIndex >= currentGallery.length) return current;
+                          const updated = [...currentGallery];
+                          [updated[index], updated[nextIndex]] = [updated[nextIndex], updated[index]];
+                          return { ...current, gallery: updated };
+                        });
                       };
                       return (
                         <div key={`service-gallery-${service.slug}-${index}`} className="rounded-lg p-3" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -741,7 +744,7 @@ function ServiceImagesPanel({
                               <button type="button" onClick={() => moveGalleryItem(1)} disabled={index === gallery.length - 1} className="rounded-lg p-2 text-white/40 transition-colors hover:text-white disabled:cursor-not-allowed disabled:opacity-25" style={iStyle} aria-label="Move gallery photo down">
                                 <ChevronDown size={15} />
                               </button>
-                              <button type="button" onClick={() => updateService({ ...service, gallery: gallery.filter((_, itemIndex) => itemIndex !== index) })} className="ml-auto rounded-lg p-2 text-white/30 transition-colors hover:text-red-300" style={iStyle} aria-label="Remove gallery photo">
+                              <button type="button" onClick={() => updateServiceFields(service.slug, current => ({ ...current, gallery: (current.gallery ?? []).filter((_, itemIndex) => itemIndex !== index) }))} className="ml-auto rounded-lg p-2 text-white/30 transition-colors hover:text-red-300" style={iStyle} aria-label="Remove gallery photo">
                                 <Trash2 size={15} />
                               </button>
                             </div>
@@ -769,7 +772,7 @@ export function AdminPanel() {
   const { products: etsyProducts, addProduct: addEtsy, updateProduct: updateEtsy, removeProduct: removeEtsy } = useEtsyProducts();
   const { products: premiumProducts, addProduct: addPremium, updateProduct: updatePremium, removeProduct: removePremium } = usePremiumProducts();
   const { products: preMadeProducts, setProducts: setPreMadeProducts, addProduct: addPreMade, updateProduct: updatePreMade, removeProduct: removePreMade } = usePreMadeProducts();
-  const { services: adminServices, updateService } = useAdminServices();
+  const { services: adminServices, updateServiceFields } = useAdminServices();
   const { orders, removeOrder } = useOrders();
   const { inquiries, removeInquiry } = useInquiries();
 
@@ -847,10 +850,6 @@ export function AdminPanel() {
       setSaveError(adminSaveErrorMessage(error));
       if (options?.rethrow) throw error;
     }
-  };
-
-  const updateServiceWithFeedback = (service: ServicePage) => {
-    return saveAdminChange(() => updateService(service));
   };
 
   const hasPreMadeBrowserStoredImages = preMadeProducts.some(preMadeHasBrowserStoredImages);
@@ -1066,7 +1065,9 @@ export function AdminPanel() {
 
           {/* SERVICE IMAGES */}
           {tab === 'services' && (
-            <ServiceImagesPanel services={adminServices} updateService={updateServiceWithFeedback} />
+            <ServiceImagesPanel services={adminServices} updateServiceFields={(slug, updater) => {
+              void saveAdminChange(() => updateServiceFields(slug, updater));
+            }} />
           )}
 
           {/* ETSY PRODUCTS */}
