@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, X, Eye, EyeOff } from 'lucide-react';
 import { useLocation } from 'wouter';
 
-const ADMIN_PASSWORD = 'dandsironworks123';
 const SESSION_KEY = 'ds_admin_auth';
 
 export function isAdminAuthenticated(): boolean {
@@ -15,19 +14,30 @@ export function AdminGear() {
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [, navigate] = useLocation();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === ADMIN_PASSWORD) {
+    setSubmitting(true);
+    setError('');
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || result?.ok === false) throw new Error(result?.error || 'Could not sign in.');
       sessionStorage.setItem(SESSION_KEY, '1');
       setOpen(false);
       setPassword('');
-      setError('');
       navigate('/admin');
-    } else {
-      setError('Incorrect password.');
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Could not sign in.');
       setPassword('');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -117,13 +127,14 @@ export function AdminGear() {
 
                   <button
                     type="submit"
-                    className="w-full py-3 rounded-xl font-display uppercase tracking-widest text-sm text-white transition-all duration-200"
+                    disabled={submitting}
+                    className="w-full py-3 rounded-xl font-display uppercase tracking-widest text-sm text-white transition-all duration-200 disabled:opacity-60"
                     style={{
                       background: 'linear-gradient(135deg, #FF4D00, #FF8C1A)',
                       boxShadow: '0 4px 20px rgba(255,77,0,0.25)',
                     }}
                   >
-                    Enter
+                    {submitting ? 'Signing In...' : 'Enter'}
                   </button>
                 </form>
               </div>

@@ -24,11 +24,11 @@ export function CheckoutModal({ product, isOpen, onClose }: CheckoutModalProps) 
     setForm(f => ({ ...f, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setTimeout(() => {
-      saveOrder({
+    try {
+      await saveOrder({
         productId: product.id,
         productTitle: product.title,
         productPrice: product.priceLabel,
@@ -44,7 +44,13 @@ export function CheckoutModal({ product, isOpen, onClose }: CheckoutModalProps) 
         title: "Inquiry Received",
         description: "We'll be in touch directly to confirm details and next steps.",
       });
-    }, 1200);
+    } catch (error) {
+      setIsSubmitting(false);
+      toast({
+        title: "Could Not Save Inquiry",
+        description: error instanceof Error ? error.message : "Please try again.",
+      });
+    }
   };
 
   const inputCls = "w-full rounded-lg px-4 py-2.5 text-white text-sm font-sans placeholder:text-white/25 focus:outline-none transition-colors";

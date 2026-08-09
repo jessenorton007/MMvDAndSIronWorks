@@ -1,19 +1,18 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { EtsyProduct, defaultEtsyProducts } from '@/data/etsy-products';
 import { PremiumProduct, defaultPremiumProducts } from '@/data/premium-products';
 import { PreMadeItem, preMadeItems as defaultPreMadeItems } from '@/data/premade-items';
 import { ServicePage, services as defaultServices } from '@/data/services';
 
-const ETSY_KEY = 'ds_etsy_products_v5';
-const PREMIUM_KEY = 'ds_premium_products_v2';
-const PREMADE_KEY = 'ds_premade_products_v1';
-const SERVICES_KEY = 'ds_services_v2';
-const ORDERS_KEY = 'ds_orders';
-const INQUIRIES_KEY = 'ds_inquiries';
-const LOST_RUNTIME_IMAGES = new Set([
-  'codex-image-aug-4-2026-02-19-25-pm-1785962926133-3bb539fa.jpg',
-  'setema-img-jpg-1785962934106-d5033425.jpg',
-]);
+const LEGACY_KEYS: Record<string, string> = {
+  'etsy-products': 'ds_etsy_products_v5',
+  'premium-products': 'ds_premium_products_v2',
+  'premade-products': 'ds_premade_products_v1',
+  services: 'ds_services_v2',
+  orders: 'ds_orders',
+  inquiries: 'ds_inquiries',
+  settings: 'ds_site_settings',
+};
 
 export interface Order {
   id: string;
@@ -37,396 +36,214 @@ export interface Inquiry {
   submittedAt: string;
 }
 
-function readStorage<T>(key: string, fallback: T): T {
+export interface SiteSettings {
+  phone: string;
+  email: string;
+  facebook: string;
+}
+
+export const defaultSiteSettings: SiteSettings = {
+  phone: '(435) 421-9033',
+  email: 'dandsiron@yahoo.com',
+  facebook: '@DallanGoffBlacksmith',
+};
+
+type ContentResponse<T> = {
+  ok: boolean;
+  content: T | null;
+  version: number;
+  error?: string;
+};
+
+function hasEmbeddedImages(value: unknown) {
+  return JSON.stringify(value).includes('data:image/');
+}
+
+function readLegacy<T>(key: string): T | null {
+  const storageKey = LEGACY_KEYS[key];
+  if (!storageKey) return null;
   try {
-    const stored = localStorage.getItem(key);
-    return stored ? (JSON.parse(stored) as T) : fallback;
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as T;
+    return hasEmbeddedImages(parsed) ? null : parsed;
   } catch {
-    return fallback;
+    return null;
   }
 }
 
-function writeStorage(key: string, value: unknown) {
-  const serialized = JSON.stringify(value);
-  try {
-    localStorage.setItem(key, serialized);
-  } catch (error) {
-    const name = error instanceof DOMException ? error.name : '';
-    if (/quota/i.test(name) || error instanceof DOMException) {
-      const previous = localStorage.getItem(key);
-      try {
-        localStorage.removeItem(key);
-        localStorage.setItem(key, serialized);
-        return;
-      } catch {
-        if (previous !== null) {
-          try {
-            localStorage.setItem(key, previous);
-          } catch {
-            // Keep the original quota error message below.
-          }
-        }
-      }
-      throw new Error('Browser storage quota exceeded while saving admin changes');
-    }
-    throw error;
-  }
+function clearLegacy(key: string) {
+  const storageKey = LEGACY_KEYS[key];
+  if (!storageKey) return;
+  try { localStorage.removeItem(storageKey); } catch { /* Browser storage is no longer authoritative. */ }
 }
 
-function mirrorStorage(key: string, value: unknown) {
-  try {
-    writeStorage(key, value);
-  } catch {
-    // Server-backed admin data should not fail just because browser storage is full.
-  }
-}
-
-function isBrowserStoredImage(value: string | undefined) {
-  return typeof value === 'string' && value.startsWith('data:image/');
-}
-
-function isLostRuntimeImage(value: string | undefined) {
-  if (!value) return false;
-  const filename = value.split('/').pop()?.split(/[?#]/)[0];
-  return Boolean(filename && LOST_RUNTIME_IMAGES.has(filename));
-}
-
-function recoverLostPreMadeImages(product: PreMadeItem): PreMadeItem {
-  const fallback = defaultPreMadeItems.find(item => item.id === product.id);
-  const gallery = (product.gallery ?? []).filter(image => !isLostRuntimeImage(image.src));
-  const hasTemporaryTestCopy = product.id === 'pre-built-fire-pits' && /testt?\s+test/i.test(product.description);
-  return {
-    ...product,
-    description: hasTemporaryTestCopy ? fallback?.description ?? product.description : product.description,
-    image: isLostRuntimeImage(product.image) ? fallback?.image ?? '' : product.image,
-    gallery: gallery.length > 0 ? gallery : fallback?.gallery ?? [],
-    video: product.video
-      ? { ...product.video, poster: isLostRuntimeImage(product.video.poster) ? fallback?.video?.poster ?? '' : product.video.poster }
-      : undefined,
-    videos: product.videos?.map((video, index) => ({
-      ...video,
-      poster: isLostRuntimeImage(video.poster) ? fallback?.videos?.[index]?.poster ?? '' : video.poster,
-    })),
-  };
-}
-
-function stripBrowserStoredPreMadeImages(product: PreMadeItem): PreMadeItem {
-  return {
-    ...product,
-    image: isBrowserStoredImage(product.image) ? '' : product.image,
-    gallery: (product.gallery ?? [])
-      .map(image => ({ ...image, src: isBrowserStoredImage(image.src) ? '' : image.src }))
-      .filter(image => image.src),
-    video: product.video
-      ? { ...product.video, poster: isBrowserStoredImage(product.video.poster) ? '' : product.video.poster }
-      : undefined,
-    videos: product.videos?.map(video => ({
-      ...video,
-      poster: isBrowserStoredImage(video.poster) ? '' : video.poster,
-    })),
-  };
-}
-
-function readLocalPreMadeProducts() {
-  return readStorage<PreMadeItem[]>(PREMADE_KEY, defaultPreMadeItems)
-    .map(stripBrowserStoredPreMadeImages)
-    .map(recoverLostPreMadeImages);
-}
-
-async function uploadRecoveredImage(value: string | undefined, filename: string) {
-  if (!isBrowserStoredImage(value)) return value ?? '';
-
-  const response = await fetch('/api/admin/images', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ image: value, filename }),
-  });
+async function requestContent<T>(key: string): Promise<ContentResponse<T>> {
+  const response = await fetch(`/api/admin/content/${encodeURIComponent(key)}`, { cache: 'no-store' });
   const result = await response.json().catch(() => ({}));
-  if (!response.ok || result?.ok === false || !result?.url) {
-    throw new Error(result?.error || 'Could not recover a browser-stored image.');
-  }
-  return String(result.url);
+  if (!response.ok || result?.ok === false) throw new Error(result?.error || `Could not load ${key}.`);
+  return result as ContentResponse<T>;
 }
 
-async function recoverLocalPreMadeProducts() {
-  const stored = readStorage<PreMadeItem[]>(PREMADE_KEY, defaultPreMadeItems);
-  const recovered: PreMadeItem[] = [];
-
-  for (const product of stored) {
-    recovered.push({
-      ...product,
-      image: await uploadRecoveredImage(product.image, `${product.id}-image`),
-      gallery: await Promise.all((product.gallery ?? []).map(async (image, index) => ({
-        ...image,
-        src: await uploadRecoveredImage(image.src, `${product.id}-gallery-${index}`),
-      }))),
-      video: product.video
-        ? {
-            ...product.video,
-            poster: await uploadRecoveredImage(product.video.poster, `${product.id}-video-poster`),
-          }
-        : undefined,
-      videos: await Promise.all((product.videos ?? []).map(async (video, index) => ({
-        ...video,
-        poster: await uploadRecoveredImage(video.poster, `${product.id}-video-${index}`),
-      }))),
-    });
-  }
-
-  return recovered.map(stripBrowserStoredPreMadeImages).map(recoverLostPreMadeImages);
-}
-
-async function recoverBrowserImagesForServerProducts(serverProducts: PreMadeItem[]) {
-  const stored = readStorage<PreMadeItem[]>(PREMADE_KEY, defaultPreMadeItems);
-  const localById = new Map(stored.map(product => [product.id, product]));
-  let recoveredAny = false;
-
-  const recoverProduct = async (product: PreMadeItem) => {
-    const local = localById.get(product.id);
-    if (!local) return product;
-
-    const recoverImage = async (serverValue: string | undefined, localValue: string | undefined, filename: string) => {
-      if (!isBrowserStoredImage(localValue)) return serverValue ?? '';
-      recoveredAny = true;
-      return uploadRecoveredImage(localValue, filename);
-    };
-
-    const gallery = [...(product.gallery ?? [])];
-    for (const [index, localImage] of (local.gallery ?? []).entries()) {
-      if (!isBrowserStoredImage(localImage.src)) continue;
-      recoveredAny = true;
-      const recovered = await uploadRecoveredImage(localImage.src, `${product.id}-gallery-${index}`);
-      gallery[index] = { ...gallery[index], ...localImage, src: recovered };
-    }
-
-    const videos = [...(product.videos ?? [])];
-    for (const [index, localVideo] of (local.videos ?? []).entries()) {
-      if (!isBrowserStoredImage(localVideo.poster)) continue;
-      recoveredAny = true;
-      const recovered = await uploadRecoveredImage(localVideo.poster, `${product.id}-video-${index}`);
-      videos[index] = { ...videos[index], ...localVideo, poster: recovered };
-    }
-
-    const video = product.video && local.video
-      ? {
-          ...product.video,
-          ...(await recoverImage(product.video.poster, local.video.poster, `${product.id}-video-poster`)
-            .then(poster => ({ poster }))),
-        }
-      : product.video;
-
-    return {
-      ...product,
-      image: await recoverImage(product.image, local.image, `${product.id}-image`),
-      gallery,
-      video,
-      videos,
-    };
-  };
-
-  const recovered = [];
-  for (const product of serverProducts) recovered.push(await recoverProduct(product));
-  return { products: recovered.map(recoverLostPreMadeImages), recoveredAny };
-}
-
-async function readServerPreMadeProducts() {
-  const response = await fetch('/api/admin/premade-products');
-  const result = await response.json().catch(() => ({}));
-  if (!response.ok || result?.ok === false || !Array.isArray(result?.products)) {
-    throw new Error(result?.error || 'Could not load server pre-made products.');
-  }
-  return (result.products as PreMadeItem[]).map(recoverLostPreMadeImages);
-}
-
-async function saveServerPreMadeProducts(products: PreMadeItem[]) {
-  const response = await fetch('/api/admin/premade-products', {
+async function persistContent<T>(key: string, content: T, version?: number): Promise<ContentResponse<T>> {
+  const response = await fetch(`/api/admin/content/${encodeURIComponent(key)}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ products }),
+    body: JSON.stringify({ content, ...(version && version > 0 ? { version } : {}) }),
   });
   const result = await response.json().catch(() => ({}));
-  if (!response.ok || result?.ok === false) {
-    throw new Error(result?.error || 'Could not save pre-made products on the server.');
-  }
+  if (!response.ok || result?.ok === false) throw new Error(result?.error || `Could not save ${key}.`);
+  return result as ContentResponse<T>;
 }
 
-function readEtsyProducts() {
-  const current = readStorage<EtsyProduct[] | null>(ETSY_KEY, null);
-  if (current) return current;
+function useServerContent<T>(key: string, defaults: T) {
+  const [content, setContentState] = useState<T>(defaults);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const versionRef = useRef(0);
+  const contentRef = useRef(defaults);
+  const defaultsRef = useRef(defaults);
+  const queueRef = useRef<Promise<void>>(Promise.resolve());
+  const writeStartedRef = useRef(false);
 
-  writeStorage(ETSY_KEY, defaultEtsyProducts);
-  return defaultEtsyProducts;
-}
-
-function mergeServices(stored: ServicePage[]) {
-  const storedBySlug = new Map(stored.map(service => [service.slug, service]));
-  return defaultServices.map(service => ({
-    ...service,
-    ...(storedBySlug.get(service.slug) ?? {}),
-  }));
-}
-
-function readServices() {
-  const current = readStorage<ServicePage[] | null>(SERVICES_KEY, null);
-  const merged = mergeServices(current ?? defaultServices);
-  if (!current) writeStorage(SERVICES_KEY, merged);
-  return merged;
-}
-
-export function useEtsyProducts() {
-  const [products, setProductsState] = useState<EtsyProduct[]>(() =>
-    readEtsyProducts()
-  );
-
-  const setProducts = useCallback((updated: EtsyProduct[]) => {
-    writeStorage(ETSY_KEY, updated);
-    setProductsState(updated);
+  const apply = useCallback((next: T) => {
+    contentRef.current = next;
+    setContentState(next);
   }, []);
-
-  const addProduct = useCallback((p: EtsyProduct) => {
-    setProducts([...readEtsyProducts(), p]);
-  }, [setProducts]);
-
-  const updateProduct = useCallback((p: EtsyProduct) => {
-    const all = readEtsyProducts();
-    setProducts(all.map(x => x.id === p.id ? p : x));
-  }, [setProducts]);
-
-  const removeProduct = useCallback((id: string) => {
-    const all = readEtsyProducts();
-    setProducts(all.filter(x => x.id !== id));
-  }, [setProducts]);
-
-  return { products, setProducts, addProduct, updateProduct, removeProduct };
-}
-
-export function usePremiumProducts() {
-  const [products, setProductsState] = useState<PremiumProduct[]>(() =>
-    readStorage<PremiumProduct[]>(PREMIUM_KEY, defaultPremiumProducts)
-  );
-
-  const setProducts = useCallback((updated: PremiumProduct[]) => {
-    writeStorage(PREMIUM_KEY, updated);
-    setProductsState(updated);
-  }, []);
-
-  const addProduct = useCallback((p: PremiumProduct) => {
-    setProducts([...readStorage<PremiumProduct[]>(PREMIUM_KEY, defaultPremiumProducts), p]);
-  }, [setProducts]);
-
-  const updateProduct = useCallback((p: PremiumProduct) => {
-    const all = readStorage<PremiumProduct[]>(PREMIUM_KEY, defaultPremiumProducts);
-    setProducts(all.map(x => x.id === p.id ? p : x));
-  }, [setProducts]);
-
-  const removeProduct = useCallback((id: string) => {
-    const all = readStorage<PremiumProduct[]>(PREMIUM_KEY, defaultPremiumProducts);
-    setProducts(all.filter(x => x.id !== id));
-  }, [setProducts]);
-
-  return { products, setProducts, addProduct, updateProduct, removeProduct };
-}
-
-export function usePreMadeProducts() {
-  const [products, setProductsState] = useState<PreMadeItem[]>(() => readLocalPreMadeProducts());
 
   useEffect(() => {
     let cancelled = false;
-    readServerPreMadeProducts()
-      .then(async serverProducts => {
+    requestContent<T>(key)
+      .then(async result => {
         if (cancelled) return;
-        if (serverProducts.length > 0) {
-          const recovery = await recoverBrowserImagesForServerProducts(serverProducts);
-          if (cancelled) return;
-          setProductsState(recovery.products);
-          mirrorStorage(PREMADE_KEY, recovery.products);
-          if (recovery.recoveredAny) await saveServerPreMadeProducts(recovery.products);
+        if (writeStartedRef.current) return;
+        if (result.content !== null) {
+          const legacy = key === 'premade-products' ? null : readLegacy<T>(key);
+          if (legacy !== null && result.version <= 1 && JSON.stringify(legacy) !== JSON.stringify(result.content)) {
+            const migrated = await persistContent(key, legacy, result.version);
+            if (cancelled) return;
+            versionRef.current = migrated.version;
+            apply(migrated.content ?? legacy);
+            clearLegacy(key);
+            return;
+          }
+          versionRef.current = result.version;
+          apply(result.content);
+          clearLegacy(key);
           return;
         }
 
-        const localProducts = await recoverLocalPreMadeProducts();
-        setProductsState(localProducts);
-        mirrorStorage(PREMADE_KEY, localProducts);
-        await saveServerPreMadeProducts(localProducts);
+        const seed = readLegacy<T>(key) ?? defaultsRef.current;
+        const saved = await persistContent(key, seed);
+        if (cancelled) return;
+        versionRef.current = saved.version;
+        apply(saved.content ?? seed);
+        clearLegacy(key);
       })
-      .catch(() => {
-        if (!cancelled) setProductsState(readLocalPreMadeProducts());
-      });
+      .catch(reason => {
+        if (!cancelled) setError(reason instanceof Error ? reason.message : `Could not load ${key}.`);
+      })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [apply, key]);
 
-    return () => {
-      cancelled = true;
+  const save = useCallback(async (next: T) => {
+    writeStartedRef.current = true;
+    let result = next;
+    const run = async () => {
+      const saved = await persistContent(key, next, versionRef.current);
+      versionRef.current = saved.version;
+      result = saved.content ?? next;
+      apply(result);
+      clearLegacy(key);
+      setError('');
     };
-  }, []);
+    const pending = queueRef.current.then(run, run);
+    queueRef.current = pending.then(() => undefined, () => undefined);
+    await pending;
+    return result;
+  }, [apply, key]);
 
-  const setProducts = useCallback(async (updated: PreMadeItem[]) => {
-    const cleaned = updated.map(stripBrowserStoredPreMadeImages).map(recoverLostPreMadeImages);
-    await saveServerPreMadeProducts(cleaned);
-    mirrorStorage(PREMADE_KEY, cleaned);
-    setProductsState(cleaned);
-  }, []);
+  const mutate = useCallback(async (updater: (current: T) => T) => {
+    writeStartedRef.current = true;
+    let result = contentRef.current;
+    const run = async () => {
+      const next = updater(contentRef.current);
+      const saved = await persistContent(key, next, versionRef.current);
+      versionRef.current = saved.version;
+      result = saved.content ?? next;
+      apply(result);
+      clearLegacy(key);
+      setError('');
+    };
+    const pending = queueRef.current.then(run, run);
+    queueRef.current = pending.then(() => undefined, () => undefined);
+    await pending;
+    return result;
+  }, [apply, key]);
 
-  const addProduct = useCallback((p: PreMadeItem) => setProducts([...products, p]), [products, setProducts]);
+  return { content, contentRef, save, mutate, loading, error };
+}
 
-  const updateProduct = useCallback((p: PreMadeItem) => setProducts(products.map(x => x.id === p.id ? p : x)), [products, setProducts]);
+function useServerCollection<T extends { id: string }>(key: string, defaults: T[]) {
+  const state = useServerContent<T[]>(key, defaults);
+  const setItems = useCallback((updated: T[]) => state.save(updated), [state.save]);
+  const addItem = useCallback((item: T) => state.mutate(current => [...current, item]), [state.mutate]);
+  const updateItem = useCallback((item: T) => state.mutate(current => current.map(existing => existing.id === item.id ? item : existing)), [state.mutate]);
+  const removeItem = useCallback((id: string) => state.mutate(current => current.filter(item => item.id !== id)), [state.mutate]);
+  return { items: state.content, setItems, addItem, updateItem, removeItem, loading: state.loading, error: state.error };
+}
 
-  const removeProduct = useCallback((id: string) => setProducts(products.filter(x => x.id !== id)), [products, setProducts]);
+export function useEtsyProducts() {
+  const state = useServerCollection('etsy-products', defaultEtsyProducts);
+  return { products: state.items, setProducts: state.setItems, addProduct: state.addItem, updateProduct: state.updateItem, removeProduct: state.removeItem, loading: state.loading, error: state.error };
+}
 
-  return { products, setProducts, addProduct, updateProduct, removeProduct };
+export function usePremiumProducts() {
+  const state = useServerCollection('premium-products', defaultPremiumProducts);
+  return { products: state.items, setProducts: state.setItems, addProduct: state.addItem, updateProduct: state.updateItem, removeProduct: state.removeItem, loading: state.loading, error: state.error };
+}
+
+export function usePreMadeProducts() {
+  const state = useServerCollection('premade-products', defaultPreMadeItems);
+  return { products: state.items, setProducts: state.setItems, addProduct: state.addItem, updateProduct: state.updateItem, removeProduct: state.removeItem, loading: state.loading, error: state.error };
 }
 
 export function useAdminServices() {
-  const [services, setServicesState] = useState<ServicePage[]>(() =>
-    readServices()
-  );
+  const state = useServerContent<ServicePage[]>('services', defaultServices);
+  const updateService = useCallback((service: ServicePage) => state.mutate(current => current.map(item => item.slug === service.slug ? service : item)), [state.mutate]);
+  return { services: state.content, setServices: state.save, updateService, loading: state.loading, error: state.error };
+}
 
-  const setServices = useCallback((updated: ServicePage[]) => {
-    const merged = mergeServices(updated);
-    writeStorage(SERVICES_KEY, merged);
-    setServicesState(merged);
-  }, []);
+export function useSiteSettings() {
+  const state = useServerContent<SiteSettings>('settings', defaultSiteSettings);
+  return { settings: state.content, setSettings: state.save, loading: state.loading, error: state.error };
+}
 
-  const updateService = useCallback((service: ServicePage) => {
-    const all = readServices();
-    setServices(all.map(item => item.slug === service.slug ? service : item));
-  }, [setServices]);
+export function useOrders() {
+  const state = useServerCollection<Order>('orders', []);
+  return { orders: state.items, removeOrder: state.removeItem, loading: state.loading, error: state.error };
+}
 
-  return { services, setServices, updateService };
+export function useInquiries() {
+  const state = useServerCollection<Inquiry>('inquiries', []);
+  return { inquiries: state.items, removeInquiry: state.removeItem, loading: state.loading, error: state.error };
+}
+
+async function appendRecord(key: 'orders' | 'inquiries', record: Record<string, unknown>) {
+  const response = await fetch(`/api/admin/records/${key}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ record }),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || result?.ok === false) throw new Error(result?.error || 'Could not save the submission.');
 }
 
 export function saveOrder(order: Omit<Order, 'id' | 'submittedAt'>) {
-  const all = readStorage<Order[]>(ORDERS_KEY, []);
-  const full: Order = {
-    ...order,
-    id: `ord_${Date.now()}`,
-    submittedAt: new Date().toISOString(),
-  };
-  localStorage.setItem(ORDERS_KEY, JSON.stringify([full, ...all]));
+  return appendRecord('orders', order);
 }
 
-export function getOrders(): Order[] {
-  return readStorage<Order[]>(ORDERS_KEY, []);
-}
-
-export function saveInquiry(inq: Omit<Inquiry, 'id' | 'submittedAt'>) {
-  const all = readStorage<Inquiry[]>(INQUIRIES_KEY, []);
-  const full: Inquiry = {
-    ...inq,
-    id: `inq_${Date.now()}`,
-    submittedAt: new Date().toISOString(),
-  };
-  localStorage.setItem(INQUIRIES_KEY, JSON.stringify([full, ...all]));
-}
-
-export function getInquiries(): Inquiry[] {
-  return readStorage<Inquiry[]>(INQUIRIES_KEY, []);
-}
-
-export function deleteOrder(id: string) {
-  const all = readStorage<Order[]>(ORDERS_KEY, []);
-  localStorage.setItem(ORDERS_KEY, JSON.stringify(all.filter(o => o.id !== id)));
-}
-
-export function deleteInquiry(id: string) {
-  const all = readStorage<Inquiry[]>(INQUIRIES_KEY, []);
-  localStorage.setItem(INQUIRIES_KEY, JSON.stringify(all.filter(i => i.id !== id)));
+export function saveInquiry(inquiry: Omit<Inquiry, 'id' | 'submittedAt'>) {
+  return appendRecord('inquiries', inquiry);
 }

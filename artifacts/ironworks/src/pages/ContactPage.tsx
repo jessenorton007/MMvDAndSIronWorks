@@ -53,10 +53,11 @@ export function ContactPage() {
     setSubmitting(true);
     try {
       await submitContact(form);
-      saveInquiry(form);
-      setSubmitted(true);
     } catch {
-      saveInquiry(form);
+      // The database record is still required if email delivery is unavailable.
+    }
+    try {
+      await saveInquiry(form);
       setSubmitted(true);
     } finally {
       setSubmitting(false);

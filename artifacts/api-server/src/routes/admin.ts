@@ -1,5 +1,11 @@
-import { randomUUID } from "node:crypto";
-import { Router } from "express";
+import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
+import { Router, type NextFunction, type Request, type Response } from "express";
+import {
+  appendAdminRecord,
+  assertAdminContentKey,
+  readAdminContent,
+  writeAdminContent,
+} from "../lib/admin-content-store";
 import {
   adminImageExists,
   adminStorageBackend,
@@ -7,11 +13,62 @@ import {
   readProductData,
   verifyAdminStorage,
   writeAdminImage,
-  writeProductData,
 } from "../lib/admin-storage";
 
 const router = Router();
 const MAX_IMAGE_BYTES = 6 * 1024 * 1024;
+const ADMIN_COOKIE = "ds_admin_session";
+
+function adminPassword() {
+  return process.env["ADMIN_PASSWORD"] || "dandsironworks123";
+}
+
+function adminSessionToken() {
+  const secret = process.env["ADMIN_SESSION_SECRET"] || adminPassword();
+  return createHmac("sha256", secret).update("dandsironworks-admin-session-v1").digest("hex");
+}
+
+function equalSecret(left: string, right: string) {
+  const a = Buffer.from(left);
+  const b = Buffer.from(right);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+function isAdminRequest(req: Request) {
+  return equalSecret(String(req.cookies?.[ADMIN_COOKIE] ?? ""), adminSessionToken());
+}
+
+function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  if (!isAdminRequest(req)) {
+    res.status(401).json({ ok: false, error: "Admin session expired. Sign in again." });
+    return;
+  }
+  next();
+}
+
+router.post("/admin/login", (req, res) => {
+  if (!equalSecret(String(req.body?.password ?? ""), adminPassword())) {
+    res.status(401).json({ ok: false, error: "Incorrect password." });
+    return;
+  }
+  res.cookie(ADMIN_COOKIE, adminSessionToken(), {
+    httpOnly: true,
+    secure: process.env["NODE_ENV"] === "production",
+    sameSite: "strict",
+    maxAge: 8 * 60 * 60 * 1000,
+    path: "/",
+  });
+  res.json({ ok: true });
+});
+
+router.post("/admin/logout", (_req, res) => {
+  res.clearCookie(ADMIN_COOKIE, { path: "/" });
+  res.json({ ok: true });
+});
+
+router.get("/admin/session", (req, res) => {
+  res.status(isAdminRequest(req) ? 200 : 401).json({ ok: isAdminRequest(req) });
+});
 
 const mimeExtensions: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -30,12 +87,20 @@ function cleanName(value: unknown) {
 }
 
 async function readPreMadeProducts() {
+  const saved = await readAdminContent("premade-products");
+  if (saved && Array.isArray(saved.payload)) return saved.payload;
+
   try {
     const raw = await readProductData();
     const parsed = JSON.parse(raw) as unknown;
-    if (Array.isArray(parsed)) return parsed;
-    if (parsed && typeof parsed === "object" && Array.isArray((parsed as { products?: unknown }).products)) {
-      return (parsed as { products: unknown[] }).products;
+    const products = Array.isArray(parsed)
+      ? parsed
+      : parsed && typeof parsed === "object" && Array.isArray((parsed as { products?: unknown }).products)
+        ? (parsed as { products: unknown[] }).products
+        : undefined;
+    if (products) {
+      await writeAdminContent("premade-products", products);
+      return products;
     }
   } catch {
     // No saved admin data yet.
@@ -56,18 +121,88 @@ function validatePreMadeProducts(value: unknown) {
   return value;
 }
 
+function validatePersistentContent(value: unknown) {
+  const serialized = JSON.stringify(value);
+  if (serialized.includes("data:image/") || serialized.includes("data:application/octet-stream;base64,")) {
+    throw new Error("Images must finish uploading to App Storage before this content can be saved.");
+  }
+  if (Buffer.byteLength(serialized, "utf8") > 4 * 1024 * 1024) {
+    throw new Error("This content collection is too large to save safely.");
+  }
+  return value;
+}
+
+function validateContentShape(key: string, value: unknown) {
+  if (["premade-products", "etsy-products", "premium-products", "services", "orders", "inquiries"].includes(key) && !Array.isArray(value)) {
+    throw new Error("This content collection must be a list.");
+  }
+  if (key === "settings" && (!value || typeof value !== "object" || Array.isArray(value))) {
+    throw new Error("Settings must be an object.");
+  }
+  return validatePersistentContent(value);
+}
+
 router.get("/admin/premade-products", async (_req, res) => {
-  const products = await readPreMadeProducts();
-  res.json({ ok: true, products });
+  try {
+    const products = await readPreMadeProducts();
+    const saved = await readAdminContent("premade-products");
+    res.json({ ok: true, products, version: saved?.version ?? 0 });
+  } catch (error) {
+    res.status(503).json({ ok: false, error: error instanceof Error ? error.message : "Could not load pre-made products." });
+  }
 });
 
-router.put("/admin/premade-products", async (req, res) => {
+router.put("/admin/premade-products", requireAdmin, async (req, res) => {
   try {
     const products = validatePreMadeProducts(req.body?.products);
-    await writeProductData(JSON.stringify({ products, updatedAt: new Date().toISOString() }, null, 2));
-    res.json({ ok: true, products });
+    const saved = await writeAdminContent("premade-products", products, Number.isInteger(req.body?.version) ? req.body.version : undefined);
+    res.json({ ok: true, products: saved.payload, version: saved.version });
   } catch (error) {
     res.status(400).json({ ok: false, error: error instanceof Error ? error.message : "Could not save pre-made products." });
+  }
+});
+
+router.get("/admin/content/:key", async (req, res) => {
+  try {
+    const key = assertAdminContentKey(String(req.params.key ?? ""));
+    if ((key === "orders" || key === "inquiries") && !isAdminRequest(req)) {
+      res.status(401).json({ ok: false, error: "Admin session required." });
+      return;
+    }
+    if (key === "premade-products") await readPreMadeProducts();
+    const saved = await readAdminContent(key);
+    res.json({ ok: true, content: saved?.payload ?? null, version: saved?.version ?? 0 });
+  } catch (error) {
+    res.status(400).json({ ok: false, error: error instanceof Error ? error.message : "Could not load content." });
+  }
+});
+
+router.put("/admin/content/:key", requireAdmin, async (req, res) => {
+  try {
+    const key = assertAdminContentKey(String(req.params.key ?? ""));
+    if (!("content" in (req.body ?? {}))) throw new Error("Content payload is required.");
+    const content = validateContentShape(key, req.body.content);
+    const saved = await writeAdminContent(key, content, Number.isInteger(req.body?.version) ? req.body.version : undefined);
+    res.json({ ok: true, content: saved.payload, version: saved.version, updatedAt: saved.updatedAt });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Could not save content.";
+    res.status(/another session/i.test(message) ? 409 : 400).json({ ok: false, error: message });
+  }
+});
+
+router.post("/admin/records/:key", async (req, res) => {
+  try {
+    const key = String(req.params.key ?? "");
+    if (key !== "orders" && key !== "inquiries") throw new Error("Unknown record collection.");
+    const submitted = req.body?.record;
+    if (!submitted || typeof submitted !== "object" || Array.isArray(submitted)) throw new Error("A record is required.");
+    if (Buffer.byteLength(JSON.stringify(submitted), "utf8") > 64 * 1024) throw new Error("The submitted record is too large.");
+    const prefix = key === "orders" ? "ord" : "inq";
+    const record = { ...submitted, id: `${prefix}_${randomUUID()}`, submittedAt: new Date().toISOString() };
+    await appendAdminRecord(key, record);
+    res.status(201).json({ ok: true, record });
+  } catch (error) {
+    res.status(400).json({ ok: false, error: error instanceof Error ? error.message : "Could not save the submitted record." });
   }
 });
 
@@ -90,7 +225,7 @@ router.get("/admin/images/:filename", async (req, res) => {
   }
 });
 
-router.get("/admin/storage-status", async (_req, res) => {
+router.get("/admin/storage-status", requireAdmin, async (_req, res) => {
   try {
     const storage = await verifyAdminStorage();
     const products = await readPreMadeProducts();
@@ -112,7 +247,6 @@ router.get("/admin/storage-status", async (_req, res) => {
       ok: true,
         backend: adminStorageBackend() === "replit-app-storage" ? "cloud-storage" : "local-filesystem",
       objectCount: storage.objectCount,
-      warning: storage.warning,
       referencedImages: checks.length,
       availableImages: checks.filter(item => item.exists).length,
       missingImages: checks.filter(item => !item.exists).map(item => item.filename),
@@ -126,7 +260,7 @@ router.get("/admin/storage-status", async (_req, res) => {
   }
 });
 
-router.post("/admin/images", async (req, res) => {
+router.post("/admin/images", requireAdmin, async (req, res) => {
   try {
     const image = String(req.body?.image ?? "");
     const match = image.match(/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/);
@@ -146,7 +280,12 @@ router.post("/admin/images", async (req, res) => {
     const filename = `${cleanName(req.body?.filename)}-${Date.now()}-${randomUUID().slice(0, 8)}.${ext}`;
     await writeAdminImage(filename, buffer);
 
-    res.json({ ok: true, url: `/api/admin/images/${filename}` });
+    const verified = await readAdminImage(filename);
+    if (verified.length !== buffer.length) {
+      throw new Error("The image upload could not be verified in persistent storage.");
+    }
+
+    res.status(201).json({ ok: true, id: filename, url: `/api/admin/images/${filename}` });
   } catch (error) {
     res.status(500).json({ ok: false, error: error instanceof Error ? error.message : "Could not save image." });
   }

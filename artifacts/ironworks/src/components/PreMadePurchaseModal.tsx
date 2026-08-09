@@ -74,7 +74,7 @@ export function PreMadePurchaseModal({ item, isOpen, onClose }: PreMadePurchaseM
 
     try {
       const result = await submitPurchase(payload);
-      saveOrder({
+      await saveOrder({
         productId: item.id,
         productTitle: item.title,
         productPrice: item.priceLabel,
@@ -89,7 +89,7 @@ export function PreMadePurchaseModal({ item, isOpen, onClose }: PreMadePurchaseM
         return;
       }
     } catch (err) {
-      saveOrder({
+      await saveOrder({
         productId: item.id,
         productTitle: item.title,
         productPrice: item.priceLabel,
@@ -100,11 +100,11 @@ export function PreMadePurchaseModal({ item, isOpen, onClose }: PreMadePurchaseM
       });
       setSuccess({
         orderId: `local_${Date.now()}`,
-        message: "Your order details were saved locally. The backend payment/email service is not reachable in this preview.",
+        message: "Your order details were saved. The payment/email service is not reachable in this preview.",
       });
       toast({
         title: "Backend Not Reachable",
-        description: err instanceof Error ? err.message : "Order saved locally for preview.",
+        description: err instanceof Error ? err.message : "Order saved for follow-up.",
       });
     } finally {
       setIsSubmitting(false);

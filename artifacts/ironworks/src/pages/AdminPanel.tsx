@@ -8,8 +8,7 @@ import {
 } from 'lucide-react';
 import {
   useAdminServices, useEtsyProducts, usePremiumProducts, usePreMadeProducts,
-  getOrders, getInquiries, deleteOrder, deleteInquiry,
-  Order, Inquiry
+  useOrders, useInquiries, useSiteSettings,
 } from '@/hooks/useAdminProducts';
 import { EtsyProduct } from '@/data/etsy-products';
 import { PremiumProduct } from '@/data/premium-products';
@@ -23,8 +22,6 @@ const SESSION_KEY = 'ds_admin_auth';
 
 type Tab = 'overview' | 'premade' | 'services' | 'etsy' | 'premium' | 'inquiries' | 'orders' | 'analytics' | 'settings';
 
-const SETTINGS_KEY = 'ds_site_settings';
-interface SiteSettings { phone: string; email: string; facebook: string; }
 type AdminStorageStatus = {
   ok: boolean;
   backend?: string;
@@ -34,10 +31,6 @@ type AdminStorageStatus = {
   missingImages?: string[];
   error?: string;
 };
-const defaultSettings: SiteSettings = { phone: '(435) 421-9033', email: 'dandsiron@yahoo.com', facebook: '@DallanGoffBlacksmith' };
-function getSettings(): SiteSettings {
-  try { const s = localStorage.getItem(SETTINGS_KEY); return s ? JSON.parse(s) : defaultSettings; } catch { return defaultSettings; }
-}
 
 function inputCls(extra = '') {
   return `w-full rounded-lg px-3 py-2.5 text-white text-sm font-sans placeholder:text-white/20 focus:outline-none transition-colors ${extra}`;
@@ -83,7 +76,12 @@ async function uploadAdminImage(dataUrl: string, filename: string) {
   if (!response.ok || result?.ok === false || !result?.url) {
     throw new Error(result?.error || 'Image upload failed. Make sure the API server can write to the admin uploads folder.');
   }
-  return String(result.url);
+  const url = String(result.url);
+  const verification = await fetch(url, { cache: 'no-store' }).catch(() => null);
+  if (!verification?.ok || !verification.headers.get('content-type')?.startsWith('image/')) {
+    throw new Error('The image reached storage but could not be read back. It was not added to the product.');
+  }
+  return url;
 }
 
 async function optimizeImageFile(file: File) {
@@ -175,7 +173,7 @@ function isAdminUploadedImage(value: string | undefined) {
 }
 
 // ── Image upload helper ──────────────────────────────────────────
-function ImageField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function ImageField({ value, onChange, onBusyChange }: { value: string; onChange: (v: string) => void | Promise<unknown>; onBusyChange?: (busy: boolean) => void }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [mode, setMode] = useState<'url' | 'file'>(value.startsWith('data:') || isAdminUploadedImage(value) ? 'file' : 'url');
   const [uploading, setUploading] = useState(false);
@@ -184,15 +182,17 @@ function ImageField({ value, onChange }: { value: string; onChange: (v: string) 
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
+    onBusyChange?.(true);
     setUploadError('');
     try {
       const uploadedUrl = await optimizeImageFile(file);
-      onChange(uploadedUrl);
+      await onChange(uploadedUrl);
       setMode('file');
     } catch (error) {
       setUploadError(adminSaveErrorMessage(error));
     } finally {
       setUploading(false);
+      onBusyChange?.(false);
       e.currentTarget.value = '';
     }
   };
@@ -235,15 +235,18 @@ function ImageField({ value, onChange }: { value: string; onChange: (v: string) 
 // ── Etsy product form ────────────────────────────────────────────
 const emptyEtsy = (): EtsyProduct => ({ id: '', title: '', image: '', priceLabel: '', etsyUrl: 'https://www.etsy.com/shop/dandsironworks', description: '', details: [] });
 
-function EtsyForm({ initial, onSave, onClose }: { initial: EtsyProduct | null; onSave: (p: EtsyProduct) => void; onClose: () => void }) {
+function EtsyForm({ initial, onSave, onClose }: { initial: EtsyProduct | null; onSave: (p: EtsyProduct) => void | Promise<void>; onClose: () => void }) {
   const [f, setF] = useState<EtsyProduct>(initial ?? emptyEtsy());
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [detailsText, setDetailsText] = useState((initial?.details ?? []).join('\n'));
   const set = (k: keyof EtsyProduct, v: any) => setF(p => ({ ...p, [k]: v }));
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const details = detailsText.split('\n').map(s => s.trim()).filter(Boolean);
     const id = f.id || `ep_${Date.now()}`;
-    onSave({ ...f, id, details });
+    setSaving(true);
+    try { await onSave({ ...f, id, details }); } finally { setSaving(false); }
   };
   return (
     <form onSubmit={submit} className="flex flex-col gap-4">
@@ -259,7 +262,7 @@ function EtsyForm({ initial, onSave, onClose }: { initial: EtsyProduct | null; o
       </div>
       <div>
         <label className="block text-xs font-display tracking-widest uppercase text-white/40 mb-1.5">Product Image</label>
-        <ImageField value={f.image} onChange={v => set('image', v)} />
+        <ImageField value={f.image} onChange={v => set('image', v)} onBusyChange={setUploading} />
       </div>
       <div>
         <label className="block text-xs font-display tracking-widest uppercase text-white/40 mb-1.5">Etsy Product URL</label>
@@ -274,8 +277,8 @@ function EtsyForm({ initial, onSave, onClose }: { initial: EtsyProduct | null; o
         <textarea rows={3} value={detailsText} onChange={e => setDetailsText(e.target.value)} placeholder={"Solid iron bar stock\nHand-hammered finish\nBeeswax rust protection"} className={inputCls('resize-none')} style={iStyle} onFocus={iFocus} onBlur={iBlur} />
       </div>
       <div className="flex gap-3 pt-2">
-        <button type="submit" className="flex-1 py-2.5 rounded-lg font-display uppercase tracking-widest text-sm text-white" style={{ background: 'linear-gradient(135deg,#FF4D00,#FF8C1A)', boxShadow: '0 4px 16px rgba(255,77,0,0.25)' }}>
-          {initial ? 'Save Changes' : 'Add Product'}
+        <button type="submit" disabled={uploading || saving} className="flex-1 py-2.5 rounded-lg font-display uppercase tracking-widest text-sm text-white disabled:opacity-60" style={{ background: 'linear-gradient(135deg,#FF4D00,#FF8C1A)', boxShadow: '0 4px 16px rgba(255,77,0,0.25)' }}>
+          {uploading ? 'Uploading Image...' : saving ? 'Saving to Database...' : initial ? 'Save Changes' : 'Add Product'}
         </button>
         <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-lg text-white/40 hover:text-white transition-colors text-sm" style={iStyle}>Cancel</button>
       </div>
@@ -286,13 +289,16 @@ function EtsyForm({ initial, onSave, onClose }: { initial: EtsyProduct | null; o
 // ── Premium product form ─────────────────────────────────────────
 const emptyPremium = (): PremiumProduct => ({ id: '', title: '', image: '', priceLabel: '', description: '' });
 
-function PremiumForm({ initial, onSave, onClose }: { initial: PremiumProduct | null; onSave: (p: PremiumProduct) => void; onClose: () => void }) {
+function PremiumForm({ initial, onSave, onClose }: { initial: PremiumProduct | null; onSave: (p: PremiumProduct) => void | Promise<void>; onClose: () => void }) {
   const [f, setF] = useState<PremiumProduct>(initial ?? emptyPremium());
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const set = (k: keyof PremiumProduct, v: any) => setF(p => ({ ...p, [k]: v }));
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const id = f.id || `pr_${Date.now()}`;
-    onSave({ ...f, id });
+    setSaving(true);
+    try { await onSave({ ...f, id }); } finally { setSaving(false); }
   };
   return (
     <form onSubmit={submit} className="flex flex-col gap-4">
@@ -308,15 +314,15 @@ function PremiumForm({ initial, onSave, onClose }: { initial: PremiumProduct | n
       </div>
       <div>
         <label className="block text-xs font-display tracking-widest uppercase text-white/40 mb-1.5">Product Image</label>
-        <ImageField value={f.image} onChange={v => set('image', v)} />
+        <ImageField value={f.image} onChange={v => set('image', v)} onBusyChange={setUploading} />
       </div>
       <div>
         <label className="block text-xs font-display tracking-widest uppercase text-white/40 mb-1.5">Description *</label>
         <textarea required rows={6} value={f.description} onChange={e => set('description', e.target.value)} placeholder="Describe this signature piece..." className={descriptionInputCls} style={iStyle} onFocus={iFocus} onBlur={iBlur} />
       </div>
       <div className="flex gap-3 pt-2">
-        <button type="submit" className="flex-1 py-2.5 rounded-lg font-display uppercase tracking-widest text-sm text-white" style={{ background: 'linear-gradient(135deg,#FF4D00,#FF8C1A)', boxShadow: '0 4px 16px rgba(255,77,0,0.25)' }}>
-          {initial ? 'Save Changes' : 'Add Product'}
+        <button type="submit" disabled={uploading || saving} className="flex-1 py-2.5 rounded-lg font-display uppercase tracking-widest text-sm text-white disabled:opacity-60" style={{ background: 'linear-gradient(135deg,#FF4D00,#FF8C1A)', boxShadow: '0 4px 16px rgba(255,77,0,0.25)' }}>
+          {uploading ? 'Uploading Image...' : saving ? 'Saving to Database...' : initial ? 'Save Changes' : 'Add Product'}
         </button>
         <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-lg text-white/40 hover:text-white transition-colors text-sm" style={iStyle}>Cancel</button>
       </div>
@@ -359,8 +365,11 @@ function PreMadeForm({
 }) {
   const [f, setF] = useState<PreMadeItem>(initial ?? emptyPreMade());
   const [featuresText, setFeaturesText] = useState((initial?.features ?? []).join('\n'));
-  const [gallery, setGallery] = useState<PreMadeItem['gallery']>(initial?.gallery ?? []);
+  const [gallery, setGallery] = useState<Array<PreMadeItem['gallery'][number] & { editorKey: string }>>(
+    () => (initial?.gallery ?? []).map(image => ({ ...image, editorKey: crypto.randomUUID() })),
+  );
   const [saving, setSaving] = useState(false);
+  const [pendingUploads, setPendingUploads] = useState(0);
   const [formError, setFormError] = useState('');
   const [videoText, setVideoText] = useState(
     (initial?.videos ?? []).map(video => `${video.src} | ${video.poster} | ${video.title} | ${video.description} | ${video.aspect}`).join('\n')
@@ -378,9 +387,14 @@ function PreMadeForm({
       return updated;
     });
   };
+  const trackUpload = (busy: boolean) => setPendingUploads(count => Math.max(0, count + (busy ? 1 : -1)));
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (pendingUploads > 0) {
+      setFormError('Wait for every image upload to finish before saving.');
+      return;
+    }
     setSaving(true);
     setFormError('');
     const id = f.id || slugify(f.title) || `pm_${Date.now()}`;
@@ -451,7 +465,7 @@ function PreMadeForm({
       </div>
       <div>
         <label className="block text-xs font-display tracking-widest uppercase text-white/40 mb-1.5">Main Image</label>
-        <ImageField value={f.image} onChange={v => set('image', v)} />
+        <ImageField value={f.image} onChange={v => set('image', v)} onBusyChange={trackUpload} />
       </div>
       <div>
         <label className="block text-xs font-display tracking-widest uppercase text-white/40 mb-1.5">Image Alt Text</label>
@@ -470,7 +484,7 @@ function PreMadeForm({
           <label className="block text-xs font-display tracking-widest uppercase text-white/40">Gallery Images</label>
           <button
             type="button"
-            onClick={() => setGallery(items => [...items, { src: '', alt: f.title || 'Pre-made product photo' }])}
+            onClick={() => setGallery(items => [...items, { src: '', alt: f.title || 'Pre-made product photo', editorKey: crypto.randomUUID() }])}
             className="flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-display uppercase tracking-widest text-orange-300/80 transition-colors hover:text-orange-300"
             style={{ background: 'rgba(255,140,26,0.08)', border: '1px solid rgba(255,140,26,0.18)' }}
           >
@@ -484,7 +498,7 @@ function PreMadeForm({
             </div>
           ) : (
             gallery.map((image, index) => (
-              <div key={`premade-gallery-${index}`} className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div key={image.editorKey} className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <div className="grid grid-cols-1 md:grid-cols-[7rem_1fr_auto] gap-3">
                   <div className="aspect-[4/3] overflow-hidden rounded-lg bg-white/[0.04] border border-white/10">
                     {image.src ? (
@@ -494,7 +508,7 @@ function PreMadeForm({
                     )}
                   </div>
                   <div className="space-y-2">
-                    <ImageField value={image.src} onChange={src => setGalleryItem(index, { src })} />
+                    <ImageField value={image.src} onChange={src => setGalleryItem(index, { src })} onBusyChange={trackUpload} />
                     <input
                       value={image.alt}
                       onChange={e => setGalleryItem(index, { alt: e.target.value })}
@@ -543,8 +557,8 @@ function PreMadeForm({
         <textarea rows={4} value={videoText} onChange={e => setVideoText(e.target.value)} placeholder={"/images/walkaround.mp4 | /images/poster.jpg | Walkaround | Finished product view | wide"} className={inputCls('resize-none')} style={iStyle} onFocus={iFocus} onBlur={iBlur} />
       </div>
       <div className="flex gap-3 pt-2">
-        <button type="submit" disabled={saving} className="flex-1 py-2.5 rounded-lg font-display uppercase tracking-widest text-sm text-white disabled:opacity-60" style={{ background: 'linear-gradient(135deg,#FF4D00,#FF8C1A)', boxShadow: '0 4px 16px rgba(255,77,0,0.25)' }}>
-          {saving ? 'Optimizing & Saving...' : initial ? 'Save Changes' : 'Add Pre-Made Product'}
+        <button type="submit" disabled={saving || pendingUploads > 0} className="flex-1 py-2.5 rounded-lg font-display uppercase tracking-widest text-sm text-white disabled:opacity-60" style={{ background: 'linear-gradient(135deg,#FF4D00,#FF8C1A)', boxShadow: '0 4px 16px rgba(255,77,0,0.25)' }}>
+          {pendingUploads > 0 ? `Uploading ${pendingUploads} Image${pendingUploads === 1 ? '' : 's'}...` : saving ? 'Saving to Database...' : initial ? 'Save Changes' : 'Add Pre-Made Product'}
         </button>
         <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-lg text-white/40 hover:text-white transition-colors text-sm" style={iStyle}>Cancel</button>
       </div>
@@ -756,8 +770,8 @@ export function AdminPanel() {
   const { products: premiumProducts, addProduct: addPremium, updateProduct: updatePremium, removeProduct: removePremium } = usePremiumProducts();
   const { products: preMadeProducts, setProducts: setPreMadeProducts, addProduct: addPreMade, updateProduct: updatePreMade, removeProduct: removePreMade } = usePreMadeProducts();
   const { services: adminServices, updateService } = useAdminServices();
-  const [orders, setOrders] = useState<Order[]>(() => getOrders());
-  const [inquiries, setInquiries] = useState<Inquiry[]>(() => getInquiries());
+  const { orders, removeOrder } = useOrders();
+  const { inquiries, removeInquiry } = useInquiries();
 
   const [etsyModal, setEtsyModal] = useState<{ open: boolean; editing: EtsyProduct | null }>({ open: false, editing: null });
   const [premiumModal, setPremiumModal] = useState<{ open: boolean; editing: PremiumProduct | null }>({ open: false, editing: null });
@@ -766,11 +780,27 @@ export function AdminPanel() {
   const [saveError, setSaveError] = useState('');
   const [storageStatus, setStorageStatus] = useState<AdminStorageStatus | null>(null);
 
-  const [settings, setSettings] = useState<SiteSettings>(getSettings());
+  const { settings: savedSettings, setSettings: persistSettings } = useSiteSettings();
+  const [settings, setSettings] = useState(savedSettings);
   const [settingsSaved, setSettingsSaved] = useState(false);
 
+  useEffect(() => setSettings(savedSettings), [savedSettings]);
+
   useEffect(() => {
-    if (sessionStorage.getItem(SESSION_KEY) !== '1') navigate('/');
+    if (sessionStorage.getItem(SESSION_KEY) !== '1') {
+      navigate('/');
+      return;
+    }
+    fetch('/api/admin/session')
+      .then(response => {
+        if (response.ok) return;
+        sessionStorage.removeItem(SESSION_KEY);
+        navigate('/');
+      })
+      .catch(() => {
+        sessionStorage.removeItem(SESSION_KEY);
+        navigate('/');
+      });
   }, [navigate]);
 
   useEffect(() => {
@@ -788,24 +818,27 @@ export function AdminPanel() {
   }, [tab, preMadeProducts]);
 
   const logout = () => {
+    void fetch('/api/admin/logout', { method: 'POST' });
     sessionStorage.removeItem(SESSION_KEY);
     navigate('/');
   };
 
   const handleDeleteOrder = (id: string) => {
-    setConfirm({ msg: 'Delete this purchase inquiry permanently?', onConfirm: () => { deleteOrder(id); setOrders(getOrders()); setConfirm(null); } });
+    setConfirm({ msg: 'Delete this purchase inquiry permanently?', onConfirm: () => { void removeOrder(id); setConfirm(null); } });
   };
   const handleDeleteInquiry = (id: string) => {
-    setConfirm({ msg: 'Delete this inquiry permanently?', onConfirm: () => { deleteInquiry(id); setInquiries(getInquiries()); setConfirm(null); } });
+    setConfirm({ msg: 'Delete this inquiry permanently?', onConfirm: () => { void removeInquiry(id); setConfirm(null); } });
   };
 
-  const saveSettings = () => {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-    setSettingsSaved(true);
-    setTimeout(() => setSettingsSaved(false), 2000);
+  const saveSettings = async () => {
+    await saveAdminChange(async () => {
+      await persistSettings(settings);
+      setSettingsSaved(true);
+      setTimeout(() => setSettingsSaved(false), 2000);
+    });
   };
 
-  const saveAdminChange = async (save: () => void | Promise<void>, onSuccess?: () => void, options?: { rethrow?: boolean }) => {
+  const saveAdminChange = async (save: () => unknown | Promise<unknown>, onSuccess?: () => void, options?: { rethrow?: boolean }) => {
     try {
       await save();
       setSaveError('');
@@ -817,7 +850,7 @@ export function AdminPanel() {
   };
 
   const updateServiceWithFeedback = (service: ServicePage) => {
-    void saveAdminChange(() => updateService(service));
+    return saveAdminChange(() => updateService(service));
   };
 
   const hasPreMadeBrowserStoredImages = preMadeProducts.some(preMadeHasBrowserStoredImages);
@@ -1225,7 +1258,7 @@ export function AdminPanel() {
                     style={{ background: settingsSaved ? 'rgba(34,197,94,0.3)' : 'linear-gradient(135deg,#FF4D00,#FF8C1A)', border: settingsSaved ? '1px solid rgba(34,197,94,0.3)' : 'none', boxShadow: settingsSaved ? 'none' : '0 4px 14px rgba(255,77,0,0.25)' }}>
                     {settingsSaved ? <><Check size={14} /> Saved</> : 'Save Settings'}
                   </button>
-                  <p className="text-xs text-white/25 font-sans">Settings are saved locally. Refresh the main site to see updates.</p>
+                  <p className="text-xs text-white/25 font-sans">Settings are saved in the production database.</p>
                 </div>
               </div>
             </div>
