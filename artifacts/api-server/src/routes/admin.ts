@@ -112,6 +112,7 @@ router.get("/admin/storage-status", async (_req, res) => {
       ok: true,
         backend: adminStorageBackend() === "replit-app-storage" ? "cloud-storage" : "local-filesystem",
       objectCount: storage.objectCount,
+      warning: storage.warning,
       referencedImages: checks.length,
       availableImages: checks.filter(item => item.exists).length,
       missingImages: checks.filter(item => !item.exists).map(item => item.filename),
