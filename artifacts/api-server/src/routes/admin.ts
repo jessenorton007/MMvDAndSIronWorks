@@ -20,11 +20,18 @@ const MAX_IMAGE_BYTES = 6 * 1024 * 1024;
 const ADMIN_COOKIE = "ds_admin_session";
 
 function adminPassword() {
-  return process.env["ADMIN_PASSWORD"] || "dandsironworks123";
+  const password = process.env["ADMIN_PASSWORD"];
+  if (!password) {
+    throw new Error("ADMIN_PASSWORD is not configured.");
+  }
+  return password;
 }
 
 function adminSessionToken() {
-  const secret = process.env["ADMIN_SESSION_SECRET"] || adminPassword();
+  const secret = process.env["ADMIN_SESSION_SECRET"];
+  if (!secret) {
+    throw new Error("ADMIN_SESSION_SECRET is not configured.");
+  }
   return createHmac("sha256", secret).update("dandsironworks-admin-session-v1").digest("hex");
 }
 

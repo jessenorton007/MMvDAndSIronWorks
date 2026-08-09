@@ -21,8 +21,6 @@ type StoredContent = {
 
 type LocalContentFile = Record<string, { payload: unknown; version: number; updatedAt: string }>;
 
-let schemaReady: Promise<void> | undefined;
-
 export function assertAdminContentKey(key: string) {
   if (!allowedKeys.has(key)) throw new Error("Unknown admin content collection.");
   return key;
@@ -39,22 +37,6 @@ function useDatabase() {
 async function databasePool() {
   const { pool } = await import("@workspace/db");
   return pool;
-}
-
-export function ensureAdminContentSchema() {
-  if (!useDatabase()) return Promise.resolve();
-  schemaReady ??= databasePool().then(pool => pool.query(`
-    CREATE TABLE IF NOT EXISTS admin_content (
-      key text PRIMARY KEY,
-      payload jsonb NOT NULL,
-      version integer NOT NULL DEFAULT 1,
-      updated_at timestamptz NOT NULL DEFAULT now()
-    )
-  `)).then(() => undefined).catch(error => {
-    schemaReady = undefined;
-    throw error;
-  });
-  return schemaReady;
 }
 
 function localFilePath() {
@@ -76,7 +58,6 @@ async function writeLocalFile(contents: LocalContentFile) {
 
 export async function readAdminContent(key: string): Promise<StoredContent | undefined> {
   assertAdminContentKey(key);
-  await ensureAdminContentSchema();
 
   if (!useDatabase()) {
     const saved = (await readLocalFile())[key];
@@ -94,7 +75,6 @@ export async function readAdminContent(key: string): Promise<StoredContent | und
 
 export async function writeAdminContent(key: string, payload: unknown, expectedVersion?: number): Promise<StoredContent> {
   assertAdminContentKey(key);
-  await ensureAdminContentSchema();
 
   if (!useDatabase()) {
     const all = await readLocalFile();
@@ -133,8 +113,6 @@ export async function writeAdminContent(key: string, payload: unknown, expectedV
 }
 
 export async function appendAdminRecord(key: "orders" | "inquiries", record: Record<string, unknown>) {
-  await ensureAdminContentSchema();
-
   if (!useDatabase()) {
     const current = await readAdminContent(key);
     const records = Array.isArray(current?.payload) ? current.payload : [];
