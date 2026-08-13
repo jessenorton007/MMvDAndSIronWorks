@@ -1035,7 +1035,15 @@ export function Home() {
                   style={{ color: 'rgba(255,255,255,0.32)', letterSpacing: '0.04em' }}
                 >
                   Proudly designed by{' '}
-                  <span style={{ color: 'rgba(255,175,100,0.75)' }}>Mojave Marketing</span>
+                  <a
+                    href="https://mojavemarketingllc.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="transition-colors hover:text-orange-300"
+                    style={{ color: 'rgba(255,175,100,0.75)' }}
+                  >
+                    Mojave Marketing
+                  </a>
                   {' '}in partnership with{' '}
                   <a
                     href="https://surrealmarketingservices.com"
