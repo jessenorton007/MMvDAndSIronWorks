@@ -75,7 +75,7 @@ On August 19, source and repository state were reverified before implementation.
 
 ## Measurement implementation
 
-GA4 is prepared but intentionally inactive until a real Measurement ID is supplied in `VITE_GA4_MEASUREMENT_ID`.
+GA4 was activated on August 19, 2026, using Measurement ID `G-QW2GMHN0GZ`. The ID is the production default, and `VITE_GA4_MEASUREMENT_ID` can override it for a different deployment when needed.
 
 | Event | Meaning | Trigger |
 |---|---|---|

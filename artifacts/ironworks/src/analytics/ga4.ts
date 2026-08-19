@@ -7,7 +7,8 @@ declare global {
   }
 }
 
-const measurementId = String(import.meta.env.VITE_GA4_MEASUREMENT_ID ?? '').trim();
+const defaultMeasurementId = 'G-QW2GMHN0GZ';
+const measurementId = String(import.meta.env.VITE_GA4_MEASUREMENT_ID ?? defaultMeasurementId).trim();
 const isConfigured = /^G-[A-Z0-9]+$/i.test(measurementId);
 
 export function initGa4() {
