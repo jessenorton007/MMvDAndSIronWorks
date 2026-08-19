@@ -1280,7 +1280,7 @@ export function AdminPanel() {
         <Modal title={etsyModal.editing ? 'Edit Product' : 'Add Shop Product'} onClose={() => setEtsyModal({ open: false, editing: null })}>
           <EtsyForm initial={etsyModal.editing} onClose={() => setEtsyModal({ open: false, editing: null })}
             onSave={p => saveAdminChange(
-              () => { etsyModal.editing ? updateEtsy(p) : addEtsy(p); },
+              () => etsyModal.editing ? updateEtsy(p) : addEtsy(p),
               () => setEtsyModal({ open: false, editing: null })
             )} />
         </Modal>
@@ -1289,7 +1289,7 @@ export function AdminPanel() {
         <Modal title={premiumModal.editing ? 'Edit Piece' : 'Add Signature Piece'} onClose={() => setPremiumModal({ open: false, editing: null })}>
           <PremiumForm initial={premiumModal.editing} onClose={() => setPremiumModal({ open: false, editing: null })}
             onSave={p => saveAdminChange(
-              () => { premiumModal.editing ? updatePremium(p) : addPremium(p); },
+              () => premiumModal.editing ? updatePremium(p) : addPremium(p),
               () => setPremiumModal({ open: false, editing: null })
             )} />
         </Modal>

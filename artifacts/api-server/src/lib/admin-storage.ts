@@ -32,6 +32,21 @@ function resultError(error: unknown, action: string) {
   return new Error(`${action}: ${String(error ?? "unknown App Storage error")}`);
 }
 
+function asBuffer(value: unknown) {
+  if (Buffer.isBuffer(value)) return value;
+  if (value instanceof Uint8Array) return Buffer.from(value);
+  if (Array.isArray(value) && value.length === 1) return asBuffer(value[0]);
+  if (
+    value &&
+    typeof value === "object" &&
+    (value as { type?: unknown }).type === "Buffer" &&
+    Array.isArray((value as { data?: unknown }).data)
+  ) {
+    return Buffer.from((value as { data: number[] }).data);
+  }
+  throw new Error("Persistent image storage returned an invalid image payload.");
+}
+
 export function adminStorageBackend() {
   return appStorageEnabled() ? "replit-app-storage" : "local-filesystem";
 }
@@ -80,7 +95,7 @@ export async function readAdminImage(filename: string) {
 
   const objectName = `${IMAGE_PREFIX}${filename}`;
   const result = await (await appStorageClient()).downloadAsBytes(objectName);
-  if (result.ok) return result.value;
+  if (result.ok) return asBuffer(result.value);
 
   // Automatically preserve any files that survived in an older runtime.
   try {
