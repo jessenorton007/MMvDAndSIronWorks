@@ -31,12 +31,8 @@ const routes = [
   ...etsyProductRoutes,
 ];
 
-const today = new Date().toISOString().slice(0, 10);
 const urls = routes.map((route) => `  <url>
     <loc>${siteUrl}${route}</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>${route === '/' ? 'weekly' : 'monthly'}</changefreq>
-    <priority>${route === '/' ? '1.0' : route.startsWith('/services') || route.startsWith('/pre-made') ? '0.8' : '0.6'}</priority>
   </url>`).join('\n');
 
 const xml = `<?xml version="1.0" encoding="UTF-8"?>

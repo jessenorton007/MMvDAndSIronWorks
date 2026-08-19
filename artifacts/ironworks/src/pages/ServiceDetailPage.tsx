@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ArrowLeft, CheckCircle, Phone, PocketKnife } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, MapPin, Phone, PocketKnife } from 'lucide-react';
 import { useLocation, useParams } from 'wouter';
 import { Navigation } from '@/components/Navigation';
 import { FloatingContactBanner } from '@/components/FloatingContactBanner';
@@ -14,6 +14,9 @@ export function ServiceDetailPage() {
   const [, navigate] = useLocation();
   const { services } = useAdminServices();
   const service = services.find((item) => item.slug === params.slug);
+  const relatedServices = service?.relatedSlugs
+    ?.map((slug) => services.find((item) => item.slug === slug))
+    .filter((item): item is NonNullable<typeof item> => Boolean(item)) ?? [];
   const returnToServices = () => {
     if (window.history.length > 1) {
       window.history.back();
@@ -80,7 +83,7 @@ export function ServiceDetailPage() {
                   <Phone size={15} className="mr-2" />
                   Call Dallan
                 </GlassButton>
-                <GlassButton onClick={() => navigate('/contact')} className="bg-white/3">
+                <GlassButton onClick={() => navigate('/contact')} className="bg-white/3" data-analytics-cta="request-quote">
                   Start a Project
                 </GlassButton>
               </div>
@@ -152,7 +155,7 @@ export function ServiceDetailPage() {
                   Real Project Photos
                 </h2>
                 <p className="text-white/45 text-sm font-sans leading-relaxed max-w-2xl">
-                  Finished installation and shop-progress views from D&S Iron Works railing projects.
+                  Finished work and shop views from D&S Iron Works projects.
                 </p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -170,6 +173,64 @@ export function ServiceDetailPage() {
                     />
                   </div>
                 ))}
+              </div>
+            </section>
+          )}
+
+          {service.process && service.process.length > 0 && (
+            <section className="mt-14">
+              <span className="text-xs font-display tracking-[0.3em] uppercase text-orange-400/70 block mb-3">
+                From Idea to Finished Steel
+              </span>
+              <h2 className="font-display text-3xl sm:text-4xl uppercase tracking-widest text-white mb-7">
+                How a Custom Project Starts
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {service.process.map((step, index) => (
+                  <article key={step.title} className="rounded-xl border border-white/10 bg-white/[0.025] p-6">
+                    <span className="font-display text-orange-400/65 text-sm tracking-widest">0{index + 1}</span>
+                    <h3 className="font-display text-xl uppercase tracking-wider text-white mt-4 mb-3">{step.title}</h3>
+                    <p className="text-white/55 font-sans leading-relaxed text-sm">{step.description}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {service.localServiceNote && (
+            <section className="mt-10 rounded-xl border border-orange-500/20 bg-orange-500/[0.045] p-6 sm:p-8">
+              <div className="flex items-start gap-4">
+                <MapPin size={22} className="text-orange-400 shrink-0 mt-1" />
+                <div>
+                  <h2 className="font-display text-2xl uppercase tracking-widest text-white mb-3">Serving Southern Utah</h2>
+                  <p className="text-white/60 font-sans leading-relaxed max-w-4xl">{service.localServiceNote}</p>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {relatedServices.length > 0 && (
+            <section className="mt-14">
+              <h2 className="font-display text-3xl uppercase tracking-widest text-white mb-7">Explore Custom Project Types</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {relatedServices.map((related) => (
+                  <button
+                    key={related.slug}
+                    onClick={() => navigate(`/services/${related.slug}`)}
+                    className="group rounded-xl border border-white/10 bg-white/[0.025] p-5 text-left hover:border-orange-500/30 transition-colors"
+                  >
+                    <span className="text-[10px] font-display tracking-[0.24em] uppercase text-orange-400/60">{related.eyebrow}</span>
+                    <span className="mt-2 flex items-center justify-between gap-3 font-display text-lg uppercase tracking-wider text-white">
+                      {related.shortTitle}<ArrowRight size={16} className="text-orange-400 group-hover:translate-x-1 transition-transform" />
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <div className="mt-8 flex flex-col sm:flex-row sm:items-center justify-between gap-5 border-t border-white/10 pt-8">
+                <p className="text-white/55 font-sans leading-relaxed">Have a custom furniture, architectural, or one-of-a-kind metal project in mind?</p>
+                <GlassButton onClick={() => navigate('/contact')} data-analytics-cta="custom-project-quote">
+                  Request a Quote <ArrowRight size={15} className="ml-2" />
+                </GlassButton>
               </div>
             </section>
           )}

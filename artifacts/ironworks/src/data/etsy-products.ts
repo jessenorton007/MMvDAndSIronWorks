@@ -11,7 +11,7 @@ export interface EtsyProduct {
 
 function details(listingId: string, notes: string[] = []) {
   return ['D&S Iron Works Etsy listing', `Etsy listing #${listingId}`, ...notes].filter(
-    (note) => !/\b(only\s+\d+|available|left|in stock|low stock)\b/i.test(note)
+    (note) => !/\b(only\s+\d+|available|left|in stock|low stock|\d+\s+people\s+have\s+this\s+in\s+their\s+cart)\b/i.test(note)
   );
 }
 

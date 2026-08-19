@@ -1,5 +1,6 @@
 // D&S Iron Works — client-side analytics tracker
 // Handles bot filtering, fingerprinting, session management, and behavioral event collection.
+import { initGa4, trackGaEvent } from './ga4';
 
 const BOT_PATTERN = /bot|crawl|spider|google|bing|slurp|duckduck|baidu|yandex|facebookexternalhit|twitterbot|linkedinbot|whatsapp|headless|phantomjs|selenium|playwright|puppeteer|lighthouse|wget|curl|python-requests/i;
 
@@ -151,6 +152,13 @@ function trackPageView(path: string) {
   _activeMs = 0;
   _scrollMilestones = new Set();
   push('pageview', { path, entry: true });
+  window.setTimeout(() => {
+    trackGaEvent('page_view', {
+      page_location: window.location.href,
+      page_path: `${window.location.pathname}${window.location.search}`,
+      page_title: document.title,
+    });
+  }, 50);
 }
 
 function resetIdle() {
@@ -199,6 +207,7 @@ export function init() {
   if (_inited || typeof window === 'undefined') return;
   if (isBot()) return;
   _inited = true;
+  initGa4();
 
   _vid = getOrCreate(localStorage, VID_KEY, 'v');
   _sid = getOrCreate(sessionStorage, SID_KEY, 's');
@@ -262,6 +271,14 @@ export function init() {
     const text = (target.textContent || '').slice(0, 80).trim();
     const href = (target as HTMLAnchorElement).href || target.closest('a')?.href || '';
     push('click', { el, text, href: href.replace(window.location.origin, ''), x: e.clientX, y: e.clientY });
+
+    if (/^(tel:|mailto:|sms:)/i.test(href)) {
+      trackGaEvent('contact_intent', { method: href.split(':')[0].toLowerCase(), link_text: text });
+    } else if (/etsy\.com/i.test(href)) {
+      trackGaEvent('shopping_intent', { destination: 'etsy', link_url: href, link_text: text });
+    } else if (target.closest('[data-analytics-cta]')) {
+      trackGaEvent('contact_intent', { method: 'website_cta', link_text: text });
+    }
 
     // Rage click: 3+ clicks within 40px and 1000ms
     const now = Date.now();

@@ -48,7 +48,6 @@ export function PreMadeDetailPage() {
             '@type': 'Offer',
             priceCurrency: 'USD',
             price: item.priceLabel.replace(/[$,]/g, ''),
-            availability: 'https://schema.org/InStock',
           },
         }
       : undefined,

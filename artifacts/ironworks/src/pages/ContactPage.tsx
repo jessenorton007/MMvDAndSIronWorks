@@ -9,6 +9,7 @@ import { Embers } from '@/components/Embers';
 import { saveInquiry } from '@/hooks/useAdminProducts';
 import { submitContact } from '@/lib/commerce';
 import { useSeo } from '@/lib/seo';
+import { trackGaEvent } from '@/analytics/ga4';
 
 const PROJECT_TYPES = [
   'Custom Gate / Fence',
@@ -58,6 +59,7 @@ export function ContactPage() {
     }
     try {
       await saveInquiry(form);
+      trackGaEvent('generate_lead', { form_name: 'contact', project_type: form.projectType || 'not_selected' });
       setSubmitted(true);
     } finally {
       setSubmitting(false);

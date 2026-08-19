@@ -7,6 +7,7 @@ type SeoInput = {
   image?: string;
   type?: string;
   jsonLd?: Record<string, unknown>;
+  robots?: string;
 };
 
 const defaultImage = '/opengraph.jpg';
@@ -59,7 +60,7 @@ function setJsonLd(data?: Record<string, unknown>) {
   document.head.appendChild(script);
 }
 
-export function useSeo({ title, description, path, image = defaultImage, type = 'website', jsonLd }: SeoInput) {
+export function useSeo({ title, description, path, image = defaultImage, type = 'website', jsonLd, robots = 'index, follow' }: SeoInput) {
   useEffect(() => {
     const canonicalPath = path ?? window.location.pathname;
     const url = absoluteUrl(canonicalPath);
@@ -67,7 +68,7 @@ export function useSeo({ title, description, path, image = defaultImage, type = 
 
     document.title = title;
     setMeta('description', description);
-    setMeta('robots', 'index, follow');
+    setMeta('robots', robots);
     setProperty('og:title', title);
     setProperty('og:description', description);
     setProperty('og:type', type);
@@ -79,5 +80,5 @@ export function useSeo({ title, description, path, image = defaultImage, type = 
     setMeta('twitter:image', imageUrl);
     setCanonical(url);
     setJsonLd(jsonLd);
-  }, [description, image, jsonLd, path, title, type]);
+  }, [description, image, jsonLd, path, robots, title, type]);
 }

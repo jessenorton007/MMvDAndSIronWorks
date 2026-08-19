@@ -41,7 +41,7 @@ function equalSecret(left: string, right: string) {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-function isAdminRequest(req: Request) {
+export function isAdminRequest(req: Request) {
   return equalSecret(String(req.cookies?.[ADMIN_COOKIE] ?? ""), adminSessionToken());
 }
 

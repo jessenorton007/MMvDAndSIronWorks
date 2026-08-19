@@ -13,6 +13,7 @@ export function ProductPage() {
   const [, navigate] = useLocation();
   const { products } = useEtsyProducts();
   const product = products.find(p => p.id === params.id);
+  const reliableDetails = product?.details?.filter((detail) => !/\b(available|left|in stock|low stock|people have this in their cart)\b/i.test(detail)) ?? [];
   const returnToShop = () => {
     if (window.history.length > 1) {
       window.history.back();
@@ -32,7 +33,7 @@ export function ProductPage() {
           '@context': 'https://schema.org',
           '@type': 'Product',
           name: product.title,
-          image: typeof window === 'undefined' ? product.image : `${window.location.origin}${product.image}`,
+          image: typeof window === 'undefined' ? product.image : new URL(product.image, window.location.origin).toString(),
           description: product.description,
           brand: {
             '@type': 'Brand',
@@ -41,7 +42,6 @@ export function ProductPage() {
           offers: {
             '@type': 'Offer',
             url: product.etsyUrl,
-            availability: 'https://schema.org/InStock',
           },
         }
       : undefined,
@@ -103,11 +103,6 @@ export function ProductPage() {
             >
               <div className="mb-3 flex items-center gap-2 flex-wrap">
                 <span className="text-xs font-display tracking-widest uppercase text-orange-400/70">Hand-Forged</span>
-                {product.badge && (
-                  <span className="text-[10px] font-display tracking-widest uppercase text-orange-400 bg-orange-500/10 border border-orange-500/25 rounded-full px-3 py-1">
-                    {product.badge}
-                  </span>
-                )}
               </div>
               <h1 className="font-display text-4xl md:text-5xl tracking-wider text-white mb-4 leading-tight">
                 {product.title}
@@ -123,9 +118,9 @@ export function ProductPage() {
                 className="text-white/65 leading-relaxed mb-8 text-base font-sans space-y-4"
               />
 
-              {product.details && product.details.length > 0 && (
+              {reliableDetails.length > 0 && (
                 <div className="mb-10 space-y-3">
-                  {product.details.map((detail, i) => (
+                  {reliableDetails.map((detail, i) => (
                     <div key={i} className="flex items-center gap-3">
                       <CheckCircle size={15} className="text-orange-500 flex-shrink-0" />
                       <span className="text-white/60 text-sm font-sans">{detail}</span>

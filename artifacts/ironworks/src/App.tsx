@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -10,9 +10,18 @@ import { ContactPage } from "@/pages/ContactPage";
 import { ServicesPage } from "@/pages/ServicesPage";
 import { ServiceDetailPage } from "@/pages/ServiceDetailPage";
 import { PreMadeDetailPage } from "@/pages/PreMadeDetailPage";
-import { AdminPanel } from "@/pages/AdminPanel";
 import { AdminGear } from "@/components/AdminGear";
 import { init as initTracker } from "@/analytics/tracker";
+
+const AdminPanel = lazy(() => import("@/pages/AdminPanel").then((module) => ({ default: module.AdminPanel })));
+
+function AdminRoute() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background" />}>
+      <AdminPanel />
+    </Suspense>
+  );
+}
 
 const queryClient = new QueryClient();
 const scrollPositions = new Map<string, number>();
@@ -76,13 +85,12 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      <Route path="/preview.html" component={Home} />
       <Route path="/shop/:id" component={ProductPage} />
       <Route path="/pre-made/:id" component={PreMadeDetailPage} />
       <Route path="/services" component={ServicesPage} />
       <Route path="/services/:slug" component={ServiceDetailPage} />
       <Route path="/contact" component={ContactPage} />
-      <Route path="/admin" component={AdminPanel} />
+      <Route path="/admin" component={AdminRoute} />
       <Route component={NotFound} />
     </Switch>
   );

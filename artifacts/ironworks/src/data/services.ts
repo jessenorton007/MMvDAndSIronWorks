@@ -10,24 +10,39 @@ export type ServicePage = {
   summary: string;
   details: string[];
   examples: string[];
+  process?: { title: string; description: string }[];
+  localServiceNote?: string;
+  relatedSlugs?: string[];
 };
 
 export const services: ServicePage[] = [
   {
     slug: 'custom-ironwork-utah',
-    title: 'Custom Ironwork in Utah',
+    title: 'Custom Ironwork & Metal Projects',
     shortTitle: 'Custom Ironwork',
-    metaTitle: 'Custom Ironwork in Utah | D&S Iron Works',
-    metaDescription: 'Custom ironwork in Utah by D&S Iron Works: forged railings, fire pits, signs, furniture, metal art, and blacksmith commissions by Dallan Goff.',
+    metaTitle: 'Custom Ironwork & Metal Projects in Southern Utah | D&S Iron Works',
+    metaDescription: 'Plan custom ironwork with Dallan Goff at D&S Iron Works, including forged railings, fire pits, signs, furniture, metal art, and one-of-a-kind steel projects in Southern Utah.',
     eyebrow: 'Built by Hand',
     heroImage: '/images/iron-table.jpg',
-    summary: 'D&S Iron Works creates custom ironwork for homes, cabins, ranches, and one-of-a-kind spaces across Utah.',
+    gallery: [
+      { src: '/images/iron-table.jpg', alt: 'Custom forged iron table built by D&S Iron Works' },
+      { src: '/images/client-upload-railings/railing-install-main.jpg', alt: 'Custom forged stair and balcony railing installed in a Utah home' },
+      { src: '/images/custom-sign-bealer.jpg', alt: 'Personalized steel sign made by D&S Iron Works' },
+    ],
+    summary: 'D&S Iron Works plans and builds functional and decorative ironwork for homes, cabins, ranches, businesses, and gathering spaces across Southern and central Utah.',
     details: [
       'Direct project planning with Dallan Goff',
       'Hand-forged and plasma-cut steel details',
       'Custom work for indoor, outdoor, decorative, and functional pieces',
     ],
     examples: ['Fire pits', 'Forged railings', 'Custom knives', 'Custom signs', 'Tables and furniture', 'Metal wall art'],
+    process: [
+      { title: 'Share the idea', description: 'Bring a sketch, reference photo, measurements, or a rough concept for the space and intended use.' },
+      { title: 'Plan it with Dallan', description: 'Discuss scale, steel details, finish, installation needs, and the practical requirements of the piece directly with Dallan.' },
+      { title: 'Build and finish', description: 'The project is forged, formed, cut, assembled, and finished in the D&S Iron Works shop.' },
+    ],
+    localServiceNote: 'D&S Iron Works serves customers throughout Southern and central Utah, including Cedar City, St. George, Beaver, Hurricane, and surrounding communities. Project fit and travel requirements are confirmed during the initial conversation.',
+    relatedSlugs: ['forged-railings', 'custom-fire-pits', 'custom-metal-signs', 'forged-metal-art', 'blacksmith-commissions'],
   },
   {
     slug: 'custom-fire-pits',

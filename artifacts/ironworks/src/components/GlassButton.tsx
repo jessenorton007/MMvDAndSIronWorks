@@ -10,6 +10,7 @@ interface GlassButtonProps {
   disabled?: boolean;
   target?: string;
   rel?: string;
+  'data-analytics-cta'?: string;
 }
 
 const sharedClass = (extra = '') => `
@@ -33,13 +34,14 @@ const Inner = ({ children }: { children: ReactNode }) => (
   </>
 );
 
-export function GlassButton({ children, className = '', href, onClick, type, disabled, target, rel }: GlassButtonProps) {
+export function GlassButton({ children, className = '', href, onClick, type, disabled, target, rel, 'data-analytics-cta': analyticsCta }: GlassButtonProps) {
   if (href) {
     return (
       <motion.a
         href={href}
         target={target}
         rel={rel}
+        data-analytics-cta={analyticsCta}
         className={sharedClass(className)}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
@@ -54,6 +56,7 @@ export function GlassButton({ children, className = '', href, onClick, type, dis
       type={type || 'button'}
       onClick={onClick}
       disabled={disabled}
+      data-analytics-cta={analyticsCta}
       className={sharedClass(className)}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}

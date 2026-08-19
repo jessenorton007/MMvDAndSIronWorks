@@ -17,6 +17,7 @@ import { ServicePage } from '@/data/services';
 import { AnalyticsTab } from './AnalyticsTab';
 import { ResilientImage } from '@/components/ResilientImage';
 import { preMadeItems as fallbackPreMadeItems } from '@/data/premade-items';
+import { useSeo } from '@/lib/seo';
 
 const SESSION_KEY = 'ds_admin_auth';
 
@@ -782,6 +783,13 @@ export function AdminPanel() {
   const [confirm, setConfirm] = useState<{ msg: string; onConfirm: () => void } | null>(null);
   const [saveError, setSaveError] = useState('');
   const [storageStatus, setStorageStatus] = useState<AdminStorageStatus | null>(null);
+
+  useSeo({
+    title: 'D&S Iron Works Administration',
+    description: 'Authorized D&S Iron Works administration access.',
+    path: '/admin',
+    robots: 'noindex, nofollow, noarchive',
+  });
 
   const { settings: savedSettings, setSettings: persistSettings } = useSiteSettings();
   const [settings, setSettings] = useState(savedSettings);

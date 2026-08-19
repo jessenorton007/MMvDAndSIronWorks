@@ -1,4 +1,3 @@
-import { Client } from "@replit/object-storage";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { adminDataDir, adminUploadDir } from "./upload-dir";
@@ -12,15 +11,19 @@ function appStorageEnabled() {
   return process.env["IRONWORKS_APP_STORAGE"] === "true" || Boolean(process.env["REPL_ID"] || process.env["REPLIT_DEPLOYMENT"]);
 }
 
-let client: Client | undefined;
-function appStorageClient() {
+type StorageClient = InstanceType<(typeof import("@replit/object-storage"))["Client"]>;
+let client: StorageClient | undefined;
+async function appStorageClient() {
   const bucketId = process.env["DEFAULT_OBJECT_STORAGE_BUCKET_ID"];
   if (!bucketId) {
     throw new Error(
       "Persistent image storage is not configured. The storage bucket is missing.",
     );
   }
-  client ??= new Client({ bucketId });
+  if (!client) {
+    const { Client } = await import("@replit/object-storage");
+    client = new Client({ bucketId });
+  }
   return client;
 }
 
@@ -36,7 +39,7 @@ export function adminStorageBackend() {
 export async function verifyAdminStorage() {
   if (!appStorageEnabled()) return { objectCount: 0 };
 
-  const result = await appStorageClient().list();
+  const result = await (await appStorageClient()).list();
   if (!result.ok) throw resultError(result.error, "Persistent image storage is not connected");
   return { objectCount: result.value.length };
 }
@@ -46,7 +49,7 @@ export async function readProductData() {
     return readFile(path.join(adminDataDir(), "premade-products.json"), "utf8");
   }
 
-  const result = await appStorageClient().downloadAsText(PRODUCT_OBJECT);
+  const result = await (await appStorageClient()).downloadAsText(PRODUCT_OBJECT);
   if (result.ok) return result.value;
 
   // Migrate a surviving legacy deployment file the first time App Storage is enabled.
@@ -66,7 +69,7 @@ export async function writeProductData(contents: string) {
     return;
   }
 
-  const result = await appStorageClient().uploadFromText(PRODUCT_OBJECT, contents);
+  const result = await (await appStorageClient()).uploadFromText(PRODUCT_OBJECT, contents);
   if (!result.ok) throw resultError(result.error, "Could not save persistent product data");
 }
 
@@ -76,7 +79,7 @@ export async function readAdminImage(filename: string) {
   }
 
   const objectName = `${IMAGE_PREFIX}${filename}`;
-  const result = await appStorageClient().downloadAsBytes(objectName);
+  const result = await (await appStorageClient()).downloadAsBytes(objectName);
   if (result.ok) return result.value;
 
   // Automatically preserve any files that survived in an older runtime.
@@ -96,7 +99,7 @@ export async function writeAdminImage(filename: string, contents: Buffer) {
     return;
   }
 
-  const result = await appStorageClient().uploadFromBytes(`${IMAGE_PREFIX}${filename}`, contents);
+  const result = await (await appStorageClient()).uploadFromBytes(`${IMAGE_PREFIX}${filename}`, contents);
   if (!result.ok) throw resultError(result.error, "Could not save image to persistent storage");
 }
 
@@ -110,7 +113,7 @@ export async function adminImageExists(filename: string) {
     }
   }
 
-  const result = await appStorageClient().exists(`${IMAGE_PREFIX}${filename}`);
+  const result = await (await appStorageClient()).exists(`${IMAGE_PREFIX}${filename}`);
   if (!result.ok) throw resultError(result.error, "Could not inspect persistent image storage");
   return result.value;
 }
