@@ -3,7 +3,9 @@
 **Prepared for:** Mojave Marketing
 **Audit date:** August 13, 2026
 **Campaign:** SEO Launch plus 26-week Local Essentials
-**Status:** Read-only internal audit. No website, DNS, deployment, analytics account, or Google Business Profile changes were made.
+**Status:** Historical pre-change audit. See `DNS_Ironworks_SEO_Launch_Implementation_Log.md` for the current August 21 production result.
+
+**Current status correction (August 21, 2026):** The public brand target is **D&S Iron Works**. Priorities are pre-made products, custom designs/custom projects, and custom furniture; the primary local SEO target is **Custom Designs / Custom Projects**. Search Console is established, GA4 is connected as `G-QW2GMHN0GZ`, and an existing Google Business Profile is in verification. The route-delivery problem described below remains visible in production because Replit is serving a static frontend catch-all instead of the SEO-aware application server.
 
 ## Evidence labels
 
@@ -17,7 +19,7 @@ The site has a stronger starting foundation than a typical launch-stage local bu
 
 The highest-risk issue is route delivery. Every tested sitemap URL and a nonexistent URL return the same `200 OK`, the same 2,569-byte HTML shell, homepage title, homepage canonical, and empty React root before JavaScript executes. Google can render JavaScript, but this implementation gives crawlers and non-rendering clients conflicting first-response signals and creates a soft-404 risk. The public `/preview.html` route is a duplicate homepage, and `/admin` lacks a server-delivered `noindex` response.
 
-The next major limitation is local relevance and measurement. The public site identifies the company as D&S Iron Works by Dallan Goff, with a Utah-wide service statement, phone, email, Facebook page, and Etsy shop. It does not establish a verified city/base, legitimate service-area cities, hours, credentials, warranties, or Google Business Profile status. No GA4, Google Tag Manager, or Search Console verification was found in the inspected code. Custom first-party analytics exists, but it is not a substitute for Search Console or a properly governed analytics baseline.
+The next major limitation at the time of the audit was local relevance and measurement. The public site identified the company as D&S Iron Works by Dallan Goff, with a Utah-wide service statement, phone, email, Facebook page, and Etsy shop. It did not establish a verified city/base, legitimate service-area cities, hours, credentials, or warranties. Since the audit, Search Console has been established, GA4 has been connected, and an existing Google Business Profile has entered verification; account metrics and remaining business facts still require access or client confirmation.
 
 The one-time SEO Launch includes the initial technical corrections, Search Console/sitemap setup, GA4 and initial conversion tracking, initial Google Business Profile review/setup when eligible, content-format corrections, and benchmark documentation. None of those setup items consumes a Local Essentials monthly improvement. Local Essentials then provides one focused improvement per month and adapts to evidence.
 
@@ -35,7 +37,7 @@ The one-time SEO Launch includes the initial technical corrections, Search Conso
 | The website links to a Facebook page and Etsy shop | Verified | Live footer and `sameAs` in JSON-LD |
 | Etsy provides independent evidence of active handmade goods and customer feedback | Verified publicly, limited | Public Etsy listing for the shop owner and a product with customer reviews; this does not verify local custom-service reviews |
 
-**Naming issue:** The campaign brief says “DNS Ironworks,” while all inspected public assets say “D&S Iron Works.” The correct legal and public-facing name must be confirmed before GBP or citation work.
+**Naming status:** Use **D&S Iron Works** as the public brand target. The exact legal entity name still requires confirmation before legal or citation work.
 
 ## 3. Missing business information
 
@@ -44,12 +46,12 @@ The following items are **Missing or require client/account access**:
 - Legal business name and confirmation that “D&S Iron Works” is the correct public name.
 - Physical base and whether customers are received there; if not, the legitimate service-area-business arrangement.
 - Exact cities/counties served and practical maximum travel distance.
-- Priority services, highest-value work, typical customer, and geographic focus.
+- Highest-value work, typical customer, and geographic focus. Current priorities are pre-made products, custom designs/custom projects, and custom furniture.
 - Business hours and response-time wording approval.
 - Years in business/experience and any team information.
 - Licenses, insurance, certifications, affiliations, warranties, delivery/install terms, and financing claims.
-- Google Business Profile ownership, eligibility, verification, categories, service area, reviews, and performance.
-- GA4, Search Console, and existing tag/container access.
+- Google Business Profile verification completion, ownership/access, categories, service area, reviews, and performance. An existing profile is already in verification.
+- Search Console and GA4 reporting/configuration access and baseline metrics. The properties themselves already exist.
 - Confirmed lead destinations and which actions count as qualified conversions.
 - Permission to publish project details, customer testimonials, locations, and before/after images.
 
@@ -180,7 +182,7 @@ All rows are **Verified** as route/content observations. Opportunities involving
 
 **Public review result — Verified, limited:** On August 13, 2026, exact-name Google web searches and Google Maps searches for D&S Iron Works in Utah did not surface a matching listing. Maps searches using the website phone number and Dallan Goff's name also did not surface a matching profile. The broad name search returned unrelated Utah and out-of-state ironwork businesses, not a D&S profile matching the website phone or owner.
 
-**Status still Missing or requires access:** A negative public search does not prove that no profile exists. An unverified, hidden, suspended, duplicate, recently created, or account-only profile may not appear publicly. The client's Google account and Google's ownership/duplicate workflow must be checked before creation is recommended. No profile was created, claimed, verified, or modified during this review.
+**Current status requires account access:** An existing profile has since been created and verification started. Confirm ownership, verification outcome, and any duplicate/suspension issue in the client's Google account. Do not create another profile.
 
 Required launch work after client confirmation/access:
 
@@ -192,11 +194,11 @@ Required launch work after client confirmation/access:
 6. Add verified services, hours, phone, website, description, and real photos.
 7. Create a genuine review request workflow after profile eligibility/verification. Never incentivize reviews. [Google review guidance](https://support.google.com/business/answer/3474122)
 
-If verification is delayed, continue website technical corrections, Search Console/GA4 setup, business-fact collection, and project proof. Do not create a duplicate profile.
+If GBP verification is delayed, continue the Replit routing correction, validation of the existing Search Console/GA4 setup, business-fact collection, and project proof. Do not create a duplicate profile.
 
 ## 9. Analytics and conversion-tracking status
 
-- **Verified:** No GA4 tag, Google Tag Manager container, or Google site-verification tag was found in the inspected repository.
+- **Historical audit observation:** On August 13, no GA4 tag, Google Tag Manager container, or Google site-verification tag was found in the inspected repository. GA4 is now connected and Search Console is established.
 - **Missing:** GA4/Search Console accounts, ownership, historical data, and whether verification occurs outside the codebase (for example, DNS).
 - **Verified:** A custom analytics implementation records visitors, sessions, events, and identified name/email/phone data. Evidence: `artifacts/api-server/src/routes/analytics.ts` and the frontend analytics/admin components.
 - **Verified:** Contact and purchase-intent submissions are sent to backend commerce routes and persisted through database helpers; SMTP is used for notifications. Evidence: `ContactPage.tsx`, `PreMadePurchaseModal.tsx`, and `artifacts/api-server/src/routes/commerce.ts`.
@@ -238,7 +240,7 @@ Because the legitimate service geography is missing, this is a **provisional cat
 
 ## 13. Risks and limitations
 
-- No Search Console, GA4, GBP, call tracking, CRM, sales, ranking platform, or backlink-tool access was available.
+- At the August 13 audit, no Search Console, GA4, GBP, call tracking, CRM, sales, ranking-platform, or backlink-tool access was available. Search Console, GA4, and an existing GBP are now confirmed, but their reporting data was not available in the August 21 verification task.
 - Service geography and official business identity were not confirmed.
 - Manual search results vary by user, location, and time; they were used only for qualitative public evidence.
 - PageSpeed Insights was rate-limited (HTTP 429), so no lab score or field metric is reported.
@@ -255,7 +257,7 @@ Because the legitimate service geography is missing, this is a **provisional cat
 | Confirm preferred hostname and redirect `www` to apex | High | HTTPS apex works; `www` does not resolve | Consistent access and canonical signals | Low | SEO Launch | DNS access/approval |
 | Confirm business name, base/service area, priority services, and hours | Critical | Site only says Utah; brief/site naming mismatch | Enables accurate local targeting and GBP work | Low client effort | Client responsibility | Client input required |
 | Establish Search Console, submit sitemap, set up GA4/initial conversions, and document benchmarks | High | No tags/verification found; no account data | Reliable acquisition, index, and lead measurement | Medium | SEO Launch | Account ownership/access and privacy approval |
-| Review existing/duplicate GBP and set up an eligible profile if none exists | High | Limited public searches found no matching profile; account state unknown | Accurate Local Search/Maps foundation without duplicate risk | Medium | SEO Launch | Client facts, account review, ownership, and verification |
+| Complete verification and duplicate/ownership review for the existing GBP | High | Existing profile confirmed; verification started | Accurate Local Search/Maps foundation without duplicate risk | Medium | SEO Launch | Client facts, account access, ownership, and verification |
 | Improve one priority service page with verified local/project proof | High | Service pages are brief and generic geographically | Better intent match and conversion confidence | Medium | Local Essentials Month 1 | Priority/geography/project facts required |
 | Correct raw Markdown/stale merchandising claims | Medium | Visible rocket-stove formatting and Etsy cart counts | Cleaner customer experience and content accuracy | Low | SEO Launch correction | Content approval |
 | Optimize media delivery and caching after measurement | Medium | 11.6-16.9 MB videos; private cache headers | Potential mobile speed and repeat-load improvements | Medium-High | Local Essentials monthly improvement; CDN/architecture may be separate | Performance baseline and deployment approval |

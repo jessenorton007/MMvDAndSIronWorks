@@ -2,13 +2,15 @@
 
 Only items not reliably verified from the website/repository are included.
 
+**Current confirmed status (August 21, 2026):** The public brand target is **D&S Iron Works**. Priorities are **pre-made products**, **custom designs/custom projects**, and **custom furniture**, in that order. The primary local SEO target is **Custom Designs / Custom Projects**. Search Console is established, GA4 is connected as `G-QW2GMHN0GZ`, and an existing Google Business Profile is in verification. Do not create duplicate Google properties or profiles.
+
 ## Business identity and market
 
-- [ ] Confirm the exact legal business name and exact public brand: is **D&S Iron Works** correct, and is “DNS Ironworks” only shorthand?
+- [x] Use **D&S Iron Works** as the public brand target. Confirm the exact legal entity name separately before legal/citation work.
 - [ ] Confirm the physical business base and whether customers are received there during stated hours. If not, confirm that it operates as a service-area business.
 - [ ] List the cities/counties actually served and the practical maximum travel/delivery area.
 - [ ] Confirm public business hours and preferred response-time wording.
-- [ ] Rank the top three services by business priority and identify the highest-value/most profitable job type.
+- [x] Top three priorities: pre-made products; custom designs/custom projects; custom furniture. The highest-value/most profitable job type still requires reliable business data.
 - [ ] Describe the typical best-fit customer and whether work is residential, commercial, shipped, installed, picked up, or delivered.
 
 ## Trust and content
@@ -21,9 +23,9 @@ Only items not reliably verified from the website/repository are included.
 
 ## Google and measurement access
 
-- [ ] Check every Google account that may have managed the business; provide any Business Profile URL, “manage now” view, ownership request, verification email, suspension notice, or duplicate notice. Limited public searches did not find a matching profile, but this does not prove none exists.
-- [ ] Grant Mojave Marketing manager access to the Business Profile after ownership is confirmed.
-- [ ] Grant Search Console and GA4 access, or confirm that new properties may be created under client ownership.
+- [x] An existing Google Business Profile has been created and verification has started. Do not create another profile.
+- [ ] Complete verification of the existing profile, check for duplicate/ownership issues, and grant Mojave Marketing Manager access only after the correct profile is confirmed.
+- [x] Search Console is established and GA4 is connected. Grant only the minimum account access needed for reporting/configuration; do not create duplicate properties.
 - [ ] Confirm whether Google Tag Manager or DNS verification already exists outside the repository.
 - [ ] Define qualified conversions: form, call, text, email, pre-made inquiry, QuickBooks payment click/completion, Etsy click/sale, and any offline sale.
 - [ ] Confirm who can report lead quality and closed jobs each month.

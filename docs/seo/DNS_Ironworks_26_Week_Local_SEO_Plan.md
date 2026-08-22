@@ -2,8 +2,10 @@
 
 **Prepared for:** Mojave Marketing
 **Campaign:** $895 SEO Launch + Local Essentials at $159/week for 26 weeks
-**Plan status:** Internal draft pending business facts, access, priorities, and implementation approval
+**Plan status:** Active internal plan. The technical implementation exists in source, but production routing must be corrected in Replit before further SEO execution.
 **Planning principle:** One primary focused improvement per month. Priorities may change when reliable data shows a stronger opportunity.
+
+**Current confirmed priorities (August 21, 2026):** 1. pre-made products; 2. custom designs/custom projects; 3. custom furniture. The primary local SEO target is **Custom Designs / Custom Projects**. Search Console is established, GA4 is connected as `G-QW2GMHN0GZ`, and an existing GBP is in verification. Do not create duplicate properties or profiles.
 
 ## Scope guardrails
 
@@ -32,7 +34,7 @@ Separate approval is required for major architecture, multiple additional pages 
 **Planned work:**
 
 - Confirm public name, eligible business location/service-area arrangement, priority services, hours, and target market.
-- Obtain Search Console, GA4/tag, GBP, hosting, and DNS access as applicable.
+- Use the existing Search Console property, connected GA4 tag, and existing GBP; obtain only the minimum reporting/configuration access still needed.
 - Record indexed-page/query/traffic/conversion/GBP baselines only where access exists.
 - Agree conversion definitions: form success, phone/text/email clicks, pre-made purchase intent, QuickBooks outbound click, and Etsy outbound click. Do not label outbound clicks as completed orders.
 - Correct approved critical issues: route-specific crawl signals, real 404s, duplicate `/preview.html`, admin indexing control, preferred hostname, accurate sitemap/canonicals, and obvious content-format defects.
@@ -44,7 +46,7 @@ Separate approval is required for major architecture, multiple additional pages 
 
 **Ongoing monitoring:** Uptime, robots/sitemap, status codes, indexed-page reports, security/manual-action notices, and forms.
 
-**GBP/review guidance:** Limited public searches did not surface a matching profile, but absence is not established. Check client Google accounts and duplicate/ownership status; do not create a profile until that review and eligibility confirmation are complete. Prepare accurate profile data and a no-incentive review process.
+**GBP/review guidance:** An existing profile has been created and verification started. Complete verification and duplicate/ownership checks for that profile; do not create another. Prepare accurate profile data and a no-incentive review process.
 
 **Client responsibility:** Supply verified business facts; grant correct access; approve code/DNS/tag changes; identify primary jobs and real competitors.
 

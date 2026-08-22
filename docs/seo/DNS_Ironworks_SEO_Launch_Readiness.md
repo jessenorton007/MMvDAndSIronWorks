@@ -1,7 +1,9 @@
 # DNS Ironworks SEO Launch Readiness
 
 **Prepared:** August 13, 2026
-**Status:** Internal pre-implementation document. No website, DNS, Google account, analytics, or Business Profile changes were made.
+**Status:** Historical pre-implementation document. Current production results are maintained in `DNS_Ironworks_SEO_Launch_Implementation_Log.md`.
+
+**Current status correction (August 21, 2026):** The public brand target is **D&S Iron Works**. Priorities are pre-made products, custom designs/custom projects, and custom furniture; the primary local SEO target is **Custom Designs / Custom Projects**. Search Console is established, GA4 is connected as `G-QW2GMHN0GZ`, and an existing GBP is in verification. Production still bypasses the SEO-aware server because Replit serves the frontend as a static catch-all.
 
 ## Evidence status
 
@@ -17,7 +19,7 @@ These questions omit the already verified website phone, website email, displaye
 2. **Missing:** What is the legitimate business base, and do customers visit it during posted hours, or is the company strictly a service-area business?
 3. **Missing:** Which cities/counties are actually served for fabrication, installation, delivery, and pickup, and what is the practical maximum travel radius?
 4. **Missing:** What public business hours and response-time statement are accurate?
-5. **Missing:** Rank the top three services by priority and identify the highest-value/best-fit job and customer.
+5. **Partially verified:** Priorities are pre-made products, custom designs/custom projects, and custom furniture. Identify the highest-value/best-fit job and customer from reliable business data.
 6. **Missing:** For each priority service, is the work fabricated only, installed, delivered, shipped, or picked up?
 7. **Missing:** Which licenses, insurance, certifications, affiliations, warranties, financing, safety, installation, and delivery claims are verified and approved for publication?
 8. **Missing:** How many years of relevant business/craft experience may be claimed, and what maker/team biography facts are approved?
@@ -25,7 +27,7 @@ These questions omit the already verified website phone, website email, displaye
 10. **Missing:** Which genuine customer testimonials/reviews may be reused with permission?
 11. **Missing:** Which businesses does the client consider direct competitors in the real service area?
 12. **Missing:** Which actions define a qualified lead, and who will report lead quality/closed work monthly?
-13. **Missing:** Does any client Google account show a Business Profile, ownership request, verification attempt, suspension, or duplicate for this business?
+13. **Partially verified:** An existing Business Profile has been created and verification started. Confirm ownership, verification outcome, and whether any duplicate/suspension issue exists.
 
 ## 2. Minimum account-access requests
 
@@ -35,14 +37,14 @@ The client should retain ownership and never share passwords.
 |---|---|---|---|
 | GitHub repository | Write access to the specific repository/implementation branch | Prepare approved code changes and submit commits | Existing local remote verified; collaborator permission not audited |
 | Replit project | Project collaborator/developer access sufficient to view deployment settings/logs and deploy approved builds; no billing access | Validate production behavior and deploy approved launch corrections | Missing |
-| DNS/domain provider | Narrow DNS edit access for `dandsironworks.com`, or have the client make supplied records/redirect configuration | Search Console domain verification and preferred-host setup | Missing |
-| Search Console | Client remains verified owner; grant Mojave Marketing **Full user** after property verification | View all reports, submit/test sitemap, inspect URLs, and validate fixes without user administration | Missing; [Google permission reference](https://support.google.com/webmasters/answer/7687615) |
-| GA4 | **Editor** at the specific property during setup; reduce to Viewer/Analyst later if no configuration work remains | Configure data stream/settings and initial measurement; no user management | Missing; [Google role reference](https://support.google.com/analytics/answer/9305587) |
+| DNS/domain provider | Narrow DNS edit access for `dandsironworks.com`, or have the client make supplied records/redirect configuration | Preferred-host correction and future DNS validation | Access not audited; both apex and `www` currently resolve |
+| Search Console | Client remains verified owner; grant Mojave Marketing **Full user** if operational access is approved | View reports, confirm sitemap submission, inspect URLs, and validate fixes without user administration | Property established; account access/report data not verified in this task; [Google permission reference](https://support.google.com/webmasters/answer/7687615) |
+| GA4 | **Editor** only while configuration is required; reduce to Viewer/Analyst afterward | Validate the connected stream and initial measurement; no user management | Connected as `G-QW2GMHN0GZ`; account access/report data not verified in this task; [Google role reference](https://support.google.com/analytics/answer/9305587) |
 | Google Tag Manager, if used | Account **User** plus **Publish** on only the website container | Build, test, version, and publish initial tags without account administration | Missing; [Google GTM permission reference](https://support.google.com/tagmanager/answer/6107011) |
-| Google Business Profile | **Manager**, only after the correct existing/eligible profile is confirmed | Edit profile content/posts/photos and respond to reviews; client retains primary ownership and user control | Missing; [Google GBP role reference](https://support.google.com/business/answer/3403100) |
+| Google Business Profile | **Manager**, only after the correct existing profile is confirmed | Edit profile content/posts/photos and respond to reviews; client retains primary ownership and user control | Existing profile; verification started; do not create a duplicate; [Google GBP role reference](https://support.google.com/business/answer/3403100) |
 | First-party analytics/admin | Read-only reporting access where supported | Reconcile current form/click activity without changing products/content | Missing |
 
-If no GA4/GTM/Search Console property exists, create it under a client-owned Google account and invite Mojave Marketing with the minimum role above. Where a one-time action requires higher privileges, the client should perform that action or grant temporary access and remove it afterward.
+Use the existing Search Console, GA4, and Google Business Profile. Do not create duplicates. Where a one-time action requires higher privileges, the client should perform that action or grant temporary access and remove it afterward.
 
 ## 3. Prioritized SEO Launch implementation checklist
 
@@ -50,28 +52,28 @@ All items below belong to the one-time SEO Launch and do not consume a Local Ess
 
 ### Critical
 
-- [ ] Capture and archive the pre-change measurement baseline in Section 4.
-- [ ] Deliver route-specific titles, descriptions, canonicals, social metadata, and supported schema in initial server HTML for all intended public templates.
-- [ ] Return a real `404` status and useful not-found page for unknown/removed routes; use `410` only when intentionally appropriate.
-- [ ] Protect `/admin` operationally and deliver `noindex` on any reachable admin response; do not rely only on `robots.txt`.
-- [ ] Redirect or remove `/preview.html` so it cannot operate as a duplicate homepage.
+- [x] Capture and archive the available pre-change technical baseline. Account metrics remain unavailable, not zero.
+- [x] Implement route-specific titles, descriptions, canonicals, social metadata, and supported schema in the application server. Production is still bypassing that server.
+- [x] Implement real `404` handling in source. Production remains incorrect until Replit routing is fixed.
+- [x] Implement `/admin` protection and server `noindex` in source. Production remains incorrect until Replit routing is fixed.
+- [x] Implement the `/preview.html` permanent redirect in source. Production remains incorrect until Replit routing is fixed.
 
 ### High
 
-- [ ] Establish the preferred apex host and permanently redirect `www` to `https://dandsironworks.com/` after DNS approval.
-- [ ] Reconcile sitemap URLs with actual indexable routes, use truthful `lastmod` values, and submit/test the sitemap in Search Console.
-- [ ] Verify Search Console under client ownership and document property/access status.
-- [ ] Install/configure GA4 and initial conversion events with privacy approval; validate in DebugView/realtime and document event definitions.
-- [ ] Define intent versus completed-sale events so Etsy/QuickBooks clicks are never reported as confirmed orders.
-- [ ] Review Google/Maps and client accounts for an existing, duplicate, hidden, suspended, or unverified profile; set up an eligible profile only if none valid exists and facts are confirmed.
-- [ ] Record initial Search Console, GA4, GBP, technical, and first-party benchmarks.
+- [x] Implement the preferred-apex redirect in source. Both hosts resolve, but production bypasses the redirect.
+- [ ] Sitemap inventory and truthful dates are correct; confirm submission/status in the existing Search Console property after routing is fixed.
+- [x] Search Console is established. Property access and report data were not available in the August 21 verification task.
+- [ ] GA4 and initial conversion events are installed as `G-QW2GMHN0GZ`; Realtime/DebugView validation and privacy approval remain.
+- [x] Define intent versus completed-sale events so Etsy/QuickBooks clicks are never reported as confirmed orders.
+- [x] Identify the existing GBP and begin verification. Confirm ownership/duplicates and do not create another profile.
+- [ ] Technical baseline is recorded; Search Console, GA4, GBP, and reliable lead benchmarks require account/report access.
 
 ### Medium
 
-- [ ] Correct visible Markdown characters and paragraph/list rendering in rocket-stove descriptions.
-- [ ] Remove unreliable Etsy “people have this in their cart” copy and prevent volatile stock/cart claims from being imported.
+- [x] Correct visible Markdown characters and paragraph/list rendering in rocket-stove descriptions.
+- [x] Remove unreliable Etsy “people have this in their cart” copy and prevent volatile stock/cart claims from being shown publicly.
 - [ ] Validate robots, structured data, rendered content, internal links, forms, mobile behavior, and key outbound links after changes.
-- [ ] Record deployment commit, test results, approval, and rollback path.
+- [x] Record deployment commit and production test results. Replit routing correction and redeployment still require approval.
 
 ## 4. Proposed pre-change measurement baseline
 
@@ -160,9 +162,9 @@ Record the retrieval date/time, source, date range, property/account, and “una
 
 ### Must be completed
 
-- [ ] Obtain answers to the concise client questions, especially name, location/service-area arrangement, priority services, hours, and GBP history.
-- [ ] Confirm which client-owned Google account will own Search Console, GA4/GTM if used, and GBP.
-- [ ] Complete the client-account GBP/duplicate check and document the result; do not create a profile prematurely.
+- [ ] Obtain remaining client facts, especially location/service-area arrangement, hours, trust claims, and project-story approval. Public name and priorities are confirmed.
+- [x] Search Console, GA4, and GBP already exist under client control; confirm only the minimum operational access needed.
+- [ ] Complete verification and duplicate/ownership review for the existing GBP. Do not create another profile.
 - [ ] Obtain minimum account permissions or assign named client actions where access will not be delegated.
 - [ ] Secure written approval for the prioritized SEO Launch correction package and measurement/privacy approach.
 - [ ] Capture every available pre-change baseline before deployment.
@@ -172,8 +174,8 @@ Record the retrieval date/time, source, date range, property/account, and “una
 ### Ideally completed, but report transparently if delayed
 
 - [ ] Implement and validate the approved safe startup corrections.
-- [ ] Verify Search Console, submit sitemap, and validate key templates.
-- [ ] Configure/test GA4 and initial conversion events.
-- [ ] Complete initial GBP setup only if no valid profile exists, eligibility is confirmed, and the client can complete verification.
+- [ ] Confirm sitemap submission in the existing Search Console property and validate key templates after production routing is fixed.
+- [ ] Validate the installed GA4 events in Realtime/DebugView.
+- [ ] Complete verification and optimization of the existing GBP; do not create another profile.
 
 If account access or GBP verification is delayed, the meeting plan should identify the dependency, owner, and next date. It should not replace missing baselines with assumptions or delay unrelated approved technical launch work.
