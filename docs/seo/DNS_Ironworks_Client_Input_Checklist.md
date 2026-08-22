@@ -2,7 +2,7 @@
 
 Only items not reliably verified from the website/repository are included.
 
-**Current confirmed status (August 21, 2026):** The public brand target is **D&S Iron Works**. Priorities are **pre-made products**, **custom designs/custom projects**, and **custom furniture**, in that order. The primary local SEO target is **Custom Designs / Custom Projects**. Search Console is established, GA4 is connected as `G-QW2GMHN0GZ`, and an existing Google Business Profile is in verification. Do not create duplicate Google properties or profiles.
+**Current confirmed status (August 21, 2026):** The public brand target is **D&S Iron Works**. Priorities are **pre-made products**, **custom designs/custom projects**, and **custom furniture**, in that order. The primary local SEO target is **Custom Designs / Custom Projects**. Search Console is established, GA4 is active as `G-QW2GMHN0GZ`, and an existing Google Business Profile is in verification. Do not create duplicate Google properties or profiles.
 
 ## Business identity and market
 

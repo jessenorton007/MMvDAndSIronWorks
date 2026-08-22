@@ -3,11 +3,11 @@
 **Implementation date:** August 19, 2026  
 **Repository:** `jessenorton007/MMvDAndSIronWorks`  
 **Preferred origin:** `https://dandsironworks.com/`  
-**Status:** Source implementation complete. Production verification failed on August 21, 2026 because Replit is serving the frontend as a static artifact instead of sending public HTML routes through the SEO-aware application server.
+**Status:** Technical implementation and production routing verified complete on August 21, 2026. Search Console, GA4 account validation, and GBP verification remain client/account actions.
 
 ## Evidence labels
 
-- **Verified:** Observed in source, a completed local check, or the August 13 live baseline.
+- **Verified:** Observed in source, a completed test, the August 13 baseline, or the August 21 production closeout.
 - **Inferred:** Reasonable conclusion that still needs production confirmation.
 - **External action:** Requires deployment, DNS, client account access, or a third-party account.
 
@@ -17,7 +17,7 @@
 - Business priorities: **1. pre-made products; 2. custom designs/custom projects; 3. custom furniture**.
 - Primary local SEO target: **Custom Designs / Custom Projects**.
 - Search Console: an existing property is established; account reports and sitemap-submission status were not available during this verification.
-- GA4: connected with Measurement ID `G-QW2GMHN0GZ`.
+- GA4: active with Measurement ID `G-QW2GMHN0GZ`.
 - Google Business Profile: an existing profile has been created and verification has started. Do not create a duplicate.
 
 ## Pre-change baseline
@@ -111,79 +111,64 @@ These events do not claim an Etsy sale, QuickBooks payment, or completed order. 
 - Redirect/status checks: unknown route `404`; `/preview.html` `301`; trailing slash `301`; unauthenticated `/admin` `302`; authenticated `/admin` `200` with meta and header noindex; `www` host `301` to apex.
 - Automated in-app visual inspection could not be completed because the local browser-control runtime rejected its own trusted dependency path. No production browser or deployment was substituted. Mobile visual review remains a post-deployment check.
 
-## Production verification results - August 21, 2026
+## Production verification closeout - August 21, 2026
 
-**Verified production source commit:** GitHub `main` at `a94b678bbbd62e07e2268fcaef4bbf07c4215fb2`.
+**Repository state during closeout:** GitHub `main` at `e8ad654`; live response behavior was verified directly against `https://dandsironworks.com`.
 
-| Check | Current production result |
+| Check | Production closeout result |
 |---|---|
 | Sitemap inventory | 53 URLs, 53 unique URLs, no admin, no preview, no fabricated `lastmod` values |
 | Intended route statuses | All 53 intended routes returned `200` |
-| Server-delivered canonicals | Failed: only one unique canonical; non-home routes received the homepage canonical |
-| Server-delivered titles | Failed: only one unique title; non-home routes received the homepage title |
-| Crawlable fallback/H1 | Failed: SEO fallback content was absent from initial HTML |
-| Unknown route | Failed: returned `200` without `noindex` |
-| `/preview.html` | Failed: returned `200` instead of a permanent redirect |
-| `/admin` | Failed indexing control: returned the public static shell with `200` and no server `noindex`; the shell itself did not contain admin data |
-| `www` host | DNS resolves, but failed preferred-host behavior: returned the same static site instead of redirecting to apex |
+| Server-delivered canonicals | Passed: 53 exact, unique apex canonicals; zero homepage canonical leakage |
+| Server-delivered titles | Passed: every route has a title and no non-home route receives the homepage title. There are 49 distinct strings because six Etsy routes share three listing names. |
+| Crawlable fallback/H1 | Passed on all 53 intended routes |
+| Unknown route | Passed: `404` with header and HTML `noindex, nofollow` |
+| `/preview.html` | Passed: `301` to `/` |
+| `/admin` | Passed unauthenticated production check: `302` to `/` with `X-Robots-Tag: noindex, nofollow, noarchive`. Authenticated HTML was not tested because no production password was used. |
+| `www` host | Passed: direct HTTPS request returned `301` to the matching apex URL and preserved the query string |
 | `robots.txt` | Passed: public crawling allowed and the apex sitemap is referenced |
-| GA4 production bundle | Passed: `G-QW2GMHN0GZ`, `page_view`, `generate_lead`, `contact_intent`, and `shopping_intent` are present |
+| Structured data | Passed JSON parsing and expected type checks for representative LocalBusiness, Service, and Product pages |
+| GA4 production implementation | Active as `G-QW2GMHN0GZ`; Realtime/DebugView and event/key-event validation remain account actions |
 | Contact API | The live API responds; a real form submission/email was not generated during this read-only verification |
 
-### Deployment diagnosis
+### Resolved Replit routing issue
 
-The production failure is configuration, not missing SEO source code:
-
-- `artifacts/ironworks/.replit-artifact/artifact.toml` serves `artifacts/ironworks/dist/public` as a static site and rewrites `/*` to `/index.html`.
-- `artifacts/api-server/.replit-artifact/artifact.toml` routes the application server only for `/api`.
-- As a result, public HTML routes never reach `artifacts/api-server/src/app.ts`, where route metadata, 404, preview, admin, and preferred-host behavior are implemented.
-
-### Required manual Replit deployment settings
-
-- Deployment type: **Autoscale application**, not Static.
-- Build command: `pnpm --filter @workspace/ironworks run build && pnpm --filter @workspace/api-server run build`
-- Run command: `node --enable-source-maps artifacts/api-server/dist/index.mjs`
-- Port: `8080` via Replit's `PORT` environment variable.
-- Health check: `/api/healthz`.
-- Route the root path `/` (all website traffic) to the application server. Do not keep the static frontend catch-all as the production root handler.
-- Preserve the database, Object Storage, production secrets, custom domain, and admin credentials.
-- No deployment or paid infrastructure change was performed during this verification.
+Replit now sends public HTML routes through the SEO-aware Express application. The prior static frontend catch-all no longer controls production route identity. The production verifier now reads the live sitemap, tests all 53 live URLs, checks route identity and indexing controls, calls `www` directly, and validates representative JSON-LD.
 
 ## Post-deployment verification checklist
 
-- [ ] Confirm `/`, `/services/custom-ironwork-utah`, one pre-made route, one Etsy route, and `/contact` return distinct source titles/canonicals/H1 summaries.
-- [ ] Confirm a random unknown route returns `404` and `X-Robots-Tag: noindex, nofollow`.
-- [ ] Confirm `/preview.html` returns `301` to `/`.
-- [ ] Confirm an unauthenticated `/admin` request redirects and an authenticated response has both noindex controls.
-- [ ] Confirm `www` resolves and returns `301` to apex after DNS is configured.
-- [x] Validate `robots.txt` and all sitemap URLs in production. Inventory passed; route identity/canonical behavior failed as documented above.
+- [x] Confirm all 53 intended routes return route-specific source titles, exact canonicals, and crawlable H1 summaries.
+- [x] Confirm a random unknown route returns `404` and `X-Robots-Tag: noindex, nofollow`.
+- [x] Confirm `/preview.html` returns `301` to `/`.
+- [x] Confirm an unauthenticated `/admin` request redirects with a server noindex header. Authenticated verification remains optional and requires a production credential.
+- [x] Confirm `www` resolves and returns `301` to apex.
+- [x] Validate `robots.txt`, live sitemap inventory, and all sitemap URLs in production.
+- [x] Parse representative LocalBusiness, Service, and Product JSON-LD in production.
 - [ ] Run Rich Results Test on the homepage, priority service page, and representative product pages.
 - [ ] Inspect the priority page and contact flow at mobile and desktop widths.
 - [ ] Test contact form storage/email delivery without exposing credentials.
 
 ## External actions still required
 
-1. Manually change Replit to build both artifacts and run the API application server for the root route; redeploy only after explicit approval.
-2. Re-run the production 53-route verification before requesting indexing or adding SEO content.
-3. In the existing Search Console property, verify that `https://dandsironworks.com/sitemap.xml` is submitted and inspect the priority URL set below.
-4. Validate the connected GA4 property in Realtime/DebugView and mark only appropriate intent/lead events as key events.
-5. Continue verification of the existing Google Business Profile. Do not create another profile.
-6. Record Search Console, GA4, GBP, and qualified-lead baselines when account access exists. Unavailable data must remain labeled unavailable.
+1. In the existing Search Console property, submit or reconfirm `https://dandsironworks.com/sitemap.xml`, inspect the priority URL set below, and request indexing only after each inspection reports the intended canonical.
+2. Validate GA4 `G-QW2GMHN0GZ` in Realtime/DebugView and mark only the approved lead/intent events as key events.
+3. Continue verification of the existing Google Business Profile. Do not create another profile.
+4. Record Search Console, GA4, GBP, and qualified-lead baselines when account access exists. Unavailable data must remain labeled unavailable.
 
 ## Current measurement baseline availability
 
 | Source | Current baseline |
 |---|---|
-| Production technical | Captured in the August 21 production table above |
+| Production technical | 53-route production PASS captured in the August 21 closeout table above |
 | Search Console clicks, impressions, CTR, position, queries, pages, indexing | Existing property confirmed; metrics unavailable in this task, not zero |
 | GA4 users, sessions, organic traffic, landing pages, lead events | Production tag confirmed; account metrics unavailable in this task, not zero |
-| Accurate GA4 measurement start | Production bundle confirmed on August 21; first received-event date must be read from GA4 |
+| Accurate GA4 measurement start | Production implementation confirmed on August 21; first received-event date must be read from GA4 |
 | GBP name/category/reviews/rating/service areas/photos/performance | Existing profile and verification attempt confirmed; details unavailable in this task, not zero |
 | Reliable lead and closed-job totals | Unavailable in this task, not zero |
 
 ## Search Console submission set
 
-After deployment, inspect and request indexing only after each response is verified:
+After production verification, inspect and request indexing only after Search Console reports the intended response and user-declared canonical:
 
 - `https://dandsironworks.com/`
 - `https://dandsironworks.com/services`

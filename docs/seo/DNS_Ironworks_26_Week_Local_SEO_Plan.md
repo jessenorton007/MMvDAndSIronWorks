@@ -2,10 +2,10 @@
 
 **Prepared for:** Mojave Marketing
 **Campaign:** $895 SEO Launch + Local Essentials at $159/week for 26 weeks
-**Plan status:** Active internal plan. The technical implementation exists in source, but production routing must be corrected in Replit before further SEO execution.
+**Plan status:** Active internal plan. The technical SEO Launch implementation and Replit production routing are verified; account baselines and ongoing Local Essentials work remain.
 **Planning principle:** One primary focused improvement per month. Priorities may change when reliable data shows a stronger opportunity.
 
-**Current confirmed priorities (August 21, 2026):** 1. pre-made products; 2. custom designs/custom projects; 3. custom furniture. The primary local SEO target is **Custom Designs / Custom Projects**. Search Console is established, GA4 is connected as `G-QW2GMHN0GZ`, and an existing GBP is in verification. Do not create duplicate properties or profiles.
+**Current confirmed priorities (August 21, 2026):** 1. pre-made products; 2. custom designs/custom projects; 3. custom furniture. The primary local SEO target is **Custom Designs / Custom Projects**. Search Console is established, GA4 is active as `G-QW2GMHN0GZ`, and an existing GBP is in verification. Do not create duplicate properties or profiles.
 
 ## Scope guardrails
 

@@ -3,7 +3,7 @@
 **Prepared:** August 13, 2026
 **Status:** Historical pre-implementation document. Current production results are maintained in `DNS_Ironworks_SEO_Launch_Implementation_Log.md`.
 
-**Current status correction (August 21, 2026):** The public brand target is **D&S Iron Works**. Priorities are pre-made products, custom designs/custom projects, and custom furniture; the primary local SEO target is **Custom Designs / Custom Projects**. Search Console is established, GA4 is connected as `G-QW2GMHN0GZ`, and an existing GBP is in verification. Production still bypasses the SEO-aware server because Replit serves the frontend as a static catch-all.
+**Current status correction (August 21, 2026):** The public brand target is **D&S Iron Works**. Priorities are pre-made products, custom designs/custom projects, and custom furniture; the primary local SEO target is **Custom Designs / Custom Projects**. Search Console is established, GA4 is active as `G-QW2GMHN0GZ`, and an existing GBP is in verification. Replit production routing is fixed and the 53-route technical verification passes.
 
 ## Evidence status
 
@@ -54,14 +54,14 @@ All items below belong to the one-time SEO Launch and do not consume a Local Ess
 
 - [x] Capture and archive the available pre-change technical baseline. Account metrics remain unavailable, not zero.
 - [x] Implement route-specific titles, descriptions, canonicals, social metadata, and supported schema in the application server. Production is still bypassing that server.
-- [x] Implement real `404` handling in source. Production remains incorrect until Replit routing is fixed.
-- [x] Implement `/admin` protection and server `noindex` in source. Production remains incorrect until Replit routing is fixed.
-- [x] Implement the `/preview.html` permanent redirect in source. Production remains incorrect until Replit routing is fixed.
+- [x] Implement and verify real `404` handling in production.
+- [x] Implement and verify `/admin` protection and server `noindex` for unauthenticated production requests.
+- [x] Implement and verify the `/preview.html` permanent redirect in production.
 
 ### High
 
-- [x] Implement the preferred-apex redirect in source. Both hosts resolve, but production bypasses the redirect.
-- [ ] Sitemap inventory and truthful dates are correct; confirm submission/status in the existing Search Console property after routing is fixed.
+- [x] Implement and verify the preferred-apex redirect in production.
+- [ ] Sitemap inventory and truthful dates are correct; confirm submission/status in the existing Search Console property.
 - [x] Search Console is established. Property access and report data were not available in the August 21 verification task.
 - [ ] GA4 and initial conversion events are installed as `G-QW2GMHN0GZ`; Realtime/DebugView validation and privacy approval remain.
 - [x] Define intent versus completed-sale events so Etsy/QuickBooks clicks are never reported as confirmed orders.
@@ -73,7 +73,7 @@ All items below belong to the one-time SEO Launch and do not consume a Local Ess
 - [x] Correct visible Markdown characters and paragraph/list rendering in rocket-stove descriptions.
 - [x] Remove unreliable Etsy “people have this in their cart” copy and prevent volatile stock/cart claims from being shown publicly.
 - [ ] Validate robots, structured data, rendered content, internal links, forms, mobile behavior, and key outbound links after changes.
-- [x] Record deployment commit and production test results. Replit routing correction and redeployment still require approval.
+- [x] Record deployment state and passing production test results.
 
 ## 4. Proposed pre-change measurement baseline
 
@@ -174,7 +174,7 @@ Record the retrieval date/time, source, date range, property/account, and “una
 ### Ideally completed, but report transparently if delayed
 
 - [ ] Implement and validate the approved safe startup corrections.
-- [ ] Confirm sitemap submission in the existing Search Console property and validate key templates after production routing is fixed.
+- [ ] Confirm sitemap submission in the existing Search Console property and validate the priority URL set.
 - [ ] Validate the installed GA4 events in Realtime/DebugView.
 - [ ] Complete verification and optimization of the existing GBP; do not create another profile.
 

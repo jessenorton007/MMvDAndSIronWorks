@@ -5,7 +5,7 @@
 **Campaign:** SEO Launch plus 26-week Local Essentials
 **Status:** Historical pre-change audit. See `DNS_Ironworks_SEO_Launch_Implementation_Log.md` for the current August 21 production result.
 
-**Current status correction (August 21, 2026):** The public brand target is **D&S Iron Works**. Priorities are pre-made products, custom designs/custom projects, and custom furniture; the primary local SEO target is **Custom Designs / Custom Projects**. Search Console is established, GA4 is connected as `G-QW2GMHN0GZ`, and an existing Google Business Profile is in verification. The route-delivery problem described below remains visible in production because Replit is serving a static frontend catch-all instead of the SEO-aware application server.
+**Current status correction (August 21, 2026):** The public brand target is **D&S Iron Works**. Priorities are pre-made products, custom designs/custom projects, and custom furniture; the primary local SEO target is **Custom Designs / Custom Projects**. Search Console is established, GA4 is active as `G-QW2GMHN0GZ`, and an existing Google Business Profile is in verification. The historical route-delivery problem described below is resolved; all 53 production routes passed the closeout verification.
 
 ## Evidence labels
 
@@ -194,7 +194,7 @@ Required launch work after client confirmation/access:
 6. Add verified services, hours, phone, website, description, and real photos.
 7. Create a genuine review request workflow after profile eligibility/verification. Never incentivize reviews. [Google review guidance](https://support.google.com/business/answer/3474122)
 
-If GBP verification is delayed, continue the Replit routing correction, validation of the existing Search Console/GA4 setup, business-fact collection, and project proof. Do not create a duplicate profile.
+If GBP verification is delayed, continue validation of the existing Search Console/GA4 setup, business-fact collection, and project proof. Do not create a duplicate profile.
 
 ## 9. Analytics and conversion-tracking status
 
