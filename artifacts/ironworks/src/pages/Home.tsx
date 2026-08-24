@@ -951,7 +951,7 @@ export function Home() {
       </section>
 
       {/* ── FOOTER ───────────────────────────────────────────────────── */}
-      <footer id="contact" className="border-t border-white/8 py-14 sm:py-16 relative overflow-hidden"
+      <footer id="contact" className="border-t border-white/8 pt-14 pb-32 sm:pt-16 sm:pb-28 relative overflow-hidden"
         style={{ background: 'rgba(10,7,4,0.97)' }}>
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[200px] bg-orange-600/8 blur-[120px] rounded-full pointer-events-none" />
         <div className="container mx-auto px-5 sm:px-6 md:px-12 relative z-10">
