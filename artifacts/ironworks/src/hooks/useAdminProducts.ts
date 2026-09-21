@@ -229,7 +229,7 @@ export function useAdminServices() {
     [state.mutate],
   );
   return {
-    services: state.content,
+    services: state.content.map(item => ({ ...defaultServices.find(service => service.slug === item.slug), ...item })),
     setServices: state.save,
     updateServiceFields,
     loading: state.loading,

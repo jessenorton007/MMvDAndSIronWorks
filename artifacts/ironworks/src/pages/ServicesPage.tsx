@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Phone, PocketKnife } from 'lucide-react';
-import { useLocation } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { Navigation } from '@/components/Navigation';
 import { FloatingContactBanner } from '@/components/FloatingContactBanner';
 import { Embers } from '@/components/Embers';
@@ -79,7 +79,7 @@ export function ServicesPage() {
                 className="group rounded-xl overflow-hidden bg-white/[0.025]"
                 style={{ border: '1px solid rgba(255,255,255,0.09)' }}
               >
-                <button onClick={() => navigate(`/services/${service.slug}`)} className="block w-full text-left">
+                <Link href={`/services/${service.slug}`} className="block w-full text-left">
                   <div className="aspect-[4/3] overflow-hidden">
                     {service.heroImage ? (
                       <img
@@ -111,7 +111,7 @@ export function ServicesPage() {
                       View Service <ArrowRight size={13} />
                     </span>
                   </div>
-                </button>
+                </Link>
               </motion.article>
             ))}
           </div>

@@ -1,4 +1,5 @@
 import seoSourceData from "./seo-source-data.json";
+import { serviceContentHtml, serviceDirectoryHtml, type PublicService } from "./service-content";
 
 const { defaultEtsyProducts, preMadeItems, services } = seoSourceData;
 
@@ -13,6 +14,7 @@ export type SeoPage = {
   robots?: string;
   type?: "website" | "product";
   jsonLd?: Record<string, unknown>;
+  contentHtml?: string;
 };
 
 const absoluteUrl = (value: string) => value.startsWith("http") ? value : `${SITE_ORIGIN}${value}`;
@@ -65,12 +67,13 @@ const staticPages: SeoPage[] = [
   },
 ];
 
-const servicePages: SeoPage[] = services.map((service) => ({
+const servicePage = (service: PublicService, allServices: PublicService[]): SeoPage => ({
   path: `/services/${service.slug}`,
   title: service.metaTitle,
   description: service.metaDescription,
   heading: service.title,
   image: service.heroImage,
+  contentHtml: serviceContentHtml(service, allServices),
   jsonLd: {
     "@context": "https://schema.org",
     "@type": "Service",
@@ -85,7 +88,9 @@ const servicePages: SeoPage[] = services.map((service) => ({
     areaServed: "Utah",
     serviceType: service.title,
   },
-}));
+});
+
+const servicePages = services.map(service => servicePage(service, services));
 
 const preMadePages: SeoPage[] = preMadeItems.map((item) => ({
   path: `/pre-made/${item.id}`,
@@ -132,7 +137,14 @@ const pages = new Map(
   [...staticPages, ...servicePages, ...preMadePages, ...etsyPages].map((page) => [page.path, page]),
 );
 
-export function getSeoPage(pathname: string) {
+export function getSeoPage(pathname: string, publicServices: PublicService[] = services) {
+  if (pathname === "/services") {
+    return { ...pages.get(pathname)!, contentHtml: serviceDirectoryHtml(publicServices) };
+  }
+  if (pathname.startsWith("/services/")) {
+    const service = publicServices.find(item => `/services/${item.slug}` === pathname);
+    return service ? servicePage(service, publicServices) : undefined;
+  }
   return pages.get(pathname);
 }
 

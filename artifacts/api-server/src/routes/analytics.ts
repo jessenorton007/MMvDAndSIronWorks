@@ -5,7 +5,7 @@ import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const DATA_FILE = join(__dirname, "../../analytics-data.json");
+const DATA_FILE = process.env["IRONWORKS_ANALYTICS_FILE"] || join(__dirname, "../../analytics-data.json");
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface VisitorRecord {

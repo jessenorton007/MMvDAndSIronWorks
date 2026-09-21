@@ -763,6 +763,36 @@
         "Family-name fire pits",
         "Wildlife cutouts",
         "Cabin fire features"
+      ],
+      "quoteChecklist": [
+        "Approximate size and the outdoor space where it will be used",
+        "Names, ranch marks, wildlife themes, or reference photos for the cutouts",
+        "Your project location and any pickup or delivery questions"
+      ],
+      "faqs": [
+        {
+          "question": "Can I personalize a steel fire pit?",
+          "answer": "D&S Iron Works makes custom fire pits with personalized cutout designs, including family names, ranch themes, and wildlife. Share your idea with Dallan to discuss the design and size."
+        },
+        {
+          "question": "Should I choose a custom or pre-built fire pit?",
+          "answer": "Choose a custom project when you want a specific design or size discussed with Dallan. For an existing design, compare the pre-built fire pit page and confirm current availability before ordering."
+        },
+        {
+          "question": "What should I send for a custom fire pit quote?",
+          "answer": "Send the approximate size, the design or lettering you want, a photo of the intended space, and your location. Confirm the price, finish, timing, and pickup or delivery arrangements with Dallan before placing an order."
+        }
+      ],
+      "relatedSlugs": [
+        "custom-ironwork-utah",
+        "custom-metal-signs",
+        "blacksmith-commissions"
+      ],
+      "relatedProducts": [
+        {
+          "path": "/pre-made/pre-built-fire-pits",
+          "label": "Compare pre-built steel fire pits"
+        }
       ]
     },
     {
@@ -810,6 +840,31 @@
         "Balcony guards",
         "Interior handrails",
         "Entry railings"
+      ],
+      "quoteChecklist": [
+        "Photos of the stairs, landing, balcony, or entry",
+        "Approximate lengths and the indoor or outdoor location",
+        "Reference photos for the look you want",
+        "Project location, timeline, and installation requirements to discuss"
+      ],
+      "faqs": [
+        {
+          "question": "What kinds of forged railings does D&S Iron Works make?",
+          "answer": "D&S Iron Works makes custom stair railings, balcony guards, interior handrails, and entry railings. Layouts and hand-forged details are planned around the space."
+        },
+        {
+          "question": "Can I see examples of completed railing work?",
+          "answer": "The project photos on this page show installed stair and balcony railings, finished steel details, and sections in the shop. Use these examples to start a conversation about the style for your own project."
+        },
+        {
+          "question": "What is needed for a railing quote?",
+          "answer": "Start with photos of the space, approximate dimensions, your location, and a reference for the style. Discuss final measurements, mounting, finish, installation responsibilities, and applicable local requirements before fabrication."
+        }
+      ],
+      "relatedSlugs": [
+        "custom-ironwork-utah",
+        "forged-metal-art",
+        "blacksmith-commissions"
       ]
     },
     {
@@ -852,6 +907,30 @@
         "Address signs",
         "Family-name signs",
         "Wall art signs"
+      ],
+      "quoteChecklist": [
+        "Exact lettering, address, ranch name, or artwork to discuss",
+        "Approximate sign size and a photo of its intended location",
+        "Indoor or outdoor use, mounting questions, and your project location"
+      ],
+      "faqs": [
+        {
+          "question": "What can go on a custom metal sign?",
+          "answer": "D&S Iron Works plans personalized ranch signs, address signs, family-name signs, and wall art. Bring the exact wording and any ranch mark, theme, or reference image you want to discuss."
+        },
+        {
+          "question": "Can a steel sign be made for outdoor use?",
+          "answer": "Indoor and outdoor sign options are available. Tell Dallan where the sign will be placed so you can discuss the finish, exposure, and mounting requirements for that location."
+        },
+        {
+          "question": "How do I start a metal sign project?",
+          "answer": "Send the wording or design idea, approximate dimensions, a photo of the location, and your project location. Confirm design details, finish, price, and timing with Dallan before the work begins."
+        }
+      ],
+      "relatedSlugs": [
+        "custom-ironwork-utah",
+        "custom-fire-pits",
+        "forged-metal-art"
       ]
     },
     {

@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, CheckCircle, MapPin, Phone, PocketKnife } from 'lucide-react';
-import { useLocation, useParams } from 'wouter';
+import { Link, useParams } from 'wouter';
 import { Navigation } from '@/components/Navigation';
 import { FloatingContactBanner } from '@/components/FloatingContactBanner';
 import { Embers } from '@/components/Embers';
@@ -11,19 +11,11 @@ import NotFound from './not-found';
 
 export function ServiceDetailPage() {
   const params = useParams<{ slug: string }>();
-  const [, navigate] = useLocation();
   const { services } = useAdminServices();
   const service = services.find((item) => item.slug === params.slug);
   const relatedServices = service?.relatedSlugs
     ?.map((slug) => services.find((item) => item.slug === slug))
     .filter((item): item is NonNullable<typeof item> => Boolean(item)) ?? [];
-  const returnToServices = () => {
-    if (window.history.length > 1) {
-      window.history.back();
-      return;
-    }
-    navigate('/services');
-  };
 
   useSeo({
     title: service?.metaTitle ?? 'Custom Ironwork Services | D&S Iron Works',
@@ -59,13 +51,13 @@ export function ServiceDetailPage() {
       <main className="relative pt-28 pb-24">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,77,0,0.06)_0%,transparent_62%)] pointer-events-none" />
         <div className="container mx-auto px-5 sm:px-6 md:px-12 relative z-10">
-          <button
-            onClick={returnToServices}
+          <Link
+            href="/services"
             className="flex items-center gap-2 text-white/35 hover:text-white transition-colors mb-10 group font-display tracking-wider text-sm uppercase"
           >
             <ArrowLeft size={15} className="group-hover:-translate-x-1 transition-transform" />
             All Services
-          </button>
+          </Link>
 
           <div className="grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-10 lg:gap-14 items-center mb-16">
             <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}>
@@ -83,7 +75,7 @@ export function ServiceDetailPage() {
                   <Phone size={15} className="mr-2" />
                   Call Dallan
                 </GlassButton>
-                <GlassButton onClick={() => navigate('/contact')} className="bg-white/3" data-analytics-cta="request-quote">
+                <GlassButton href="/contact" className="bg-white/3" data-analytics-cta="request-quote">
                   Start a Project
                 </GlassButton>
               </div>
@@ -209,26 +201,57 @@ export function ServiceDetailPage() {
             </section>
           )}
 
+          {service.quoteChecklist && service.quoteChecklist.length > 0 && (
+            <section className="mt-14 rounded-xl border border-white/10 bg-white/[0.025] p-6 sm:p-8">
+              <h2 className="font-display text-3xl uppercase tracking-widest text-white mb-6">What to Send for a Quote</h2>
+              <ul className="list-disc pl-5 space-y-3 text-white/60 font-sans leading-relaxed">
+                {service.quoteChecklist.map(item => <li key={item}>{item}</li>)}
+              </ul>
+              <div className="mt-7"><GlassButton href="/contact" data-analytics-cta="service-quote-checklist">Discuss Your Project</GlassButton></div>
+            </section>
+          )}
+
+          {service.faqs && service.faqs.length > 0 && (
+            <section className="mt-14">
+              <h2 className="font-display text-3xl uppercase tracking-widest text-white mb-7">Common Questions</h2>
+              <div className="space-y-6">
+                {service.faqs.map(faq => (
+                  <article key={faq.question} className="border-b border-white/10 pb-6">
+                    <h3 className="font-display text-xl tracking-wide text-white mb-3">{faq.question}</h3>
+                    <p className="text-white/60 font-sans leading-relaxed max-w-4xl">{faq.answer}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {service.relatedProducts && service.relatedProducts.length > 0 && (
+            <section className="mt-10">
+              <h2 className="font-display text-2xl uppercase tracking-widest text-white mb-4">Pre-Built Options</h2>
+              {service.relatedProducts.map(product => <Link key={product.path} href={product.path} className="text-orange-300 underline underline-offset-4">{product.label}</Link>)}
+            </section>
+          )}
+
           {relatedServices.length > 0 && (
             <section className="mt-14">
               <h2 className="font-display text-3xl uppercase tracking-widest text-white mb-7">Explore Custom Project Types</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {relatedServices.map((related) => (
-                  <button
+                  <Link
                     key={related.slug}
-                    onClick={() => navigate(`/services/${related.slug}`)}
+                    href={`/services/${related.slug}`}
                     className="group rounded-xl border border-white/10 bg-white/[0.025] p-5 text-left hover:border-orange-500/30 transition-colors"
                   >
                     <span className="text-[10px] font-display tracking-[0.24em] uppercase text-orange-400/60">{related.eyebrow}</span>
                     <span className="mt-2 flex items-center justify-between gap-3 font-display text-lg uppercase tracking-wider text-white">
                       {related.shortTitle}<ArrowRight size={16} className="text-orange-400 group-hover:translate-x-1 transition-transform" />
                     </span>
-                  </button>
+                  </Link>
                 ))}
               </div>
               <div className="mt-8 flex flex-col sm:flex-row sm:items-center justify-between gap-5 border-t border-white/10 pt-8">
                 <p className="text-white/55 font-sans leading-relaxed">Have a custom furniture, architectural, or one-of-a-kind metal project in mind?</p>
-                <GlassButton onClick={() => navigate('/contact')} data-analytics-cta="custom-project-quote">
+                <GlassButton href="/contact" data-analytics-cta="custom-project-quote">
                   Request a Quote <ArrowRight size={15} className="ml-2" />
                 </GlassButton>
               </div>

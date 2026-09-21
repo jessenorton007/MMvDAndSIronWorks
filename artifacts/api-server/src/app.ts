@@ -9,6 +9,7 @@ import router from "./routes";
 import { logger } from "./lib/logger";
 import { getSeoPage, notFoundSeo, SITE_ORIGIN, type SeoPage } from "./lib/seo-pages";
 import { isAdminRequest } from "./routes/admin";
+import { readPublicServices } from "./lib/service-content";
 
 const app: Express = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -71,7 +72,7 @@ if (existsSync(staticRoot)) {
     const jsonLd = page.jsonLd
       ? `<script id="route-json-ld" type="application/ld+json">${JSON.stringify(page.jsonLd).replaceAll("<", "\\u003c")}</script>`
       : "";
-    const fallback = `<main id="seo-fallback" style="max-width:72rem;margin:0 auto;padding:8rem 1.5rem 4rem;color:#f5f5f4;font-family:Arial,sans-serif"><h1>${escapeHtml(page.heading)}</h1><p>${description}</p><p><a href="/services" style="color:#fb923c">Explore services</a> · <a href="/contact" style="color:#fb923c">Request a quote</a></p></main>`;
+    const fallback = `<main id="seo-fallback" style="max-width:72rem;margin:0 auto;padding:8rem 1.5rem 4rem;color:#f5f5f4;font-family:Arial,sans-serif"><h1>${escapeHtml(page.heading)}</h1>${page.contentHtml ?? `<p>${description}</p>`}<p><a href="/services" style="color:#fb923c">Explore services</a> · <a href="/contact" style="color:#fb923c">Request a quote</a></p></main>`;
 
     return template
       .replace(/<title>[\s\S]*?<\/title>/i, `<title>${title}</title>`)
@@ -92,14 +93,23 @@ if (existsSync(staticRoot)) {
 
   app.get("/preview.html", (_req, res) => res.redirect(301, "/"));
   app.use(express.static(staticRoot, { index: false, redirect: false }));
-  app.get(/^(?!\/api).*/, (req, res) => {
+  app.get(/^(?!\/api).*/, async (req, res) => {
     const pathname = req.path.length > 1 ? req.path.replace(/\/+$/, "") : "/";
     if (pathname !== req.path) {
       res.redirect(301, `${pathname}${req.url.slice(req.path.length)}`);
       return;
     }
 
-    const page = getSeoPage(pathname);
+    let publicServices;
+    if (pathname === "/services" || pathname.startsWith("/services/")) {
+      try {
+        publicServices = await readPublicServices();
+      } catch (error) {
+        // Match the browser's built-in fallback if the content store is unavailable.
+        logger.warn({ err: error }, "Could not load service content for HTML");
+      }
+    }
+    const page = getSeoPage(pathname, publicServices);
     if (page) {
       if (pathname === "/admin") {
         res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");

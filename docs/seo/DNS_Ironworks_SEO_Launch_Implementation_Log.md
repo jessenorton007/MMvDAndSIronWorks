@@ -179,3 +179,33 @@ After production verification, inspect and request indexing only after Search Co
 - `https://dandsironworks.com/contact`
 
 Submit the sitemap once; do not manually request all 53 URLs unless Search Console evidence shows a specific indexing problem.
+
+## September 21, 2026 — Service content and crawlable links
+
+Continued from the D and S Ironworks task after its context window was exhausted. Starting local and fetched GitHub main: 8881b7f7f894b77ede770603d6a7dec2d3101c56. Production routing baseline remains PASS across 53 URLs.
+
+Implemented:
+- Initial HTML now includes full service summaries, details, examples, existing photo galleries, process steps, service-area notes, and related links. The services directory exposes all seven service links before JavaScript executes.
+- Added nine visible questions/answers and three quote checklists across custom fire pits, forged railings, and custom metal signs. Added a custom-to-pre-built fire pit comparison link and nine additional related-service links (14 total).
+- Replaced service directory cards, related-service buttons, All Services navigation, and service quote CTAs with actual links.
+- Service HTML and metadata now read the existing admin service collection, matching the client rather than serving stale build-time wording. Missing fields inherit defaults; existing values and explicit empty arrays remain authoritative. No production data was overwritten.
+- Added IRONWORKS_ANALYTICS_FILE for isolated preview analytics. Production defaults are unchanged.
+- Added scripts/verify-service-content.mjs alongside the existing route verifier.
+
+Validation:
+- Frontend and API TypeScript: PASS.
+- Frontend and API production builds: PASS. The Windows build used a local, ignored esbuild-wasm 0.27.3 adapter because native esbuild could not enumerate a parent directory. Production manifests and lockfile are unchanged. Existing large bundle warning remains; Vite also emitted a non-fatal tooltip sourcemap warning.
+- Existing production site: 53 routes, canonicals, redirects, public admin protection/noindex, robots, sitemap, and representative schema PASS. Production authenticated admin was not tested.
+- Fresh built local server with a read-only copy of live public service collection version 48: all 53 routes PASS, including authenticated local admin/noindex.
+- New service-content verifier: 7 services, 9 questions, 14 related-service links PASS.
+- Local fixture checks: edited service title honored; markup escaped; explicit empty FAQ/link arrays honored; removed service returns 404. Fixture restored afterward.
+- Browser: railing page renders quote checklist, answers, gallery, and related links in the existing design.
+
+Measurement and next work:
+- No ranking, organic traffic, lead, or AI citation increase has been measured or promised. Search Console/GA4 account baselines remain unavailable in this task.
+- Google documents the same core SEO requirements for AI Overviews and AI Mode; useful text and internal links support eligibility, but inclusion is not guaranteed: https://developers.google.com/search/docs/appearance/ai-features
+- Deploy frontend and API together through the established Replit application workflow; this task has not deployed production. After deployment, run both verifiers with SEO_TEST_ORIGIN=https://dandsironworks.com. Omit ADMIN_PASSWORD unless explicitly validating authenticated production admin.
+- Record the deployment date, then compare Search Console page/query data and organic leads across comparable 28-day periods, accounting for indexing time and seasonality. Verify GBP status and collect approved real project facts/specifications before adding claims, lead times, prices, locations, or testimonials.
+- Repository remains C:\Users\jesse\Documents\Codex\2026-06-01\identify-my-forge-design-project-and\Forge-Design-Studio. Local preview for this batch: http://127.0.0.1:5189/services/forged-railings ; preview data and analytics live under ignored work/seo-preview.
+
+Publishing status: normal Git push could not complete; gh auth status reports an invalid saved token. The connected GitHub integration authenticated successfully but create_tree returned HTTP 403 Resource not accessible by integration. No remote branch was changed and no deployment occurred. Refresh GitHub CLI authentication with repository write access, then run a normal fetch/integration and push; never force-push. Local main holds the verified changes.
