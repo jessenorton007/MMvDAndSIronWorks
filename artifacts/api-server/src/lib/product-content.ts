@@ -30,9 +30,10 @@ export function preMadeSeo(item: PreMade, products: PreMade[] = source.preMadeIt
     path, title: `${item.title} | D&S Iron Works Pre-Made Steel`, heading: item.title,
     description: productDescription(item.description), image: item.image, type: 'product',
     jsonLd: productSchema(item, path),
-    contentHtml: item.description.split(/\n\s*\n/).map(paragraph).join('') + paragraph(`Price: ${item.priceLabel}`)
+    contentHtml: imageHtml(item.image, item.alt, true) + paragraph(`Price: ${item.priceLabel}`)
       + section('Details', list(publicFeatures(item.features)) + paragraph(item.availability))
-      + section('Gallery', item.gallery.map(photo => imageHtml(photo.src, photo.alt)).join('')) + guideHtml,
+      + section('Gallery', item.gallery.map(photo => imageHtml(photo.src, photo.alt)).join(''))
+      + section('About This Product', item.description.split(/\n\s*\n/).map(paragraph).join('')) + guideHtml,
   };
 }
 
@@ -42,9 +43,10 @@ export function etsySeo(item: Etsy): SeoPage {
     path, title: `${item.title} | D&S Iron Works`, heading: item.title,
     description: productDescription(item.description), image: item.image, type: 'product',
     jsonLd: productSchema(item, path, item.etsyUrl),
-    contentHtml: paragraph(item.description) + paragraph(item.priceLabel) + list(reliableProductDetails(item.details))
+    contentHtml: imageHtml(item.image, item.title, true) + paragraph(item.priceLabel) + list(reliableProductDetails(item.details))
       + `<p><a href="${escapeHtml(item.etsyUrl)}" rel="noopener noreferrer">Buy on Etsy</a></p>`
       + paragraph('Confirm the current price, options, and availability on Etsy before purchasing.')
+      + section('About This Product', paragraph(item.description))
       + '<p><a href="/services/blacksmith-commissions">Ask about a custom blacksmith commission</a></p>',
   };
 }

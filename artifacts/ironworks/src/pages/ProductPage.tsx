@@ -99,10 +99,6 @@ export function ProductPage() {
 
               <div className="w-full h-px mb-8" style={{ background: 'linear-gradient(90deg, rgba(255,140,26,0.3), transparent)' }} />
 
-              <FormattedDescription
-                text={product.description}
-                className="text-white/65 leading-relaxed mb-8 text-base font-sans space-y-4"
-              />
 
               {reliableDetails.length > 0 && (
                 <div className="mb-10 space-y-3">
@@ -128,6 +124,10 @@ export function ProductPage() {
               <a href="/services/blacksmith-commissions" className="text-orange-300 underline underline-offset-4 mt-5">Ask about a custom blacksmith commission</a>
             </motion.div>
           </div>
+          <section className="mt-12 rounded-xl border border-white/10 p-6 sm:p-8">
+            <h2 className="font-display text-2xl uppercase tracking-wider text-white mb-5">About This Product</h2>
+            <FormattedDescription text={product.description} className="text-white/65 leading-relaxed text-base font-sans space-y-4" />
+          </section>
         </div>
       </div>
     </div>

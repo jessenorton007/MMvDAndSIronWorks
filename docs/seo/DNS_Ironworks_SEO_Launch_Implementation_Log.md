@@ -257,3 +257,8 @@ Validation: frontend/API TypeScript and builds pass; 54 served sitemap routes an
 Run the mutation regression only against the isolated local server: set SEO_FIXTURE_FILE to the full path of `work/seo-preview/admin-content.json`, then run `node artifacts/api-server/scripts/verify-content-updates.mjs`. Never point it at production data. Normal route/product/service verifiers are read-only.
 
 Reviewed current primary guidance: https://developers.google.com/search/docs/fundamentals/ai-optimization-guide and https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap. Next account-dependent work remains publication, actual Search Console indexing/query analysis, GA4 receipt/key-event verification, and accurate Google Business Profile management. These are not replaced by adding more generic pages or invented project facts. No production deployment or measured ranking/AI-visibility improvement is claimed.
+
+
+## September 22, 2026 — Put products before long descriptions
+
+At the user's request, pre-made and Etsy detail pages now place full descriptions below product images, price, purchasing controls, and the pre-made gallery. Homepage pre-made and signature cards keep their descriptions in a native expandable section beneath the product, so lengthy copy does not block browsing the next item. Stored product descriptions and metadata remain intact. Initial server product HTML follows the same media-before-description order.

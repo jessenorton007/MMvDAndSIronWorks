@@ -68,10 +68,6 @@ export function PreMadeDetailPage() {
               <h1 className="font-display text-5xl md:text-7xl tracking-widest uppercase leading-none text-white mb-6">
                 {item.title}
               </h1>
-              <FormattedDescription
-                text={item.description}
-                className="text-white/60 font-sans font-light leading-relaxed text-lg max-w-xl mb-7 space-y-4"
-              />
               <div className="mb-8 flex flex-wrap gap-2">
                 {features.map((feature) => (
                   <span
@@ -160,6 +156,11 @@ export function PreMadeDetailPage() {
               </div>
             </section>
           </div>
+
+          <section className="mt-12 rounded-xl border border-white/10 bg-white/[0.025] p-6 sm:p-8">
+            <h2 className="font-display text-2xl sm:text-3xl uppercase tracking-widest text-white mb-6">About This Product</h2>
+            <FormattedDescription text={item.description} className="text-white/60 font-sans leading-relaxed max-w-4xl space-y-4" />
+          </section>
 
           <ProductGuide id={item.id} products={products} />
 
