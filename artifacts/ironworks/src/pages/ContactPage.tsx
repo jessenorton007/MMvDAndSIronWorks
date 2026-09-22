@@ -25,12 +25,14 @@ export function ContactPage() {
   const [, navigate] = useLocation();
   useSeo({
     title: 'Contact D&S Iron Works | Custom Ironwork & Pre-Made Fire Pits',
-    description: 'Contact Dallan Goff at D&S Iron Works to ask about custom ironwork, pre-built fire pits, Iron Rocket Stove and Iron Rocket XL camp cooking stoves, metal signs, railings, forged art, or blacksmith commissions in Utah.',
+    description: 'Contact Dallan Goff about custom ironwork, pre-built fire pits, Iron Rocket outdoor cooking stoves, railings, signs, forged art, or blacksmith commissions in Utah.',
     path: '/contact',
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'ContactPage',
       name: 'Contact D&S Iron Works',
+      url: 'https://dandsironworks.com/contact',
+      mainEntity: { '@type': 'LocalBusiness', '@id': 'https://dandsironworks.com/#business', name: 'D&S Iron Works', telephone: '+1-435-421-9033', email: 'dandsiron@yahoo.com', areaServed: 'Utah' },
       description: 'Start a custom ironwork project or ask about pre-made fire pits, Iron Rocket Stove, and Iron Rocket XL from D&S Iron Works.',
     },
   });

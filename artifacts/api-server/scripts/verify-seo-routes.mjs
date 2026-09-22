@@ -8,7 +8,7 @@ const expectedRouteCount = Number(process.env.SEO_EXPECTED_ROUTE_COUNT ?? 54);
 const target = new URL(baseUrl);
 const isProductionOrigin = target.hostname === "dandsironworks.com";
 const sitemapUrl = process.env.SEO_SITEMAP_URL
-  ?? (isProductionOrigin ? `${target.origin}/sitemap.xml` : undefined);
+  ?? (process.env.SEO_SITEMAP_PATH ? undefined : `${target.origin}/sitemap.xml`);
 const xml = sitemapUrl
   ? await (await fetch(sitemapUrl)).text()
   : fs.readFileSync(new URL(sitemapPath, import.meta.url), "utf8");

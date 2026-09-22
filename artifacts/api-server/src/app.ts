@@ -11,6 +11,7 @@ import { getSeoPage, notFoundSeo, SITE_ORIGIN, type SeoPage } from "./lib/seo-pa
 import { isAdminRequest } from "./routes/admin";
 import { readPublicServices } from "./lib/service-content";
 import { readPublicProducts, preMadeSeo, etsySeo } from "./lib/product-content";
+import { publicSitemap } from './lib/sitemap';
 
 const app: Express = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -93,6 +94,17 @@ if (existsSync(staticRoot)) {
   };
 
   app.get("/preview.html", (_req, res) => res.redirect(301, "/"));
+  // Read the same public collections as the pages; admin changes need no rebuild.
+  app.get('/sitemap.xml', async (_req, res) => {
+    try {
+      res.setHeader('Cache-Control', 'no-cache');
+      res.type('application/xml').send(await publicSitemap());
+    } catch (error) {
+      logger.warn({ err: error }, 'Could not load current sitemap content');
+      res.setHeader('Retry-After', '300');
+      res.status(503).type('text').send('Sitemap temporarily unavailable.');
+    }
+  });
   app.use(express.static(staticRoot, { index: false, redirect: false }));
   app.get(/^(?!\/api).*/, async (req, res) => {
     const pathname = req.path.length > 1 ? req.path.replace(/\/+$/, "") : "/";
@@ -123,7 +135,7 @@ if (existsSync(staticRoot)) {
       } else if (pathname.startsWith('/pre-made/')) {
         const products = await readPublicProducts('premade-products');
         const item = products.find(product => `/pre-made/${product.id}` === pathname);
-        page = item ? preMadeSeo(item) : undefined;
+        page = item ? preMadeSeo(item, products) : undefined;
       } else if (pathname.startsWith('/shop/')) {
         const products = await readPublicProducts('etsy-products');
         const item = products.find(product => `/shop/${product.id}` === pathname);

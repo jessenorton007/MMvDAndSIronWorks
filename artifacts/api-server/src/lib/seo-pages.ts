@@ -24,6 +24,7 @@ const absoluteUrl = (value: string) => value.startsWith("http") ? value : `${SIT
 const localBusiness = {
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
+  "@id": `${SITE_ORIGIN}/#business`,
   name: "D&S Iron Works",
   description: "Custom ironwork, forged metal art, pre-built fire pits, rocket stoves, railings, signs, and hand-forged goods by Dallan Goff.",
   url: `${SITE_ORIGIN}/`,
@@ -59,6 +60,17 @@ const staticPages: SeoPage[] = [
     description: "Contact Dallan Goff about custom ironwork, pre-built fire pits, Iron Rocket outdoor cooking stoves, railings, signs, forged art, or blacksmith commissions in Utah.",
     heading: "Contact D&S Iron Works",
     image: "/opengraph.jpg",
+    jsonLd: {
+      '@context': 'https://schema.org', '@type': 'ContactPage',
+      name: 'Contact D&S Iron Works', url: `${SITE_ORIGIN}/contact`,
+      mainEntity: localBusiness,
+    },
+    contentHtml: '<p>Have an idea, a sketch, or just a feeling? Reach out to Dallan directly.</p>'
+      + '<h2>Contact Dallan Goff</h2><ul>'
+      + '<li><a href="tel:+14354219033">Call (435) 421-9033</a></li>'
+      + '<li><a href="sms:+14354219033">Text (435) 421-9033</a></li>'
+      + '<li><a href="mailto:dandsiron@yahoo.com">Email dandsiron@yahoo.com</a></li>'
+      + '<li><a href="https://www.facebook.com/DallanGoffBlacksmith">Dallan Goff Blacksmith on Facebook</a></li></ul>',
   },
   {
     path: "/admin",
@@ -84,6 +96,7 @@ const servicePage = (service: PublicService, allServices: PublicService[]): SeoP
     url: `${SITE_ORIGIN}/services/${service.slug}`,
     provider: {
       "@type": "LocalBusiness",
+      "@id": `${SITE_ORIGIN}/#business`,
       name: "D&S Iron Works",
       telephone: "+1-435-421-9033",
     },
@@ -94,7 +107,7 @@ const servicePage = (service: PublicService, allServices: PublicService[]): SeoP
 
 const servicePages = services.map(service => servicePage(service, services));
 
-const preMadePages = preMadeItems.map(preMadeSeo);
+const preMadePages = preMadeItems.map(item => preMadeSeo(item));
 const etsyPages = defaultEtsyProducts.map(etsySeo);
 
 const pages = new Map(

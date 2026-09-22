@@ -1,8 +1,8 @@
 import { Link } from 'wouter';
-import { productGuides } from '@/data/product-guides';
+import { resolveProductGuide, type GuideProduct } from '@/data/product-guides';
 
-export function ProductGuide({ id }: { id: string }) {
-  const guide = productGuides[id];
+export function ProductGuide({ id, products }: { id: string; products: GuideProduct[] }) {
+  const guide = resolveProductGuide(id, products);
   if (!guide) return null;
   return <section className="mt-12 space-y-10">
     <div className="rounded-xl border border-white/10 bg-white/[0.025] p-6 sm:p-8">

@@ -3,6 +3,7 @@ import { readAdminContent } from './admin-content-store';
 import { escapeHtml } from './service-content';
 import { productSchema, productDescription, publicFeatures, reliableProductDetails, plainText } from './product-seo';
 import type { SeoPage } from './seo-pages';
+import { resolveProductGuide } from './product-guides';
 import { imageHtml } from './image-html';
 
 type PreMade = (typeof source.preMadeItems)[number];
@@ -17,9 +18,9 @@ const paragraph = (text: string) => `<p>${escapeHtml(plainText(text))}</p>`;
 const list = (items: string[]) => `<ul>${items.map(text => `<li>${escapeHtml(text)}</li>`).join('')}</ul>`;
 const section = (title: string, body: string) => `<section><h2>${escapeHtml(title)}</h2>${body}</section>`;
 
-export function preMadeSeo(item: PreMade): SeoPage {
+export function preMadeSeo(item: PreMade, products: PreMade[] = source.preMadeItems): SeoPage {
   const path = `/pre-made/${item.id}`;
-  const guide = source.productGuides[item.id as keyof typeof source.productGuides];
+  const guide = resolveProductGuide(item.id, products);
   const guideHtml = guide ? [
     section('At a Glance', paragraph(guide.summary) + `<dl>${guide.specs.map(spec => `<dt>${escapeHtml(spec.label)}</dt><dd>${escapeHtml(spec.value)}</dd>`).join('')}</dl>` + paragraph('Confirm the current build specifications and included components with Dallan before ordering.')),
     section('Before You Order', guide.faqs.map(faq => `<h3>${escapeHtml(faq.question)}</h3>${paragraph(faq.answer)}`).join('')),

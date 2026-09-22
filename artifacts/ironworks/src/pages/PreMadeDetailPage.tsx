@@ -161,7 +161,7 @@ export function PreMadeDetailPage() {
             </section>
           </div>
 
-          <ProductGuide id={item.id} />
+          <ProductGuide id={item.id} products={products} />
 
           {(item.video || item.videos?.length) && (
             <section className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-5">

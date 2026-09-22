@@ -30,8 +30,10 @@ export function ServiceDetailPage() {
           '@type': 'Service',
           name: service.title,
           description: service.metaDescription,
+          url: `https://dandsironworks.com/services/${service.slug}`,
           provider: {
             '@type': 'LocalBusiness',
+            '@id': 'https://dandsironworks.com/#business',
             name: 'D&S Iron Works',
             telephone: '+1-435-421-9033',
             areaServed: 'Utah',

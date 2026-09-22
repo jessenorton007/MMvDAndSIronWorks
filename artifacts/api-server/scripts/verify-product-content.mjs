@@ -6,6 +6,9 @@ const helper = fs.readFileSync(new URL('../src/lib/product-seo.ts', import.meta.
 const compiled = ts.transpileModule(helper, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText;
 const { productSchema, productDescription, publicFeatures, numericPrice, plainText } = await import(`data:text/javascript;base64,${Buffer.from(compiled).toString('base64')}`);
 
+const guideCode = ts.transpileModule(fs.readFileSync(new URL('../src/lib/product-guides.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText;
+const { resolveProductGuide } = await import(`data:text/javascript;base64,${Buffer.from(guideCode).toString('base64')}`);
+
 const origin = process.env.SEO_TEST_ORIGIN ?? 'http://127.0.0.1:5189';
 const source = JSON.parse(fs.readFileSync(new URL('../src/lib/seo-source-data.json', import.meta.url), 'utf8'));
 const escaped = value => value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
@@ -33,8 +36,8 @@ for (const [key, prefix, fallback] of [['premade-products', '/pre-made/', source
     for (const paragraph of item.description.split(/\n\s*\n/)) assert.ok(html.includes(escaped(plainText(paragraph))), `${path}: description missing`);
     if (key === 'premade-products') {
       for (const feature of publicFeatures(item.features)) assert.ok(html.includes(escaped(feature)), path);
-      for (const faq of source.productGuides[item.id]?.faqs ?? []) {
-        assert.ok(html.includes(escaped(faq.question)) && html.includes(escaped(faq.answer)), path);
+      for (const faq of resolveProductGuide(item.id, items)?.faqs ?? []) {
+        assert.ok(html.includes(escaped(faq.question)) && html.includes(escaped(plainText(faq.answer))), path);
         questions++;
       }
     }

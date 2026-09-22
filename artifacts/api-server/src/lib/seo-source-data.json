@@ -1092,24 +1092,11 @@
     },
     "iron-rocket-stove": {
       "summary": "The regular Iron Rocket is a wood-fed outdoor cooking stove with a steel cooktop, rear griddle, and a cooktop that lifts off the base for transport.",
-      "specs": [
-        {
-          "label": "Cooktop overall",
-          "value": "16 inches wide × 32 inches long"
-        },
-        {
-          "label": "Rear griddle",
-          "value": "16 inches wide × 18 inches long"
-        },
-        {
-          "label": "Transport",
-          "value": "Cooktop lifts off the base stove"
-        }
-      ],
+      "specs": [],
       "faqs": [
         {
           "question": "What is the difference between the regular Iron Rocket and the XL?",
-          "answer": "The regular model lists a 16 × 32 inch cooktop and 16 × 18 inch rear griddle. The XL lists a 22 × 32 inch cooktop and 22 × 20 inch rear griddle. Choose based on the cooking surface and space you need, and confirm the current build details with Dallan."
+          "answer": "Compare the current dimensions and included components with Dallan before choosing."
         },
         {
           "question": "Does the stove separate for transport?",
@@ -1133,24 +1120,11 @@
     },
     "iron-rocket-xl": {
       "summary": "The Iron Rocket XL is the larger outdoor cooking model, with a wider steel cooktop and rear griddle. Its cooktop lifts off the base for transport.",
-      "specs": [
-        {
-          "label": "Cooktop overall",
-          "value": "22 inches wide × 32 inches long"
-        },
-        {
-          "label": "Rear griddle",
-          "value": "22 inches wide × 20 inches long"
-        },
-        {
-          "label": "Transport",
-          "value": "Cooktop lifts off the base stove"
-        }
-      ],
+      "specs": [],
       "faqs": [
         {
           "question": "How much larger is the XL cooking surface?",
-          "answer": "The listed XL cooktop is 22 × 32 inches, compared with 16 × 32 inches on the regular Iron Rocket. Its rear griddle is 22 × 20 inches, compared with 16 × 18 inches on the regular model."
+          "answer": "Compare the current dimensions and included components with Dallan before choosing."
         },
         {
           "question": "Can the XL be taken apart for transport?",

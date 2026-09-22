@@ -397,6 +397,7 @@ export function Home() {
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'LocalBusiness',
+      '@id': 'https://dandsironworks.com/#business',
       name: 'D&S Iron Works',
       description: 'Custom ironwork, forged metal art, pre-built fire pits, Iron Rocket Stove and Iron Rocket XL camp cooking stoves, railings, signs, sculptures, and hand-forged goods by Dallan Goff.',
       url: 'https://dandsironworks.com/',
