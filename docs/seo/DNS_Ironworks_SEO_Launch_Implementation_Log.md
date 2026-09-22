@@ -209,3 +209,36 @@ Measurement and next work:
 - Repository remains C:\Users\jesse\Documents\Codex\2026-06-01\identify-my-forge-design-project-and\Forge-Design-Studio. Local preview for this batch: http://127.0.0.1:5189/services/forged-railings ; preview data and analytics live under ignored work/seo-preview.
 
 Publishing status: normal Git push could not complete; gh auth status reports an invalid saved token. The connected GitHub integration authenticated successfully but create_tree returned HTTP 403 Resource not accessible by integration. No remote branch was changed and no deployment occurred. Refresh GitHub CLI authentication with repository write access, then run a normal fetch/integration and push; never force-push. Local main holds the verified changes.
+
+## September 22, 2026 — Product answers, project evidence, images, and measurement
+
+Implemented in the local repository; production has not been deployed:
+
+- Added eight more service questions, quote checklists, and related links. Together with the previous batch: seven services, 17 visible answers, and 22 related-service links.
+- Added three pre-made product guides with nine buying questions, regular/XL cooking-surface comparisons, and six related links. Dimensions are transcribed from the public saved product descriptions (premade-products version 8), not inferred from photos. Update `src/data/product-guides.ts` whenever those specifications change, then regenerate server data/build both artifacts.
+- Added `/projects/forged-stair-balcony-railings`, based on the existing shop and installed railing photos. No invented client, town, project date, cost, testimonial, or outcome. Facebook could not be read in this session. The project is linked from the home and railing pages and included in the 54-route sitemap.
+- Server-rendered product HTML and Product/Offer metadata now use the saved public product collections, matching current browser content. Exact numeric prices only; no guessed stock status, reviews, ratings, shipping charges, or price ranges. Shared pure helpers keep client/server metadata consistent. Obvious test-only feature filler is excluded from public views without altering the stored data.
+- Homepage product/service cards and primary navigation expose real links. Initial homepage HTML also links to all saved public services and products. Canonicals remain on https://dandsironworks.com. Missing client-side detail routes retain noindex and their own URL.
+- Created responsive WebP variants for 50 repository photos, with original-image fallback and original full-size lightbox assets retained. Large variants total 12,558,576 bytes versus 51,266,126 bytes for originals (75.5% smaller). This is a file-size comparison, not measured page-speed or ranking improvement. Admin uploads remain untouched. Regeneration: `python artifacts/ironworks/scripts/optimize-images.py` with Pillow installed.
+- Images below the first viewport load lazily; main service/product images receive high priority. Mobile and reduced-motion users receive a still homepage background without mounting/downloading the desktop autoplay video.
+- Public routes load in separate JavaScript chunks. Main entry decreased from 618.96 kB (190.13 kB gzip) to approximately 452.04 kB (147.57 kB gzip). Each page also loads its own/shared chunks, so entry size is not the total transfer size. Route scroll handling waits for the lazy route to mount.
+- Fixed GA4's command queue shape, excluded localhost/preview domains, added page context and named CTA context. Pre-made purchase opening emits `begin_checkout`; a saved purchase request emits `generate_lead`; an external payment handoff emits `payment_redirect`. These are not confirmed payments. Existing successful contact-form lead tracking remains. No customer form fields are added to GA4 events.
+
+Validation:
+
+- Frontend/API TypeScript and production builds: PASS. The same ignored Windows esbuild-wasm adapter was necessary. A pre-existing nonfatal tooltip sourcemap warning remains.
+- Route verifier: all 54 routes/canonicals pass, plus redirects, robots, sitemap, unknown-route 404, and isolated authenticated/unauthenticated admin checks. There are 50 distinct titles because four existing Etsy variants share product names; product identities were preserved.
+- Service verifier: seven services, 17 answers, 22 related links PASS.
+- Product verifier: 43 saved products, nine product answers, project content, exact-price parsing, public feature filtering, and all responsive image assets PASS.
+- Local-only fixture changes: edited product heading and price respected; markup escaped; empty feature/gallery arrays respected; deleted product returns 404 and disappears from initial homepage links. Fixture restored afterward. No production records were edited.
+- GA4 unit verification: proper arguments queue, one initialization, production hosts, event page context, and preview exclusion PASS. This does not confirm receipt in GA4 reporting.
+- Mobile browser: homepage, railing service, project, and regular stove render within the viewport; menu and project navigation work; purchase form opens. Homepage has zero hero video elements on mobile, selects the 640px image variant, and does not insert a GA4 script on localhost. No real contact, purchase, or payment was submitted.
+- Chrome DevTools performance tools are unavailable, so no Lighthouse/Core Web Vitals trace or score is claimed.
+
+External follow-up and release:
+
+1. GitHub CLI authentication remains invalid. Refresh it with access to jessenorton007/MMvDAndSIronWorks, fetch, integrate any new changes, and use a normal push. Do not force-push. The previous GitHub connector write attempt was also denied by repository integration permissions.
+2. Deploy frontend and API together through the established Replit workflow. Do not replace or seed the production admin database with the preview fixtures.
+3. Run `verify-seo-routes.mjs`, `verify-service-content.mjs`, and `verify-product-content.mjs` with `SEO_TEST_ORIGIN=https://dandsironworks.com` after deployment. Confirm the project URL and current product prices in both HTML and browser.
+4. The signed-in Search Console account has no access to the dandsironworks.com property. Switch to its owner account before querying impressions, clicks, queries, indexing, or submitting the updated sitemap. Unavailable is not zero. Inspect the new project and key changed pages after deployment; don't request indexing for every URL without evidence.
+5. In the correct GA4 property, verify contact/purchase leads and contact/Etsy intent events with a deliberate test, confirm `generate_lead` as a key event, and compare organic landing pages/leads over comparable 28-day periods. Phone/SMS/Etsy clicks indicate intent, not completed jobs. No ranking, AI citation, organic traffic, or revenue improvement has yet been measured.

@@ -10,6 +10,7 @@ import { logger } from "./lib/logger";
 import { getSeoPage, notFoundSeo, SITE_ORIGIN, type SeoPage } from "./lib/seo-pages";
 import { isAdminRequest } from "./routes/admin";
 import { readPublicServices } from "./lib/service-content";
+import { readPublicProducts, preMadeSeo, etsySeo } from "./lib/product-content";
 
 const app: Express = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -101,7 +102,7 @@ if (existsSync(staticRoot)) {
     }
 
     let publicServices;
-    if (pathname === "/services" || pathname.startsWith("/services/")) {
+    if (pathname === "/" || pathname === "/services" || pathname.startsWith("/services/")) {
       try {
         publicServices = await readPublicServices();
       } catch (error) {
@@ -109,7 +110,28 @@ if (existsSync(staticRoot)) {
         logger.warn({ err: error }, "Could not load service content for HTML");
       }
     }
-    const page = getSeoPage(pathname, publicServices);
+    let page = getSeoPage(pathname, publicServices);
+    try {
+      if (pathname === '/' && page) {
+        const [preMade, etsy] = await Promise.all([readPublicProducts('premade-products'), readPublicProducts('etsy-products')]);
+        const links = (items: { path: string; title: string }[]) => `<ul>${items.map(item => `<li><a href="${escapeHtml(item.path)}">${escapeHtml(item.title)}</a></li>`).join('')}</ul>`;
+        page = { ...page, contentHtml: `<p>${escapeHtml(page.description)}</p><h2>Custom Metalwork Services</h2>`
+          + links((publicServices ?? []).map(service => ({ path: `/services/${service.slug}`, title: service.title })))
+          + '<h2>Pre-Made Steel</h2>' + links(preMade.map(item => ({ path: `/pre-made/${item.id}`, title: item.title })))
+          + '<h2>Forge Shop</h2>' + links(etsy.map(item => ({ path: `/shop/${item.id}`, title: item.title })))
+          + '<p><a href="/projects/forged-stair-balcony-railings">Forged stair and balcony railing project</a></p>' };
+      } else if (pathname.startsWith('/pre-made/')) {
+        const products = await readPublicProducts('premade-products');
+        const item = products.find(product => `/pre-made/${product.id}` === pathname);
+        page = item ? preMadeSeo(item) : undefined;
+      } else if (pathname.startsWith('/shop/')) {
+        const products = await readPublicProducts('etsy-products');
+        const item = products.find(product => `/shop/${product.id}` === pathname);
+        page = item ? etsySeo(item) : undefined;
+      }
+    } catch (error) {
+      logger.warn({ err: error }, 'Could not load product content for HTML');
+    }
     if (page) {
       if (pathname === "/admin") {
         res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");

@@ -1,5 +1,6 @@
 import seoSourceData from "./seo-source-data.json";
 import { readAdminContent } from "./admin-content-store";
+import { imageHtml } from './image-html';
 
 type SourceService = (typeof seoSourceData.services)[number];
 export type PublicService = { [Key in keyof SourceService]: SourceService[Key] };
@@ -41,7 +42,7 @@ export function serviceContentHtml(service: PublicService, services: PublicServi
     section("What This Includes", list(service.details)),
     section("Common Projects", list(service.examples)),
     service.gallery?.length ? section("Real Project Photos", service.gallery.map(photo =>
-      `<figure><img src="${escapeHtml(photo.src)}" alt="${escapeHtml(photo.alt)}" loading="lazy" style="max-width:100%;height:auto" /></figure>`
+      `<figure>${imageHtml(photo.src, photo.alt)}</figure>`
     ).join("")) : "",
     service.process?.length ? section("How a Custom Project Starts", `<ol>${service.process.map(step =>
       `<li><h3>${escapeHtml(step.title)}</h3><p>${escapeHtml(step.description)}</p></li>`
@@ -53,5 +54,6 @@ export function serviceContentHtml(service: PublicService, services: PublicServi
     ).join("")) : "",
     service.relatedProducts?.length ? section("Pre-Built Options", service.relatedProducts.map(product => internalLink(product.path, product.label)).join(" ")) : "",
     related.length ? section("Explore Custom Project Types", `<ul>${related.join("")}</ul>`) : "",
+    service.slug === 'forged-railings' ? '<section><h2>From the Shop to the Staircase</h2><p>Take a closer look at the branch-like steelwork in the shop and around a wood staircase and upper landing.</p><a href="/projects/forged-stair-balcony-railings">View the stair and balcony railing project</a></section>' : '',
   ].join("");
 }

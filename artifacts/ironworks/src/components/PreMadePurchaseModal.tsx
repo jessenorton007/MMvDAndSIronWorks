@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle, ExternalLink, X } from "lucide-react";
 import { GlassButton } from "./GlassButton";
@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { PreMadeItem } from "@/data/premade-items";
 import { saveOrder } from "@/hooks/useAdminProducts";
 import { submitPurchase } from "@/lib/commerce";
+import { trackGaEvent } from "@/analytics/ga4";
 
 interface PreMadePurchaseModalProps {
   item: PreMadeItem | null;
@@ -33,6 +34,10 @@ export function PreMadePurchaseModal({ item, isOpen, onClose }: PreMadePurchaseM
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState<{ orderId: string; paymentUrl?: string; message: string } | null>(null);
   const [form, setForm] = useState(blankForm);
+
+  useEffect(() => {
+    if (isOpen && item) trackGaEvent('begin_checkout', { product_id: item.id });
+  }, [isOpen, item?.id]);
 
   if (!item) return null;
 
@@ -84,7 +89,9 @@ export function PreMadePurchaseModal({ item, isOpen, onClose }: PreMadePurchaseM
         address: `${form.address1}${form.address2 ? `, ${form.address2}` : ""}, ${form.city}, ${form.state} ${form.postalCode}`,
       });
       setSuccess({ orderId: result.orderId, paymentUrl: result.paymentUrl, message: result.message });
+      trackGaEvent('generate_lead', { form_name: 'purchase_request', product_id: item.id });
       if (result.paymentUrl) {
+        trackGaEvent('payment_redirect', { destination: 'quickbooks', product_id: item.id });
         window.location.href = result.paymentUrl;
         return;
       }
@@ -102,6 +109,7 @@ export function PreMadePurchaseModal({ item, isOpen, onClose }: PreMadePurchaseM
         orderId: `local_${Date.now()}`,
         message: "Your order details were saved. The payment/email service is not reachable in this preview.",
       });
+      trackGaEvent('generate_lead', { form_name: 'purchase_request', product_id: item.id, delivery: 'saved_for_followup' });
       toast({
         title: "Backend Not Reachable",
         description: err instanceof Error ? err.message : "Order saved for follow-up.",
@@ -132,7 +140,7 @@ export function PreMadePurchaseModal({ item, isOpen, onClose }: PreMadePurchaseM
             className="fixed left-1/2 top-1/2 z-[70] w-[calc(100%-1.5rem)] max-w-4xl max-h-[92vh] -translate-x-1/2 -translate-y-1/2 overflow-y-auto"
           >
             <div className="rounded-2xl overflow-hidden relative bg-[#0f0b08]" style={{ border: "1px solid rgba(255,140,26,0.2)", boxShadow: "0 32px 80px rgba(0,0,0,0.8)" }}>
-              <button onClick={resetAndClose} className="absolute top-4 right-4 z-10 p-2 rounded-full text-white/40 hover:text-white transition-colors bg-white/5 border border-white/10">
+              <button aria-label="Close purchase form" onClick={resetAndClose} className="absolute top-4 right-4 z-10 p-2 rounded-full text-white/40 hover:text-white transition-colors bg-white/5 border border-white/10">
                 <X size={18} />
               </button>
 

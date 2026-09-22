@@ -12,6 +12,8 @@ import { PreMadePurchaseModal } from '@/components/PreMadePurchaseModal';
 import { usePreMadeProducts } from '@/hooks/useAdminProducts';
 import { getPreMadeItem as getFallbackPreMadeItem } from '@/data/premade-items';
 import { useSeo } from '@/lib/seo';
+import { productSchema, productDescription, publicFeatures } from '@/lib/product-seo';
+import { ProductGuide } from '@/components/ProductGuide';
 import NotFound from './not-found';
 
 export function PreMadeDetailPage() {
@@ -19,6 +21,7 @@ export function PreMadeDetailPage() {
   const [, navigate] = useLocation();
   const { products } = usePreMadeProducts();
   const item = products.find((product) => product.id === params.id);
+  const features = publicFeatures(item?.features ?? []);
   const fallbackItem = getFallbackPreMadeItem(params.id);
   const [purchaseOpen, setPurchaseOpen] = useState(false);
   const [expandedImage, setExpandedImage] = useState<{ src: string; alt: string } | null>(null);
@@ -29,28 +32,13 @@ export function PreMadeDetailPage() {
   useSeo({
     title: item ? `${item.title} | D&S Iron Works Pre-Made Steel` : 'Pre-Made Steel Items | D&S Iron Works',
     description: item
-      ? `${item.description} Available from D&S Iron Works for ${item.priceLabel}.`
+      ? productDescription(item.description)
       : 'Pre-built fire pits, Iron Rocket Stove, and Iron Rocket XL camp cooking stoves from D&S Iron Works.',
-    path: item ? `/pre-made/${item.id}` : '/pre-made',
+    path: item ? `/pre-made/${item.id}` : undefined,
+    robots: item ? 'index, follow' : 'noindex, nofollow',
     image: item?.image,
-    jsonLd: item
-      ? {
-          '@context': 'https://schema.org',
-          '@type': 'Product',
-          name: item.title,
-          description: item.description,
-          image: typeof window === 'undefined' ? item.image : `${window.location.origin}${item.image}`,
-          brand: {
-            '@type': 'Brand',
-            name: 'D&S Iron Works',
-          },
-          offers: {
-            '@type': 'Offer',
-            priceCurrency: 'USD',
-            price: item.priceLabel.replace(/[$,]/g, ''),
-          },
-        }
-      : undefined,
+    type: 'product',
+    jsonLd: item ? productSchema(item, `/pre-made/${item.id}`) : undefined,
   });
 
   if (!item) return <NotFound />;
@@ -85,7 +73,7 @@ export function PreMadeDetailPage() {
                 className="text-white/60 font-sans font-light leading-relaxed text-lg max-w-xl mb-7 space-y-4"
               />
               <div className="mb-8 flex flex-wrap gap-2">
-                {item.features.map((feature) => (
+                {features.map((feature) => (
                   <span
                     key={feature}
                     className="rounded-full border border-orange-500/20 bg-orange-500/8 px-3 py-1.5 text-xs font-display tracking-widest uppercase text-orange-200/75"
@@ -122,7 +110,7 @@ export function PreMadeDetailPage() {
                 className="h-full w-full cursor-zoom-in"
                 aria-label={`Enlarge ${item.title} photo`}
               >
-                <ResilientImage src={item.image} fallbackSrc={fallbackItem?.image} alt={item.alt} className="w-full h-full object-cover" />
+                <ResilientImage fetchPriority="high" loading="eager" src={item.image} fallbackSrc={fallbackItem?.image} alt={item.alt} className="w-full h-full object-cover" />
               </button>
               <div className="absolute inset-0 bg-gradient-to-t from-black/52 via-transparent to-transparent pointer-events-none" />
             </motion.div>
@@ -137,7 +125,7 @@ export function PreMadeDetailPage() {
                 Details
               </h2>
               <div className="space-y-4">
-                {item.features.map((feature) => (
+                {features.map((feature) => (
                   <div key={feature} className="flex gap-3">
                     <CheckCircle size={17} className="text-orange-400 mt-0.5 shrink-0" />
                     <p className="text-white/60 font-sans leading-relaxed">{feature}</p>
@@ -166,12 +154,14 @@ export function PreMadeDetailPage() {
                     style={{ border: '1px solid rgba(255,255,255,0.08)' }}
                     aria-label={`Enlarge ${image.alt}`}
                   >
-                    <ResilientImage src={image.src} fallbackSrc={fallbackItem?.gallery[index]?.src ?? fallbackItem?.gallery[0]?.src} alt={image.alt} className="w-full h-full object-cover" />
+                    <ResilientImage loading="lazy" src={image.src} fallbackSrc={fallbackItem?.gallery[index]?.src ?? fallbackItem?.gallery[0]?.src} alt={image.alt} className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
             </section>
           </div>
+
+          <ProductGuide id={item.id} />
 
           {(item.video || item.videos?.length) && (
             <section className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-5">

@@ -1,5 +1,7 @@
+import { preMadeSeo, etsySeo } from "./product-content";
 import seoSourceData from "./seo-source-data.json";
-import { serviceContentHtml, serviceDirectoryHtml, type PublicService } from "./service-content";
+import { serviceContentHtml, serviceDirectoryHtml, escapeHtml, type PublicService } from "./service-content";
+import { imageHtml } from './image-html';
 
 const { defaultEtsyProducts, preMadeItems, services } = seoSourceData;
 
@@ -92,52 +94,24 @@ const servicePage = (service: PublicService, allServices: PublicService[]): SeoP
 
 const servicePages = services.map(service => servicePage(service, services));
 
-const preMadePages: SeoPage[] = preMadeItems.map((item) => ({
-  path: `/pre-made/${item.id}`,
-  title: `${item.title} | D&S Iron Works Pre-Made Steel`,
-  description: item.description,
-  heading: item.title,
-  image: item.image,
-  type: "product",
-  jsonLd: {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: item.title,
-    description: item.description,
-    image: absoluteUrl(item.image),
-    brand: { "@type": "Brand", name: "D&S Iron Works" },
-    offers: {
-      "@type": "Offer",
-      priceCurrency: "USD",
-      price: item.priceLabel.replace(/[$,]/g, ""),
-      url: `${SITE_ORIGIN}/pre-made/${item.id}`,
-    },
-  },
-}));
-
-const etsyPages: SeoPage[] = defaultEtsyProducts.map((product) => ({
-  path: `/shop/${product.id}`,
-  title: `${product.title} | D&S Iron Works`,
-  description: product.description,
-  heading: product.title,
-  image: product.image,
-  type: "product",
-  jsonLd: {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: product.title,
-    description: product.description,
-    image: absoluteUrl(product.image),
-    brand: { "@type": "Brand", name: "D&S Iron Works" },
-    offers: { "@type": "Offer", url: product.etsyUrl },
-  },
-}));
+const preMadePages = preMadeItems.map(preMadeSeo);
+const etsyPages = defaultEtsyProducts.map(etsySeo);
 
 const pages = new Map(
   [...staticPages, ...servicePages, ...preMadePages, ...etsyPages].map((page) => [page.path, page]),
 );
 
 export function getSeoPage(pathname: string, publicServices: PublicService[] = services) {
+  const project = seoSourceData.railingProject;
+  if (pathname === project.path) {
+    return {
+      path: project.path, title: `${project.title} | D&S Iron Works Project`, heading: project.title,
+      description: project.description, image: project.sections[0].image,
+      jsonLd: { '@context': 'https://schema.org', '@type': 'WebPage', name: project.title, description: project.description, url: `${SITE_ORIGIN}${project.path}` },
+      contentHtml: `<p>${escapeHtml(project.intro)}</p>` + project.sections.map((section, index) => `<section>${imageHtml(section.image, section.alt, index === 0)}<h2>${escapeHtml(section.title)}</h2><p>${escapeHtml(section.text)}</p></section>`).join('')
+        + `<section><h2>Planning Your Own Railing</h2><p>${escapeHtml(project.planning)}</p><a href="/services/forged-railings">Explore the railing service</a></section>`,
+    };
+  }
   if (pathname === "/services") {
     return { ...pages.get(pathname)!, contentHtml: serviceDirectoryHtml(publicServices) };
   }

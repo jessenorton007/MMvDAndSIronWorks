@@ -36,11 +36,11 @@ export function Navigation() {
   };
 
   const navLinks = [
-    { name: 'Custom', action: () => scrollTo('custom-designs') },
-    { name: 'Pre-Made', action: () => scrollTo('pre-made') },
-    { name: 'Services', action: goServices },
-    { name: 'Shop', action: () => scrollTo('shop') },
-    { name: 'Contact', action: goContact },
+    { name: 'Custom', href: '/#custom-designs', action: () => scrollTo('custom-designs') },
+    { name: 'Pre-Made', href: '/#pre-made', action: () => scrollTo('pre-made') },
+    { name: 'Services', href: '/services', action: goServices },
+    { name: 'Shop', href: '/#shop', action: () => scrollTo('shop') },
+    { name: 'Contact', href: '/contact', action: goContact },
   ];
 
   return (
@@ -58,7 +58,7 @@ export function Navigation() {
               : '0 4px 24px rgba(0,0,0,0.3)',
           }}
         >
-          <div className="flex-shrink-0 cursor-pointer" onClick={() => navigate('/#hero')}>
+          <a href="/#hero" className="flex-shrink-0 cursor-pointer" aria-label="D&S Iron Works home">
             <img
               src="/brand/logo.png"
               alt="D&S Iron Works"
@@ -75,22 +75,25 @@ export function Navigation() {
                 }
               }}
             />
-          </div>
+          </a>
 
           <div className="hidden md:flex items-center gap-7">
             {navLinks.map((link) => (
-              <button
+              <a
+                href={link.href}
                 key={link.name}
-                onClick={link.action}
+                onClick={event => { if (!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && event.button === 0) { event.preventDefault(); link.action(); } }}
                 className="nav-link text-sm font-display font-medium tracking-widest uppercase"
               >
                 {link.name}
-              </button>
+              </a>
             ))}
           </div>
 
           <div className="md:hidden">
             <button
+              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileMenuOpen}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 text-white/70 hover:text-white transition-colors"
             >
@@ -118,13 +121,14 @@ export function Navigation() {
               }}
             >
               {navLinks.map((link) => (
-                <button
+                <a
+                  href={link.href}
                   key={link.name}
-                  onClick={link.action}
+                  onClick={event => { if (!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && event.button === 0) { event.preventDefault(); link.action(); } }}
                   className="nav-link text-left text-lg font-display tracking-widest uppercase py-3 border-b border-white/5 last:border-0"
                 >
                   {link.name}
-                </button>
+                </a>
               ))}
             </div>
           </motion.div>

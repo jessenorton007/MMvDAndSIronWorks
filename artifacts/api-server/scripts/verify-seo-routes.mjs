@@ -4,7 +4,7 @@ import https from "node:https";
 
 const baseUrl = process.env.SEO_TEST_ORIGIN ?? "http://127.0.0.1:5189";
 const sitemapPath = process.env.SEO_SITEMAP_PATH ?? "../../ironworks/public/sitemap.xml";
-const expectedRouteCount = Number(process.env.SEO_EXPECTED_ROUTE_COUNT ?? 53);
+const expectedRouteCount = Number(process.env.SEO_EXPECTED_ROUTE_COUNT ?? 54);
 const target = new URL(baseUrl);
 const isProductionOrigin = target.hostname === "dandsironworks.com";
 const sitemapUrl = process.env.SEO_SITEMAP_URL

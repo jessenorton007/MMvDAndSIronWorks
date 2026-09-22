@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { useLocation } from "wouter";
+import { publicFeatures } from "@/lib/product-seo";
 import { PocketKnife } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { Embers } from "@/components/Embers";
@@ -143,12 +143,10 @@ function PreMadeItemCard({
   item,
   delay,
   onPurchase,
-  onDetails,
 }: {
   item: PreMadeItem;
   delay: number;
   onPurchase: () => void;
-  onDetails: () => void;
 }) {
   const isFirePit = item.id === 'pre-built-fire-pits';
   const fallbackItem = fallbackPreMadeItems.find(candidate => candidate.id === item.id);
@@ -216,7 +214,7 @@ function PreMadeItemCard({
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {item.features.map((feature) => (
+              {publicFeatures(item.features).map((feature) => (
                 <span key={feature} className="rounded-full px-3 py-1 text-[10px] font-display tracking-widest uppercase text-white/50 bg-white/[0.035] border border-white/10">
                   {feature}
                 </span>
@@ -230,7 +228,7 @@ function PreMadeItemCard({
               </div>
               <p className="text-white/35 text-xs font-sans mb-4">{item.availability}</p>
               <div className="flex flex-wrap gap-3">
-                <GlassButton onClick={onDetails} className="text-sm px-5 py-2.5 bg-white/3">
+                <GlassButton href={`/pre-made/${item.id}`} className="text-sm px-5 py-2.5 bg-white/3">
                   View Details
                 </GlassButton>
                 <GlassButton onClick={onPurchase} className="text-sm px-5 py-2.5">
@@ -299,7 +297,7 @@ function PreMadeItemCard({
             </video>
           )}
           <div className="flex flex-wrap gap-2">
-            {item.features.map((feature) => (
+            {publicFeatures(item.features).map((feature) => (
               <span key={feature} className="rounded-full px-3 py-1 text-[10px] font-display tracking-widest uppercase text-white/50 bg-white/[0.035] border border-white/10">
                 {feature}
               </span>
@@ -312,7 +310,7 @@ function PreMadeItemCard({
             </div>
             <p className="text-white/35 text-xs font-sans mb-4">{item.availability}</p>
             <div className="flex flex-wrap gap-3">
-              <GlassButton onClick={onDetails} className="text-sm px-5 py-2.5 bg-white/3">
+              <GlassButton href={`/pre-made/${item.id}`} className="text-sm px-5 py-2.5 bg-white/3">
                 View Details
               </GlassButton>
               <GlassButton onClick={onPurchase} className="text-sm px-5 py-2.5">
@@ -327,12 +325,18 @@ function PreMadeItemCard({
 }
 
 export function Home() {
+  const [desktopVideo, setDesktopVideo] = useState(false);
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 768px) and (prefers-reduced-motion: no-preference)');
+    const sync = () => setDesktopVideo(media.matches);
+    sync(); media.addEventListener('change', sync);
+    return () => media.removeEventListener('change', sync);
+  }, []);
   const { scrollYProgress } = useScroll();
   const heroOpacity = useTransform(scrollYProgress, [0, 0.22], [1, 0]);
   const heroScale = useTransform(scrollYProgress, [0, 0.22], [1, 1.06]);
   const [checkoutProduct, setCheckoutProduct] = useState<PremiumProduct | null>(null);
   const [purchaseItem, setPurchaseItem] = useState<PreMadeItem | null>(null);
-  const [, navigate] = useLocation();
 
   const { products: etsyProducts } = useEtsyProducts();
   const { products: premiumProducts } = usePremiumProducts();
@@ -387,15 +391,16 @@ export function Home() {
   });
 
   useSeo({
-    title: 'D&S Iron Works | Custom Ironwork, Fire Pits & Iron Rocket Stoves in Utah',
-    description: 'D&S Iron Works by Dallan Goff creates custom ironwork, pre-built fire pits, Iron Rocket Stove and Iron Rocket XL camp cooking stoves, metal signs, forged railings, sculptural ironwork, and hand-forged goods in Utah.',
+    title: 'D&S Iron Works | Custom Ironwork, Fire Pits & Rocket Stoves in Utah',
+    description: 'D&S Iron Works by Dallan Goff creates custom ironwork, pre-built fire pits, rocket stoves, metal signs, forged railings, sculptural ironwork, and hand-forged goods in Utah.',
     path: '/',
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'LocalBusiness',
       name: 'D&S Iron Works',
       description: 'Custom ironwork, forged metal art, pre-built fire pits, Iron Rocket Stove and Iron Rocket XL camp cooking stoves, railings, signs, sculptures, and hand-forged goods by Dallan Goff.',
-      image: typeof window === 'undefined' ? '/opengraph.jpg' : `${window.location.origin}/opengraph.jpg`,
+      url: 'https://dandsironworks.com/',
+      image: 'https://dandsironworks.com/opengraph.jpg',
       telephone: '+1-435-421-9033',
       email: 'dandsiron@yahoo.com',
       areaServed: 'Utah',
@@ -425,13 +430,13 @@ export function Home() {
           <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/15 to-black/85 md:from-black/40 md:via-transparent md:to-black/70 z-10" />
 
           {/* Forging video background — loops silently */}
-          <img
+          <ResilientImage loading="eager" fetchPriority="high" sizes="100vw"
             src="/images/mobile-hero-iron-table.jpg"
             alt=""
-            className="md:hidden w-full h-full object-cover object-center"
+            className={desktopVideo ? "hidden" : "w-full h-full object-cover object-center"}
             aria-hidden="true"
           />
-          <video
+          {desktopVideo && <video
             autoPlay
             muted
             loop
@@ -442,8 +447,8 @@ export function Home() {
           >
             <source src="/images/forging-hero.mp4" type="video/mp4" />
             {/* Fallback static image if video fails */}
-            <img src="/images/hero-bg.png" alt="Forge interior" className="w-full h-full object-cover" />
-          </video>
+            <ResilientImage src="/images/hero-bg.png" alt="Forge interior" className="w-full h-full object-cover" />
+          </video>}
         </motion.div>
 
         <div className="relative z-10 container mx-auto px-5 sm:px-6 md:px-12 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -515,7 +520,7 @@ export function Home() {
               className="relative w-64 h-64 rounded-2xl overflow-hidden"
               style={{ border: '1px solid rgba(255,140,26,0.2)', boxShadow: '0 24px 80px rgba(0,0,0,0.5)' }}
             >
-              <img src="/images/custom-sign-bealer.jpg" alt="Custom Metal Signs" className="w-full h-full object-cover object-center" />
+              <ResilientImage src="/images/custom-sign-bealer.jpg" alt="Custom Metal Signs" className="w-full h-full object-cover object-center" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
               <div className="absolute bottom-3 left-3 text-xs font-display tracking-widest uppercase text-white/80">Custom Signs & Art</div>
             </div>
@@ -523,7 +528,7 @@ export function Home() {
               className="relative w-48 h-48 rounded-2xl overflow-hidden self-start ml-12"
               style={{ border: '1px solid rgba(255,140,26,0.15)', boxShadow: '0 16px 60px rgba(0,0,0,0.4)' }}
             >
-              <img src="/images/tree-of-life.jpg" alt="Tree of Life Iron Sculpture" className="w-full h-full object-cover object-center" />
+              <ResilientImage src="/images/tree-of-life.jpg" alt="Tree of Life Iron Sculpture" className="w-full h-full object-cover object-center" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/65 to-transparent" />
               <div className="absolute bottom-3 left-3 text-xs font-display tracking-widest uppercase text-white/80">Forged Art</div>
             </div>
@@ -531,7 +536,7 @@ export function Home() {
               className="relative w-56 h-40 rounded-2xl overflow-hidden"
               style={{ border: '1px solid rgba(255,140,26,0.12)', boxShadow: '0 12px 48px rgba(0,0,0,0.4)' }}
             >
-              <img src="/images/fire-pit-real.jpg" alt="Custom Fire Pit" className="w-full h-full object-cover object-center" />
+              <ResilientImage src="/images/fire-pit-real.jpg" alt="Custom Fire Pit" className="w-full h-full object-cover object-center" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/65 to-transparent" />
               <div className="absolute bottom-3 left-3 text-xs font-display tracking-widest uppercase text-white/80">Fire Pits</div>
             </div>
@@ -577,18 +582,18 @@ export function Home() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 mb-16">
             {customDesignCards.map((item, i) => (
-              <motion.button
+              <motion.a
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-80px' }}
                 transition={{ delay: i * 0.1 }}
-                onClick={() => navigate(`/services/${item.slug}`)}
+                href={`/services/${item.slug}`}
                 className="group relative aspect-[4/3] overflow-hidden rounded-xl text-left"
                 style={{ border: '1px solid rgba(255,255,255,0.09)' }}
               >
                 {item.src ? (
-                  <img
+                  <ResilientImage
                     src={item.src}
                     alt={item.alt}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
@@ -608,7 +613,7 @@ export function Home() {
                 </div>
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
                   style={{ boxShadow: 'inset 0 0 0 1px rgba(255,140,26,0.25)' }} />
-              </motion.button>
+              </motion.a>
             ))}
           </div>
 
@@ -622,15 +627,15 @@ export function Home() {
                   Custom Metalwork Categories
                 </h3>
               </div>
-              <GlassButton onClick={() => navigate('/services')} className="self-start md:self-auto text-sm px-6 py-2.5">
+              <GlassButton href="/services" className="self-start md:self-auto text-sm px-6 py-2.5">
                 View All Services
               </GlassButton>
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {adminServices.map((service) => (
-                <button
+                <a
                   key={service.slug}
-                  onClick={() => navigate(`/services/${service.slug}`)}
+                  href={`/services/${service.slug}`}
                   className="group rounded-xl p-4 sm:p-5 text-left bg-white/[0.025] hover:bg-white/[0.04] transition-colors"
                   style={{ border: '1px solid rgba(255,255,255,0.08)' }}
                 >
@@ -640,10 +645,15 @@ export function Home() {
                   <h4 className="font-display text-base sm:text-lg uppercase tracking-wider text-white group-hover:text-orange-100 transition-colors">
                     {service.shortTitle}
                   </h4>
-                </button>
+                </a>
               ))}
             </div>
           </div>
+
+          <p className="mb-10 text-white/60 font-sans leading-relaxed">
+            See the shop details and finished setting in our{' '}
+            <a href="/projects/forged-stair-balcony-railings" className="text-orange-300 underline underline-offset-4">forged stair and balcony railing project</a>.
+          </p>
 
           {/* Featured piece — custom iron table */}
           <motion.div
@@ -654,7 +664,7 @@ export function Home() {
             style={{ border: '1px solid rgba(255,140,26,0.14)', background: 'rgba(255,255,255,0.02)' }}
           >
             <div className="sm:w-72 h-64 sm:h-auto flex-shrink-0 overflow-hidden">
-              <img
+              <ResilientImage
                 src="/images/iron-table.jpg"
                 alt="Custom hand-forged iron table"
                 className="w-full h-full object-cover object-top"
@@ -668,7 +678,7 @@ export function Home() {
               <p className="text-white/55 font-sans font-light leading-relaxed mb-5 max-w-md">
                 Hand-forged twisted-leg iron tables with CNC cut tops — built in the shop from raw steel. Every weld, every twist, done by hand.
               </p>
-              <GlassButton onClick={() => navigate('/contact')} className="self-start text-sm px-6 py-2.5">
+              <GlassButton href="/contact" className="self-start text-sm px-6 py-2.5">
                 Commission a Piece
               </GlassButton>
             </div>
@@ -702,7 +712,7 @@ export function Home() {
                 </p>
                 <div className="text-2xl font-display tracking-wider text-white">(435) 421-9033</div>
                 <p className="text-xs text-white/35 font-sans">Call or text — goes straight to the forge</p>
-                <GlassButton onClick={() => navigate('/contact')} className="text-sm px-6 py-2.5 mt-2">
+                <GlassButton href="/contact" className="text-sm px-6 py-2.5 mt-2">
                   Send a Message
                 </GlassButton>
               </div>
@@ -736,7 +746,6 @@ export function Home() {
                 item={item}
                 delay={i * 0.08}
                 onPurchase={() => setPurchaseItem(item)}
-                onDetails={() => navigate(`/pre-made/${item.id}`)}
               />
             ))}
           </div>
@@ -847,7 +856,7 @@ export function Home() {
                   onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,0.09)'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'none'; }}
                 >
                   <div className="aspect-[4/3] overflow-hidden relative">
-                    <img src={product.image} alt={product.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                    <ResilientImage src={product.image} alt={product.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                     <div className="absolute inset-0 shadow-[inset_0_0_60px_rgba(0,0,0,0.35)] pointer-events-none" />
                   </div>
                   <div className="p-5 sm:p-7 flex flex-col flex-1">
@@ -904,14 +913,14 @@ export function Home() {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {etsyProducts.map((product, i) => (
-                <motion.div
+                <motion.a
                   key={product.id}
                   initial={{ opacity: 0, scale: 0.96 }}
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.06 }}
                   className="group cursor-pointer"
-                  onClick={() => navigate(`/shop/${product.id}`)}
+                  href={`/shop/${product.id}`}
                 >
                   <div
                     className="aspect-square mb-3 overflow-hidden rounded-xl relative"
@@ -919,7 +928,7 @@ export function Home() {
                     onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,140,26,0.28)'}
                     onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,0.09)'}
                   >
-                    <img
+                    <ResilientImage
                       src={product.image}
                       alt={product.title}
                       className="w-full h-full object-cover opacity-90 group-hover:opacity-100"
@@ -935,7 +944,7 @@ export function Home() {
                     <h3 className="font-display tracking-wider uppercase text-white/85 group-hover:text-white transition-colors text-xs sm:text-sm leading-snug">{product.title}</h3>
                     <p className="text-orange-400/75 mt-1 font-sans text-sm">{product.priceLabel}</p>
                   </div>
-                </motion.div>
+                </motion.a>
               ))}
             </div>
           )}
@@ -949,7 +958,7 @@ export function Home() {
         <div className="container mx-auto px-5 sm:px-6 md:px-12 relative z-10">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10 mb-12">
             <div className="flex flex-col items-start">
-              <img src="/brand/logo.png" alt="D&S Iron Works" className="h-12 sm:h-14 mb-4" style={{ filter: 'invert(1) brightness(0.7)' }} />
+              <ResilientImage src="/brand/logo.png" alt="D&S Iron Works" className="h-12 sm:h-14 mb-4" style={{ filter: 'invert(1) brightness(0.7)' }} />
               <p className="text-white/35 text-sm font-sans leading-relaxed max-w-xs">
                 D &amp; S Iron Works by Dallan Goff creates custom ironwork, forged railings,
                 fire pits, signs, sculptures, and hand-forged goods in Utah.
@@ -975,8 +984,8 @@ export function Home() {
                   <button key={id} onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })}
                     className="nav-link block text-sm font-display tracking-widest uppercase">{label}</button>
                 ))}
-                <button onClick={() => navigate('/services')} className="nav-link block text-sm font-display tracking-widest uppercase">Services</button>
-                <button onClick={() => navigate('/contact')} className="nav-link block text-sm font-display tracking-widest uppercase">Contact</button>
+                <a href="/services" className="nav-link block text-sm font-display tracking-widest uppercase">Services</a>
+                <a href="/contact" className="nav-link block text-sm font-display tracking-widest uppercase">Contact</a>
               </div>
             </div>
           </div>

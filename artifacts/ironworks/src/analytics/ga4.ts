@@ -13,9 +13,10 @@ const isConfigured = /^G-[A-Z0-9]+$/i.test(measurementId);
 
 export function initGa4() {
   if (!isConfigured || typeof window === 'undefined' || window.gtag) return false;
+  if (!['dandsironworks.com', 'www.dandsironworks.com'].includes(window.location.hostname)) return false;
 
   window.dataLayer = window.dataLayer ?? [];
-  window.gtag = (...args: unknown[]) => window.dataLayer?.push(args);
+  window.gtag = function (..._args: unknown[]) { window.dataLayer?.push(arguments); };
   window.gtag('js', new Date());
   window.gtag('config', measurementId, { send_page_view: true });
 
@@ -28,7 +29,7 @@ export function initGa4() {
 
 export function trackGaEvent(name: string, params: GaEventParams = {}) {
   if (!isConfigured || typeof window === 'undefined') return;
-  window.gtag?.('event', name, params);
+  window.gtag?.('event', name, { page_path: window.location.pathname, ...params });
 }
 
 export function ga4Status() {

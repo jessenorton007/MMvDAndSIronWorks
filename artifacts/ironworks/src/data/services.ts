@@ -46,6 +46,11 @@ export const services: ServicePage[] = [
     ],
     localServiceNote: 'D&S Iron Works serves customers throughout Southern and central Utah, including Cedar City, St. George, Beaver, Hurricane, and surrounding communities. Project fit and travel requirements are confirmed during the initial conversation.',
     relatedSlugs: ['forged-railings', 'custom-fire-pits', 'custom-metal-signs', 'forged-metal-art', 'blacksmith-commissions'],
+    quoteChecklist: ['A sketch, reference photo, or description of your idea', 'Approximate measurements and the space where the piece will be used', 'Your location and the timing you would like to discuss'],
+    faqs: [
+      { question: 'Who will I discuss my custom ironwork with?', answer: 'Project planning is directly with Dallan Goff. Bring your ideas, measurements, and reference photos to discuss the scale, details, finish, and practical requirements.' },
+      { question: 'Do I need a finished drawing to get started?', answer: 'A finished drawing is not required to start the conversation. A rough sketch, photo, or description of the intended space can help Dallan understand the project.' },
+    ],
   },
   {
     slug: 'custom-fire-pits',
@@ -135,6 +140,12 @@ export const services: ServicePage[] = [
       'Options for functional outdoor use, gifts, or display pieces',
     ],
     examples: ['Custom knives', 'Camp knives', 'Display blades', 'Forged gifts'],
+    quoteChecklist: ['Intended use or display purpose', 'Reference photos and preferred overall size', 'Handle ideas and timing to discuss'],
+    faqs: [
+      { question: 'Can I commission a knife as a gift?', answer: 'Custom knife projects can be discussed for gifts, functional outdoor use, or display. Explain the intended purpose and any design ideas so Dallan can discuss a suitable build.' },
+      { question: 'What details should I confirm before a knife is made?', answer: 'Discuss the blade design, steel, handle, size, finish, price, and timing directly with Dallan. Confirm what is included before approving the project.' },
+    ],
+    relatedSlugs: ['blacksmith-commissions', 'custom-ironwork-utah'],
   },
   {
     slug: 'custom-metal-signs',
@@ -174,6 +185,12 @@ export const services: ServicePage[] = [
       'Designed from a sketch, reference photo, idea, or theme',
     ],
     examples: ['Tree of Life sculptures', 'Candelabras', 'Decorative hooks', 'Forged bells', 'Wall art'],
+    quoteChecklist: ['A theme, sketch, or reference photo', 'Wall or display-space measurements', 'Indoor or outdoor placement and mounting questions'],
+    faqs: [
+      { question: 'What kinds of forged metal art can I request?', answer: 'D&S Iron Works discusses sculptural and decorative work such as trees, leaves, candelabras, hooks, bells, and wall pieces. Share your theme and the space where the piece will be displayed.' },
+      { question: 'Can the design be planned around my room or entry?', answer: 'Bring a photo and measurements of the display space. Discuss the scale, finish, weight, and mounting requirements with Dallan as part of planning the piece.' },
+    ],
+    relatedSlugs: ['custom-metal-signs', 'blacksmith-commissions', 'custom-ironwork-utah'],
   },
   {
     slug: 'blacksmith-commissions',
@@ -190,6 +207,12 @@ export const services: ServicePage[] = [
       'Useful for gifts, home projects, ranch work, and statement pieces',
     ],
     examples: ['Custom gifts', 'Forged furniture', 'Metal art', 'Fireplace tools', 'Functional ironwork'],
+    quoteChecklist: ['The idea and how the finished piece will be used', 'A sketch, photo, or rough dimensions', 'Your location, budget range, and preferred timing to discuss'],
+    faqs: [
+      { question: 'How do I start a blacksmith commission?', answer: 'Contact Dallan with a sketch, reference photo, measurements, or a rough idea. The first conversation covers the use, scale, and appearance of the piece.' },
+      { question: 'How much will a custom commission cost?', answer: 'A custom commission needs a project-specific quote. Discuss the design, size, finish, and any installation or delivery requirements with Dallan before agreeing on price and timing.' },
+    ],
+    relatedSlugs: ['custom-ironwork-utah', 'hand-forged-knives', 'forged-metal-art'],
   },
 ];
 

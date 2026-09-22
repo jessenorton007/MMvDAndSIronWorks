@@ -7,6 +7,7 @@ import { Embers } from '@/components/Embers';
 import { GlassButton } from '@/components/GlassButton';
 import { useAdminServices } from '@/hooks/useAdminProducts';
 import { useSeo } from '@/lib/seo';
+import { ResilientImage } from '@/components/ResilientImage';
 import NotFound from './not-found';
 
 export function ServiceDetailPage() {
@@ -20,7 +21,8 @@ export function ServiceDetailPage() {
   useSeo({
     title: service?.metaTitle ?? 'Custom Ironwork Services | D&S Iron Works',
     description: service?.metaDescription ?? 'Custom ironwork, forged metal art, fire pits, signs, railings, and blacksmith commissions by D&S Iron Works.',
-    path: service ? `/services/${service.slug}` : '/services',
+    path: service ? `/services/${service.slug}` : undefined,
+    robots: service ? 'index, follow' : 'noindex, nofollow',
     image: service?.heroImage,
     jsonLd: service
       ? {
@@ -89,7 +91,7 @@ export function ServiceDetailPage() {
               style={{ border: '1px solid rgba(255,140,26,0.16)', boxShadow: '0 24px 80px rgba(0,0,0,0.45)' }}
             >
               {service.heroImage ? (
-                <img src={service.heroImage} alt={`${service.title} example from D&S Iron Works`} className="w-full h-full object-cover" />
+                <ResilientImage loading="eager" fetchPriority="high" src={service.heroImage} alt={`${service.title} example from D&S Iron Works`} className="w-full h-full object-cover" />
               ) : (
                 <div className="flex h-full w-full flex-col items-center justify-center gap-5 bg-[linear-gradient(135deg,rgba(255,140,26,0.18),rgba(255,255,255,0.035)_45%,rgba(0,0,0,0.45))]">
                   <PocketKnife size={56} className="text-orange-300/70" strokeWidth={1.35} />
@@ -157,7 +159,7 @@ export function ServiceDetailPage() {
                     className="aspect-[4/3] overflow-hidden rounded-xl bg-black/50"
                     style={{ border: '1px solid rgba(255,255,255,0.08)' }}
                   >
-                    <img
+                    <ResilientImage
                       src={image.src}
                       alt={image.alt}
                       className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
@@ -200,6 +202,8 @@ export function ServiceDetailPage() {
               </div>
             </section>
           )}
+
+          {service.slug === 'forged-railings' && <section className="mt-10 rounded-xl border border-orange-500/20 p-6"><h2 className="font-display text-2xl uppercase mb-3">From the Shop to the Staircase</h2><p className="text-white/60 mb-4">Take a closer look at the branch-like steelwork in the shop and around a wood staircase and upper landing.</p><Link href="/projects/forged-stair-balcony-railings" className="text-orange-300 underline underline-offset-4">View the stair and balcony railing project</Link></section>}
 
           {service.quoteChecklist && service.quoteChecklist.length > 0 && (
             <section className="mt-14 rounded-xl border border-white/10 bg-white/[0.025] p-6 sm:p-8">

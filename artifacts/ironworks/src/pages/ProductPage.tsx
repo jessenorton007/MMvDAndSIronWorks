@@ -7,13 +7,14 @@ import { FormattedDescription } from '@/components/FormattedDescription';
 import { Navigation } from '@/components/Navigation';
 import { FloatingContactBanner } from '@/components/FloatingContactBanner';
 import { useSeo } from '@/lib/seo';
+import { productSchema, productDescription, reliableProductDetails } from '@/lib/product-seo';
 
 export function ProductPage() {
   const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const { products } = useEtsyProducts();
   const product = products.find(p => p.id === params.id);
-  const reliableDetails = product?.details?.filter((detail) => !/\b(available|left|in stock|low stock|people have this in their cart)\b/i.test(detail)) ?? [];
+  const reliableDetails = reliableProductDetails(product?.details);
   const returnToShop = () => {
     if (window.history.length > 1) {
       window.history.back();
@@ -24,27 +25,12 @@ export function ProductPage() {
 
   useSeo({
     title: product ? `${product.title} | D&S Iron Works` : 'Hand-Forged Products | D&S Iron Works',
-    description: product?.description ?? 'Hand-forged iron goods, jewelry, hooks, bells, and custom metalwork from D&S Iron Works in Utah.',
-    path: product ? `/shop/${product.id}` : '/shop',
+    description: product ? productDescription(product.description) : 'Hand-forged iron goods, jewelry, hooks, bells, and custom metalwork from D&S Iron Works in Utah.',
+    path: product ? `/shop/${product.id}` : undefined,
+    robots: product ? 'index, follow' : 'noindex, nofollow',
     image: product?.image,
     type: 'product',
-    jsonLd: product
-      ? {
-          '@context': 'https://schema.org',
-          '@type': 'Product',
-          name: product.title,
-          image: typeof window === 'undefined' ? product.image : new URL(product.image, window.location.origin).toString(),
-          description: product.description,
-          brand: {
-            '@type': 'Brand',
-            name: 'D&S Iron Works',
-          },
-          offers: {
-            '@type': 'Offer',
-            url: product.etsyUrl,
-          },
-        }
-      : undefined,
+    jsonLd: product ? productSchema(product, `/shop/${product.id}`, product.etsyUrl) : undefined,
   });
 
   if (!product) {
@@ -87,7 +73,7 @@ export function ProductPage() {
                 style={{ border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,140,26,0.05)' }}
               >
                 {product.image
-                  ? <img src={product.image} alt={product.title} className="w-full h-full object-cover" />
+                  ? <img fetchPriority="high" decoding="async" src={product.image} alt={product.title} className="w-full h-full object-cover" />
                   : <div className="w-full h-full bg-white/5 flex items-center justify-center"><span className="text-white/20 font-display uppercase">No image</span></div>
                 }
                 <div className="absolute inset-0 shadow-[inset_0_0_60px_rgba(0,0,0,0.3)] pointer-events-none rounded-2xl" />
@@ -137,8 +123,9 @@ export function ProductPage() {
               </div>
 
               <p className="text-xs text-white/30 tracking-wide mt-5 font-sans">
-                Purchase securely through our Etsy shop. Questions? Call or text Dallan directly.
+                Purchase securely through our Etsy shop. Confirm the current price, options, and availability on Etsy before purchasing.
               </p>
+              <a href="/services/blacksmith-commissions" className="text-orange-300 underline underline-offset-4 mt-5">Ask about a custom blacksmith commission</a>
             </motion.div>
           </div>
         </div>

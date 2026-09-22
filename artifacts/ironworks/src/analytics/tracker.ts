@@ -268,7 +268,7 @@ export function init() {
     resetIdle();
     const target = e.target as HTMLElement;
     const el = target.tagName.toLowerCase();
-    const text = (target.textContent || '').slice(0, 80).trim();
+    const text = (target.closest('a, button')?.textContent || target.textContent || '').slice(0, 80).trim();
     const href = (target as HTMLAnchorElement).href || target.closest('a')?.href || '';
     push('click', { el, text, href: href.replace(window.location.origin, ''), x: e.clientX, y: e.clientY });
 
@@ -277,7 +277,7 @@ export function init() {
     } else if (/etsy\.com/i.test(href)) {
       trackGaEvent('shopping_intent', { destination: 'etsy', link_url: href, link_text: text });
     } else if (target.closest('[data-analytics-cta]')) {
-      trackGaEvent('contact_intent', { method: 'website_cta', link_text: text });
+      trackGaEvent('contact_intent', { method: 'website_cta', cta: target.closest('[data-analytics-cta]')?.getAttribute('data-analytics-cta') ?? '', link_text: text });
     }
 
     // Rage click: 3+ clicks within 40px and 1000ms

@@ -742,6 +742,21 @@
         "custom-metal-signs",
         "forged-metal-art",
         "blacksmith-commissions"
+      ],
+      "quoteChecklist": [
+        "A sketch, reference photo, or description of your idea",
+        "Approximate measurements and the space where the piece will be used",
+        "Your location and the timing you would like to discuss"
+      ],
+      "faqs": [
+        {
+          "question": "Who will I discuss my custom ironwork with?",
+          "answer": "Project planning is directly with Dallan Goff. Bring your ideas, measurements, and reference photos to discuss the scale, details, finish, and practical requirements."
+        },
+        {
+          "question": "Do I need a finished drawing to get started?",
+          "answer": "A finished drawing is not required to start the conversation. A rough sketch, photo, or description of the intended space can help Dallan understand the project."
+        }
       ]
     },
     {
@@ -886,6 +901,25 @@
         "Camp knives",
         "Display blades",
         "Forged gifts"
+      ],
+      "quoteChecklist": [
+        "Intended use or display purpose",
+        "Reference photos and preferred overall size",
+        "Handle ideas and timing to discuss"
+      ],
+      "faqs": [
+        {
+          "question": "Can I commission a knife as a gift?",
+          "answer": "Custom knife projects can be discussed for gifts, functional outdoor use, or display. Explain the intended purpose and any design ideas so Dallan can discuss a suitable build."
+        },
+        {
+          "question": "What details should I confirm before a knife is made?",
+          "answer": "Discuss the blade design, steel, handle, size, finish, price, and timing directly with Dallan. Confirm what is included before approving the project."
+        }
+      ],
+      "relatedSlugs": [
+        "blacksmith-commissions",
+        "custom-ironwork-utah"
       ]
     },
     {
@@ -953,6 +987,26 @@
         "Decorative hooks",
         "Forged bells",
         "Wall art"
+      ],
+      "quoteChecklist": [
+        "A theme, sketch, or reference photo",
+        "Wall or display-space measurements",
+        "Indoor or outdoor placement and mounting questions"
+      ],
+      "faqs": [
+        {
+          "question": "What kinds of forged metal art can I request?",
+          "answer": "D&S Iron Works discusses sculptural and decorative work such as trees, leaves, candelabras, hooks, bells, and wall pieces. Share your theme and the space where the piece will be displayed."
+        },
+        {
+          "question": "Can the design be planned around my room or entry?",
+          "answer": "Bring a photo and measurements of the display space. Discuss the scale, finish, weight, and mounting requirements with Dallan as part of planning the piece."
+        }
+      ],
+      "relatedSlugs": [
+        "custom-metal-signs",
+        "blacksmith-commissions",
+        "custom-ironwork-utah"
       ]
     },
     {
@@ -975,7 +1029,871 @@
         "Metal art",
         "Fireplace tools",
         "Functional ironwork"
+      ],
+      "quoteChecklist": [
+        "The idea and how the finished piece will be used",
+        "A sketch, photo, or rough dimensions",
+        "Your location, budget range, and preferred timing to discuss"
+      ],
+      "faqs": [
+        {
+          "question": "How do I start a blacksmith commission?",
+          "answer": "Contact Dallan with a sketch, reference photo, measurements, or a rough idea. The first conversation covers the use, scale, and appearance of the piece."
+        },
+        {
+          "question": "How much will a custom commission cost?",
+          "answer": "A custom commission needs a project-specific quote. Discuss the design, size, finish, and any installation or delivery requirements with Dallan before agreeing on price and timing."
+        }
+      ],
+      "relatedSlugs": [
+        "custom-ironwork-utah",
+        "hand-forged-knives",
+        "forged-metal-art"
       ]
     }
-  ]
+  ],
+  "productGuides": {
+    "pre-built-fire-pits": {
+      "summary": "A portable steel fire pit with wildlife cutouts and pack-flat panels. Compare the photos and assembly video, then confirm current availability with Dallan.",
+      "specs": [
+        {
+          "label": "Design",
+          "value": "Wildlife cutout panels"
+        },
+        {
+          "label": "Setup",
+          "value": "Pack-flat panel construction"
+        }
+      ],
+      "faqs": [
+        {
+          "question": "How does the fire pit pack for transport?",
+          "answer": "The panel design packs flat. The assembly video on this page shows how the panels fit together, and the walkaround shows the assembled fire pit."
+        },
+        {
+          "question": "Can I order a different design?",
+          "answer": "For a personalized name, ranch theme, or different design, visit Custom Fire Pits and discuss the project with Dallan. Confirm the dimensions, finish, price, and timing for that custom build."
+        },
+        {
+          "question": "What should I confirm before ordering?",
+          "answer": "Ask about current availability, assembled dimensions, packed size, weight, included parts, and pickup or shipping arrangements. These details help you decide whether the fire pit fits your space and transport plans."
+        }
+      ],
+      "related": [
+        {
+          "path": "/services/custom-fire-pits",
+          "label": "Plan a custom fire pit"
+        },
+        {
+          "path": "/pre-made/iron-rocket-stove",
+          "label": "Explore the Iron Rocket cooking stove"
+        }
+      ]
+    },
+    "iron-rocket-stove": {
+      "summary": "The regular Iron Rocket is a wood-fed outdoor cooking stove with a steel cooktop, rear griddle, and a cooktop that lifts off the base for transport.",
+      "specs": [
+        {
+          "label": "Cooktop overall",
+          "value": "16 inches wide × 32 inches long"
+        },
+        {
+          "label": "Rear griddle",
+          "value": "16 inches wide × 18 inches long"
+        },
+        {
+          "label": "Transport",
+          "value": "Cooktop lifts off the base stove"
+        }
+      ],
+      "faqs": [
+        {
+          "question": "What is the difference between the regular Iron Rocket and the XL?",
+          "answer": "The regular model lists a 16 × 32 inch cooktop and 16 × 18 inch rear griddle. The XL lists a 22 × 32 inch cooktop and 22 × 20 inch rear griddle. Choose based on the cooking surface and space you need, and confirm the current build details with Dallan."
+        },
+        {
+          "question": "Does the stove separate for transport?",
+          "answer": "The product description states that the cooktop lifts off the base stove, allowing the two pieces to be transported separately. Ask Dallan for the weight and transport dimensions before planning your setup."
+        },
+        {
+          "question": "What should I check before purchase?",
+          "answer": "Confirm current availability, what is included, finish, total weight, setup instructions, and pickup or shipping costs. Ask Dallan which accessories and cooking surfaces are included in the quoted price."
+        }
+      ],
+      "related": [
+        {
+          "path": "/pre-made/iron-rocket-xl",
+          "label": "Compare the larger Iron Rocket XL"
+        },
+        {
+          "path": "/pre-made/pre-built-fire-pits",
+          "label": "See pack-flat steel fire pits"
+        }
+      ]
+    },
+    "iron-rocket-xl": {
+      "summary": "The Iron Rocket XL is the larger outdoor cooking model, with a wider steel cooktop and rear griddle. Its cooktop lifts off the base for transport.",
+      "specs": [
+        {
+          "label": "Cooktop overall",
+          "value": "22 inches wide × 32 inches long"
+        },
+        {
+          "label": "Rear griddle",
+          "value": "22 inches wide × 20 inches long"
+        },
+        {
+          "label": "Transport",
+          "value": "Cooktop lifts off the base stove"
+        }
+      ],
+      "faqs": [
+        {
+          "question": "How much larger is the XL cooking surface?",
+          "answer": "The listed XL cooktop is 22 × 32 inches, compared with 16 × 32 inches on the regular Iron Rocket. Its rear griddle is 22 × 20 inches, compared with 16 × 18 inches on the regular model."
+        },
+        {
+          "question": "Can the XL be taken apart for transport?",
+          "answer": "The product description states that the cooktop lifts off the base stove. Confirm the weight and dimensions of each part with Dallan to plan loading and transport."
+        },
+        {
+          "question": "How do I choose the right model?",
+          "answer": "Compare the listed cooking surfaces, available outdoor space, and transport needs. Contact Dallan to confirm the current configuration, included components, price, and availability before ordering."
+        }
+      ],
+      "related": [
+        {
+          "path": "/pre-made/iron-rocket-stove",
+          "label": "Compare the regular Iron Rocket Stove"
+        },
+        {
+          "path": "/services/custom-ironwork-utah",
+          "label": "Discuss custom steel projects"
+        }
+      ]
+    }
+  },
+  "railingProject": {
+    "path": "/projects/forged-stair-balcony-railings",
+    "title": "Forged Stair and Balcony Railings",
+    "description": "See D&S Iron Works railing sections in the shop and installed around a wood staircase and upper landing, with branch-like forged steel details.",
+    "intro": "These D&S Iron Works project photos show how branch-like steel balusters carry a consistent design from an angled stair section to the railing around an upper landing. The dark ironwork sits alongside substantial wood posts and stair treads.",
+    "sections": [
+      {
+        "title": "A Closer Look at the Steelwork",
+        "text": "The balusters have irregular curves and a textured surface, giving the railing an organic pattern. Straight top and bottom rails frame the individual pieces. In the installed view, that pattern repeats across the stairs and upper landing.",
+        "image": "/images/client-upload-railings/railing-install-main.jpg",
+        "alt": "Branch-like forged steel railing installed beside wood stairs and around the upper landing"
+      },
+      {
+        "title": "The Railing Section in the Shop",
+        "text": "The shop photo shows an angled section laid out on a fabrication table. It gives a clearer view of the individual balusters and their connection to the surrounding frame before the section is installed.",
+        "image": "/images/client-upload-railings/railing-shop-progress.jpg",
+        "alt": "Angled forged railing section on a fabrication table in the D&S Iron Works shop"
+      }
+    ],
+    "planning": "For a similar project, bring photos of your stairs or landing, approximate dimensions, your location, and examples of the look you want. Discuss final measurements, mounting points, finish, installation responsibilities, and applicable requirements with Dallan before fabrication."
+  },
+  "optimizedImages": {
+    "/images/client-upload-railings/img_5107.jpeg": [
+      {
+        "src": "/images/optimized/client-upload-railings/img_5107-640.webp",
+        "width": 640,
+        "height": 853,
+        "bytes": 109340
+      },
+      {
+        "src": "/images/optimized/client-upload-railings/img_5107-1280.webp",
+        "width": 1280,
+        "height": 1707,
+        "bytes": 326366
+      }
+    ],
+    "/images/client-upload-railings/img_5108.jpeg": [
+      {
+        "src": "/images/optimized/client-upload-railings/img_5108-640.webp",
+        "width": 640,
+        "height": 853,
+        "bytes": 78300
+      },
+      {
+        "src": "/images/optimized/client-upload-railings/img_5108-1280.webp",
+        "width": 1280,
+        "height": 1707,
+        "bytes": 223684
+      }
+    ],
+    "/images/client-upload-railings/img_5110.jpeg": [
+      {
+        "src": "/images/optimized/client-upload-railings/img_5110-640.webp",
+        "width": 640,
+        "height": 480,
+        "bytes": 36824
+      },
+      {
+        "src": "/images/optimized/client-upload-railings/img_5110-1280.webp",
+        "width": 1280,
+        "height": 960,
+        "bytes": 109142
+      }
+    ],
+    "/images/client-upload-railings/img_5111.jpeg": [
+      {
+        "src": "/images/optimized/client-upload-railings/img_5111-640.webp",
+        "width": 640,
+        "height": 480,
+        "bytes": 36790
+      },
+      {
+        "src": "/images/optimized/client-upload-railings/img_5111-1280.webp",
+        "width": 1280,
+        "height": 960,
+        "bytes": 105938
+      }
+    ],
+    "/images/client-upload-railings/img_5113.jpeg": [
+      {
+        "src": "/images/optimized/client-upload-railings/img_5113-640.webp",
+        "width": 640,
+        "height": 480,
+        "bytes": 61960
+      },
+      {
+        "src": "/images/optimized/client-upload-railings/img_5113-1280.webp",
+        "width": 1280,
+        "height": 960,
+        "bytes": 190744
+      }
+    ],
+    "/images/client-upload-railings/img_5950.jpeg": [
+      {
+        "src": "/images/optimized/client-upload-railings/img_5950-640.webp",
+        "width": 640,
+        "height": 436,
+        "bytes": 67722
+      },
+      {
+        "src": "/images/optimized/client-upload-railings/img_5950-1280.webp",
+        "width": 1279,
+        "height": 872,
+        "bytes": 195876
+      }
+    ],
+    "/images/client-upload-railings/img_5952.jpeg": [
+      {
+        "src": "/images/optimized/client-upload-railings/img_5952-640.webp",
+        "width": 640,
+        "height": 853,
+        "bytes": 138218
+      },
+      {
+        "src": "/images/optimized/client-upload-railings/img_5952-1280.webp",
+        "width": 1280,
+        "height": 1707,
+        "bytes": 450294
+      }
+    ],
+    "/images/client-upload-railings/img_5953.jpeg": [
+      {
+        "src": "/images/optimized/client-upload-railings/img_5953-640.webp",
+        "width": 640,
+        "height": 853,
+        "bytes": 123932
+      },
+      {
+        "src": "/images/optimized/client-upload-railings/img_5953-1280.webp",
+        "width": 1280,
+        "height": 1707,
+        "bytes": 417752
+      }
+    ],
+    "/images/client-upload-railings/img_6022.jpeg": [
+      {
+        "src": "/images/optimized/client-upload-railings/img_6022-640.webp",
+        "width": 640,
+        "height": 480,
+        "bytes": 101544
+      },
+      {
+        "src": "/images/optimized/client-upload-railings/img_6022-1280.webp",
+        "width": 1280,
+        "height": 960,
+        "bytes": 361810
+      }
+    ],
+    "/images/client-upload-railings/img_6028.jpeg": [
+      {
+        "src": "/images/optimized/client-upload-railings/img_6028-640.webp",
+        "width": 640,
+        "height": 480,
+        "bytes": 85758
+      },
+      {
+        "src": "/images/optimized/client-upload-railings/img_6028-1280.webp",
+        "width": 1280,
+        "height": 960,
+        "bytes": 301336
+      }
+    ],
+    "/images/client-upload-railings/img_6042.jpeg": [
+      {
+        "src": "/images/optimized/client-upload-railings/img_6042-640.webp",
+        "width": 640,
+        "height": 853,
+        "bytes": 117406
+      },
+      {
+        "src": "/images/optimized/client-upload-railings/img_6042-1280.webp",
+        "width": 1280,
+        "height": 1707,
+        "bytes": 412958
+      }
+    ],
+    "/images/client-upload-railings/img_6043.jpeg": [
+      {
+        "src": "/images/optimized/client-upload-railings/img_6043-640.webp",
+        "width": 640,
+        "height": 853,
+        "bytes": 106320
+      },
+      {
+        "src": "/images/optimized/client-upload-railings/img_6043-1280.webp",
+        "width": 1280,
+        "height": 1707,
+        "bytes": 295216
+      }
+    ],
+    "/images/client-upload-railings/railing-balcony-install.jpg": [
+      {
+        "src": "/images/optimized/client-upload-railings/railing-balcony-install-640.webp",
+        "width": 640,
+        "height": 480,
+        "bytes": 36882
+      },
+      {
+        "src": "/images/optimized/client-upload-railings/railing-balcony-install-1280.webp",
+        "width": 1280,
+        "height": 960,
+        "bytes": 107260
+      }
+    ],
+    "/images/client-upload-railings/railing-detail.jpg": [
+      {
+        "src": "/images/optimized/client-upload-railings/railing-detail-640.webp",
+        "width": 640,
+        "height": 436,
+        "bytes": 67714
+      },
+      {
+        "src": "/images/optimized/client-upload-railings/railing-detail-1280.webp",
+        "width": 1279,
+        "height": 872,
+        "bytes": 196070
+      }
+    ],
+    "/images/client-upload-railings/railing-install-main.jpg": [
+      {
+        "src": "/images/optimized/client-upload-railings/railing-install-main-640.webp",
+        "width": 640,
+        "height": 480,
+        "bytes": 61888
+      },
+      {
+        "src": "/images/optimized/client-upload-railings/railing-install-main-1280.webp",
+        "width": 1280,
+        "height": 960,
+        "bytes": 191436
+      }
+    ],
+    "/images/client-upload-railings/railing-shop-progress.jpg": [
+      {
+        "src": "/images/optimized/client-upload-railings/railing-shop-progress-640.webp",
+        "width": 640,
+        "height": 480,
+        "bytes": 101586
+      },
+      {
+        "src": "/images/optimized/client-upload-railings/railing-shop-progress-1280.webp",
+        "width": 1280,
+        "height": 960,
+        "bytes": 362012
+      }
+    ],
+    "/images/client-upload-railings/railing-stair-finished.jpg": [
+      {
+        "src": "/images/optimized/client-upload-railings/railing-stair-finished-640.webp",
+        "width": 640,
+        "height": 853,
+        "bytes": 117856
+      },
+      {
+        "src": "/images/optimized/client-upload-railings/railing-stair-finished-1280.webp",
+        "width": 1280,
+        "height": 1707,
+        "bytes": 415660
+      }
+    ],
+    "/images/client-upload-railings/railing-stair-install.jpg": [
+      {
+        "src": "/images/optimized/client-upload-railings/railing-stair-install-640.webp",
+        "width": 640,
+        "height": 853,
+        "bytes": 109462
+      },
+      {
+        "src": "/images/optimized/client-upload-railings/railing-stair-install-1280.webp",
+        "width": 1280,
+        "height": 1707,
+        "bytes": 329902
+      }
+    ],
+    "/images/custom-sign-bealer.jpg": [
+      {
+        "src": "/images/optimized/custom-sign-bealer-640.webp",
+        "width": 640,
+        "height": 382,
+        "bytes": 76548
+      },
+      {
+        "src": "/images/optimized/custom-sign-bealer-1280.webp",
+        "width": 1280,
+        "height": 764,
+        "bytes": 264964
+      }
+    ],
+    "/images/custom-sign.jpg": [
+      {
+        "src": "/images/optimized/custom-sign-640.webp",
+        "width": 640,
+        "height": 482,
+        "bytes": 72052
+      },
+      {
+        "src": "/images/optimized/custom-sign-1280.webp",
+        "width": 1280,
+        "height": 964,
+        "bytes": 240422
+      }
+    ],
+    "/images/fire-pit-real.jpg": [
+      {
+        "src": "/images/optimized/fire-pit-real-640.webp",
+        "width": 639,
+        "height": 413,
+        "bytes": 58976
+      },
+      {
+        "src": "/images/optimized/fire-pit-real-1280.webp",
+        "width": 1280,
+        "height": 827,
+        "bytes": 163520
+      }
+    ],
+    "/images/fire-pit-real2.jpg": [
+      {
+        "src": "/images/optimized/fire-pit-real2-640.webp",
+        "width": 640,
+        "height": 480,
+        "bytes": 107282
+      },
+      {
+        "src": "/images/optimized/fire-pit-real2-1280.webp",
+        "width": 1280,
+        "height": 960,
+        "bytes": 377864
+      }
+    ],
+    "/images/fire-pit.jpg": [
+      {
+        "src": "/images/optimized/fire-pit-640.webp",
+        "width": 640,
+        "height": 413,
+        "bytes": 36274
+      },
+      {
+        "src": "/images/optimized/fire-pit-1264.webp",
+        "width": 1264,
+        "height": 816,
+        "bytes": 94526
+      }
+    ],
+    "/images/hand-forged-knives.jpg": [
+      {
+        "src": "/images/optimized/hand-forged-knives-640.webp",
+        "width": 639,
+        "height": 375,
+        "bytes": 89186
+      },
+      {
+        "src": "/images/optimized/hand-forged-knives-1280.webp",
+        "width": 1280,
+        "height": 751,
+        "bytes": 305076
+      }
+    ],
+    "/images/hero-bg.png": [
+      {
+        "src": "/images/optimized/hero-bg-640.webp",
+        "width": 640,
+        "height": 349,
+        "bytes": 21440
+      },
+      {
+        "src": "/images/optimized/hero-bg-1280.webp",
+        "width": 1280,
+        "height": 698,
+        "bytes": 57536
+      }
+    ],
+    "/images/iron-rocket-branded-firebox.jpg": [
+      {
+        "src": "/images/optimized/iron-rocket-branded-firebox-640.webp",
+        "width": 640,
+        "height": 853,
+        "bytes": 154326
+      },
+      {
+        "src": "/images/optimized/iron-rocket-branded-firebox-1280.webp",
+        "width": 1280,
+        "height": 1707,
+        "bytes": 437540
+      }
+    ],
+    "/images/iron-rocket-cooktop.jpg": [
+      {
+        "src": "/images/optimized/iron-rocket-cooktop-640.webp",
+        "width": 640,
+        "height": 853,
+        "bytes": 154990
+      },
+      {
+        "src": "/images/optimized/iron-rocket-cooktop-1280.webp",
+        "width": 1280,
+        "height": 1707,
+        "bytes": 482462
+      }
+    ],
+    "/images/iron-rocket-full.jpg": [
+      {
+        "src": "/images/optimized/iron-rocket-full-640.webp",
+        "width": 640,
+        "height": 480,
+        "bytes": 118602
+      },
+      {
+        "src": "/images/optimized/iron-rocket-full-1280.webp",
+        "width": 1280,
+        "height": 960,
+        "bytes": 473642
+      }
+    ],
+    "/images/iron-rocket-sunset-close.jpg": [
+      {
+        "src": "/images/optimized/iron-rocket-sunset-close-640.webp",
+        "width": 640,
+        "height": 853,
+        "bytes": 161712
+      },
+      {
+        "src": "/images/optimized/iron-rocket-sunset-close-1280.webp",
+        "width": 1280,
+        "height": 1707,
+        "bytes": 507238
+      }
+    ],
+    "/images/iron-rocket-sunset-full.jpg": [
+      {
+        "src": "/images/optimized/iron-rocket-sunset-full-640.webp",
+        "width": 640,
+        "height": 853,
+        "bytes": 181476
+      },
+      {
+        "src": "/images/optimized/iron-rocket-sunset-full-1280.webp",
+        "width": 1280,
+        "height": 1707,
+        "bytes": 624014
+      }
+    ],
+    "/images/iron-table.jpg": [
+      {
+        "src": "/images/optimized/iron-table-640.webp",
+        "width": 640,
+        "height": 853,
+        "bytes": 143962
+      },
+      {
+        "src": "/images/optimized/iron-table-1280.webp",
+        "width": 1280,
+        "height": 1707,
+        "bytes": 428068
+      }
+    ],
+    "/images/mobile-hero-iron-table.jpg": [
+      {
+        "src": "/images/optimized/mobile-hero-iron-table-640.webp",
+        "width": 640,
+        "height": 1138,
+        "bytes": 114234
+      },
+      {
+        "src": "/images/optimized/mobile-hero-iron-table-1080.webp",
+        "width": 1080,
+        "height": 1920,
+        "bytes": 245718
+      }
+    ],
+    "/images/portfolio-fireplace.png": [
+      {
+        "src": "/images/optimized/portfolio-fireplace-640.webp",
+        "width": 640,
+        "height": 448,
+        "bytes": 31088
+      },
+      {
+        "src": "/images/optimized/portfolio-fireplace-1280.webp",
+        "width": 1280,
+        "height": 896,
+        "bytes": 96740
+      }
+    ],
+    "/images/portfolio-gate.png": [
+      {
+        "src": "/images/optimized/portfolio-gate-640.webp",
+        "width": 640,
+        "height": 448,
+        "bytes": 58122
+      },
+      {
+        "src": "/images/optimized/portfolio-gate-1280.webp",
+        "width": 1280,
+        "height": 896,
+        "bytes": 186804
+      }
+    ],
+    "/images/portfolio-railing.png": [
+      {
+        "src": "/images/optimized/portfolio-railing-640.webp",
+        "width": 640,
+        "height": 448,
+        "bytes": 18972
+      },
+      {
+        "src": "/images/optimized/portfolio-railing-1280.webp",
+        "width": 1280,
+        "height": 896,
+        "bytes": 45722
+      }
+    ],
+    "/images/portfolio-sculpture.png": [
+      {
+        "src": "/images/optimized/portfolio-sculpture-640.webp",
+        "width": 640,
+        "height": 448,
+        "bytes": 20168
+      },
+      {
+        "src": "/images/optimized/portfolio-sculpture-1280.webp",
+        "width": 1280,
+        "height": 896,
+        "bytes": 56274
+      }
+    ],
+    "/images/premade-fire-pit-real-front.jpg": [
+      {
+        "src": "/images/optimized/premade-fire-pit-real-front-640.webp",
+        "width": 640,
+        "height": 480,
+        "bytes": 78188
+      },
+      {
+        "src": "/images/optimized/premade-fire-pit-real-front-1280.webp",
+        "width": 1280,
+        "height": 960,
+        "bytes": 248380
+      }
+    ],
+    "/images/premade-fire-pit-sunset.jpg": [
+      {
+        "src": "/images/optimized/premade-fire-pit-sunset-640.webp",
+        "width": 640,
+        "height": 853,
+        "bytes": 172370
+      },
+      {
+        "src": "/images/optimized/premade-fire-pit-sunset-1280.webp",
+        "width": 1280,
+        "height": 1707,
+        "bytes": 611886
+      }
+    ],
+    "/images/premade-rocket-stove-griddle.jpg": [
+      {
+        "src": "/images/optimized/premade-rocket-stove-griddle-640.webp",
+        "width": 640,
+        "height": 482,
+        "bytes": 107830
+      },
+      {
+        "src": "/images/optimized/premade-rocket-stove-griddle-1280.webp",
+        "width": 1280,
+        "height": 964,
+        "bytes": 319514
+      }
+    ],
+    "/images/premium-firepit.png": [
+      {
+        "src": "/images/optimized/premium-firepit-640.webp",
+        "width": 640,
+        "height": 448,
+        "bytes": 25706
+      },
+      {
+        "src": "/images/optimized/premium-firepit-1280.webp",
+        "width": 1280,
+        "height": 896,
+        "bytes": 68124
+      }
+    ],
+    "/images/premium-fireplace.png": [
+      {
+        "src": "/images/optimized/premium-fireplace-640.webp",
+        "width": 640,
+        "height": 448,
+        "bytes": 17386
+      },
+      {
+        "src": "/images/optimized/premium-fireplace-1280.webp",
+        "width": 1280,
+        "height": 896,
+        "bytes": 58200
+      }
+    ],
+    "/images/premium-panel.png": [
+      {
+        "src": "/images/optimized/premium-panel-640.webp",
+        "width": 640,
+        "height": 448,
+        "bytes": 46318
+      },
+      {
+        "src": "/images/optimized/premium-panel-1280.webp",
+        "width": 1280,
+        "height": 896,
+        "bytes": 150372
+      }
+    ],
+    "/images/product-bracket.png": [
+      {
+        "src": "/images/optimized/product-bracket-640.webp",
+        "width": 640,
+        "height": 640,
+        "bytes": 28878
+      },
+      {
+        "src": "/images/optimized/product-bracket-1024.webp",
+        "width": 1024,
+        "height": 1024,
+        "bytes": 70582
+      }
+    ],
+    "/images/product-candle.png": [
+      {
+        "src": "/images/optimized/product-candle-640.webp",
+        "width": 640,
+        "height": 640,
+        "bytes": 32052
+      },
+      {
+        "src": "/images/optimized/product-candle-1024.webp",
+        "width": 1024,
+        "height": 1024,
+        "bytes": 77838
+      }
+    ],
+    "/images/product-hook.png": [
+      {
+        "src": "/images/optimized/product-hook-640.webp",
+        "width": 640,
+        "height": 640,
+        "bytes": 44352
+      },
+      {
+        "src": "/images/optimized/product-hook-1024.webp",
+        "width": 1024,
+        "height": 1024,
+        "bytes": 105542
+      }
+    ],
+    "/images/product-opener.png": [
+      {
+        "src": "/images/optimized/product-opener-640.webp",
+        "width": 640,
+        "height": 640,
+        "bytes": 42840
+      },
+      {
+        "src": "/images/optimized/product-opener-1024.webp",
+        "width": 1024,
+        "height": 1024,
+        "bytes": 92082
+      }
+    ],
+    "/images/product-plant-stand.png": [
+      {
+        "src": "/images/optimized/product-plant-stand-640.webp",
+        "width": 640,
+        "height": 640,
+        "bytes": 14914
+      },
+      {
+        "src": "/images/optimized/product-plant-stand-1024.webp",
+        "width": 1024,
+        "height": 1024,
+        "bytes": 43312
+      }
+    ],
+    "/images/product-poker.png": [
+      {
+        "src": "/images/optimized/product-poker-640.webp",
+        "width": 640,
+        "height": 640,
+        "bytes": 22166
+      },
+      {
+        "src": "/images/optimized/product-poker-1024.webp",
+        "width": 1024,
+        "height": 1024,
+        "bytes": 45900
+      }
+    ],
+    "/images/ranch-sign-flat.jpg": [
+      {
+        "src": "/images/optimized/ranch-sign-flat-640.webp",
+        "width": 640,
+        "height": 291,
+        "bytes": 65094
+      },
+      {
+        "src": "/images/optimized/ranch-sign-flat-1280.webp",
+        "width": 1280,
+        "height": 582,
+        "bytes": 202828
+      }
+    ],
+    "/images/ranch-sign-installed.jpg": [
+      {
+        "src": "/images/optimized/ranch-sign-installed-640.webp",
+        "width": 640,
+        "height": 424,
+        "bytes": 93288
+      },
+      {
+        "src": "/images/optimized/ranch-sign-installed-1280.webp",
+        "width": 1280,
+        "height": 848,
+        "bytes": 382430
+      }
+    ]
+  }
 }

@@ -14,21 +14,28 @@ async function importDataModule(filename) {
 }
 
 export async function generateSeoData() {
-  const [etsy, premade, serviceData] = await Promise.all([
+  const [etsy, premade, serviceData, guideData, projectData] = await Promise.all([
     importDataModule("etsy-products.ts"),
     importDataModule("premade-items.ts"),
     importDataModule("services.ts"),
+    importDataModule("product-guides.ts"),
+    importDataModule("projects.ts"),
   ]);
   const output = {
     defaultEtsyProducts: etsy.defaultEtsyProducts,
     preMadeItems: premade.preMadeItems,
     services: serviceData.services,
+    productGuides: guideData.productGuides,
+    railingProject: projectData.railingProject,
+    optimizedImages: JSON.parse(await readFile(path.resolve(artifactDir, "../ironworks/src/data/optimized-images.json"), "utf8")),
   };
   await writeFile(
     path.resolve(artifactDir, "src/lib/seo-source-data.json"),
     `${JSON.stringify(output, null, 2)}\n`,
     "utf8",
   );
+  await writeFile(path.resolve(artifactDir, 'src/lib/product-seo.ts'),
+    await readFile(path.resolve(artifactDir, '../ironworks/src/lib/product-seo.ts'), 'utf8'), 'utf8');
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

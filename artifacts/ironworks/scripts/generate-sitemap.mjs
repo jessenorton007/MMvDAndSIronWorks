@@ -28,6 +28,7 @@ const routes = [
   '/pre-made/iron-rocket-stove',
   '/pre-made/iron-rocket-xl',
   '/contact',
+  '/projects/forged-stair-balcony-railings',
   ...etsyProductRoutes,
 ];
 

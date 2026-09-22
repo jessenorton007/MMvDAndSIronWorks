@@ -13,8 +13,7 @@ type SeoInput = {
 const defaultImage = '/opengraph.jpg';
 
 function absoluteUrl(path: string) {
-  if (typeof window === 'undefined') return path;
-  return new URL(path, window.location.origin).toString();
+  return new URL(path, 'https://dandsironworks.com').toString();
 }
 
 function setMeta(name: string, content: string) {

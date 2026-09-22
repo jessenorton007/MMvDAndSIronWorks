@@ -4,14 +4,16 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
-import { Home } from "@/pages/Home";
-import { ProductPage } from "@/pages/ProductPage";
-import { ContactPage } from "@/pages/ContactPage";
-import { ServicesPage } from "@/pages/ServicesPage";
-import { ServiceDetailPage } from "@/pages/ServiceDetailPage";
-import { PreMadeDetailPage } from "@/pages/PreMadeDetailPage";
+const Home = lazy(() => import("@/pages/Home").then(module => ({ default: module.Home })));
+const ProductPage = lazy(() => import("@/pages/ProductPage").then(module => ({ default: module.ProductPage })));
+const ContactPage = lazy(() => import("@/pages/ContactPage").then(module => ({ default: module.ContactPage })));
+const ServicesPage = lazy(() => import("@/pages/ServicesPage").then(module => ({ default: module.ServicesPage })));
+const ServiceDetailPage = lazy(() => import("@/pages/ServiceDetailPage").then(module => ({ default: module.ServiceDetailPage })));
+const PreMadeDetailPage = lazy(() => import("@/pages/PreMadeDetailPage").then(module => ({ default: module.PreMadeDetailPage })));
 import { AdminGear } from "@/components/AdminGear";
 import { init as initTracker } from "@/analytics/tracker";
+
+const ProjectPage = lazy(() => import("@/pages/ProjectPage").then(module => ({ default: module.ProjectPage })));
 
 const AdminPanel = lazy(() => import("@/pages/AdminPanel").then((module) => ({ default: module.AdminPanel })));
 
@@ -89,6 +91,7 @@ function Router() {
       <Route path="/pre-made/:id" component={PreMadeDetailPage} />
       <Route path="/services" component={ServicesPage} />
       <Route path="/services/:slug" component={ServiceDetailPage} />
+      <Route path="/projects/forged-stair-balcony-railings" component={ProjectPage} />
       <Route path="/contact" component={ContactPage} />
       <Route path="/admin" component={AdminRoute} />
       <Route component={NotFound} />
@@ -105,8 +108,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <ScrollToRouteTop />
-          <Router />
+          <Suspense fallback={<div className="min-h-screen bg-background pt-32 text-center text-white/60" role="status">Loading...</div>}>
+            <ScrollToRouteTop />
+            <Router />
+          </Suspense>
           <AdminGear />
         </WouterRouter>
         <Toaster />

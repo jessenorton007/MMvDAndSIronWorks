@@ -1,3 +1,4 @@
+import { ResilientImage } from '@/components/ResilientImage';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Phone, PocketKnife } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
@@ -82,7 +83,7 @@ export function ServicesPage() {
                 <Link href={`/services/${service.slug}`} className="block w-full text-left">
                   <div className="aspect-[4/3] overflow-hidden">
                     {service.heroImage ? (
-                      <img
+                      <ResilientImage
                         src={service.heroImage}
                         alt={`${service.title} by D&S Iron Works`}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
