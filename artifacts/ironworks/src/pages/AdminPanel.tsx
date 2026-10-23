@@ -15,13 +15,14 @@ import { PremiumProduct } from '@/data/premium-products';
 import { PreMadeItem } from '@/data/premade-items';
 import { ServicePage } from '@/data/services';
 import { AnalyticsTab } from './AnalyticsTab';
+import { ClassesAdmin } from './ClassesAdmin';
 import { ResilientImage } from '@/components/ResilientImage';
 import { preMadeItems as fallbackPreMadeItems } from '@/data/premade-items';
 import { useSeo } from '@/lib/seo';
 
 const SESSION_KEY = 'ds_admin_auth';
 
-type Tab = 'overview' | 'premade' | 'services' | 'etsy' | 'premium' | 'inquiries' | 'orders' | 'analytics' | 'settings';
+type Tab = 'overview' | 'classes' | 'premade' | 'services' | 'etsy' | 'premium' | 'inquiries' | 'orders' | 'analytics' | 'settings';
 
 type AdminStorageStatus = {
   ok: boolean;
@@ -866,6 +867,7 @@ export function AdminPanel() {
   };
 
   const navItems: { id: Tab; label: string; icon: any; badge?: number }[] = [
+    { id: 'classes', label: 'Classes & Waivers', icon: ClipboardList },
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'premade', label: 'Pre-Made Products', icon: Flame, badge: preMadeProducts.length },
     { id: 'services', label: 'Service Images', icon: ImageIcon, badge: adminServices.filter(service => service.heroImage).length },
@@ -940,6 +942,7 @@ export function AdminPanel() {
           )}
 
           {/* OVERVIEW */}
+          {tab === 'classes' && <ClassesAdmin />}
           {tab === 'overview' && (
             <div>
               <SectionHeader title="Overview" sub="D & S Iron Works admin dashboard" />

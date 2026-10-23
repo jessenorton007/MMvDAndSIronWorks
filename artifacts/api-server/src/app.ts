@@ -12,6 +12,7 @@ import { isAdminRequest } from "./routes/admin";
 import { readPublicServices } from "./lib/service-content";
 import { readPublicProducts, preMadeSeo, etsySeo } from "./lib/product-content";
 import { publicSitemap } from './lib/sitemap';
+import { classesTransaction } from './lib/classes-store';
 
 const app: Express = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -123,6 +124,17 @@ if (existsSync(staticRoot)) {
       }
     }
     let page = getSeoPage(pathname, publicServices);
+    if (pathname === '/classes' || pathname.startsWith('/classes/')) {
+      try {
+        const classes = await classesTransaction(state => state.classes.filter(c => c.published), false);
+        const item = classes.find(c => `/classes/${c.slug}` === pathname);
+        if (pathname === '/classes') {
+          page = { path: pathname, title: 'Blacksmithing Classes | D&S Iron Works', heading: 'Blacksmithing Classes', description: 'Beginner, intermediate, advanced, and date night blacksmithing classes at D&S Iron Works.', contentHtml: '<p>Explore classes and upcoming sessions.</p><ul>' + classes.map(c => `<li><a href="/classes/${escapeHtml(c.slug)}">${escapeHtml(c.title)}</a></li>`).join('') + '</ul>' };
+        } else if (item) {
+          page = { path: pathname, title: `${item.title} | D&S Iron Works`, heading: item.title, description: item.description.slice(0, 160), image: item.images[0]?.src, contentHtml: `<p>${escapeHtml(item.description)}</p><p>${escapeHtml(item.duration)} · ${escapeHtml(item.location)}</p><p>Registration requests require D&S confirmation.</p>` };
+        }
+      } catch (error) { logger.warn({ err: error }, 'Could not load classes'); res.status(503).type('text').send('Classes are temporarily unavailable. Please try again.'); return; }
+    }
     try {
       if (pathname === '/' && page) {
         const [preMade, etsy] = await Promise.all([readPublicProducts('premade-products'), readPublicProducts('etsy-products')]);

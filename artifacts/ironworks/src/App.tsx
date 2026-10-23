@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
+const ClassesPage = lazy(() => import('@/pages/ClassesPage').then(module => ({ default: module.ClassesPage })));
 const Home = lazy(() => import("@/pages/Home").then(module => ({ default: module.Home })));
 const ProductPage = lazy(() => import("@/pages/ProductPage").then(module => ({ default: module.ProductPage })));
 const ContactPage = lazy(() => import("@/pages/ContactPage").then(module => ({ default: module.ContactPage })));
@@ -87,6 +88,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/classes" component={ClassesPage} />
+      <Route path="/classes/:slug" component={ClassesPage} />
       <Route path="/shop/:id" component={ProductPage} />
       <Route path="/pre-made/:id" component={PreMadeDetailPage} />
       <Route path="/services" component={ServicesPage} />

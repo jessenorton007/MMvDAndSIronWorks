@@ -36,6 +36,7 @@ export function Navigation() {
   };
 
   const navLinks = [
+    { name: 'Classes', href: '/classes', action: () => { setMobileMenuOpen(false); navigate('/classes'); } },
     { name: 'Custom', href: '/#custom-designs', action: () => scrollTo('custom-designs') },
     { name: 'Pre-Made', href: '/#pre-made', action: () => scrollTo('pre-made') },
     { name: 'Services', href: '/services', action: goServices },
