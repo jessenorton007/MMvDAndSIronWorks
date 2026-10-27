@@ -12,6 +12,10 @@
 
 ## Payment boundary
 
+New registrations reuse the contact form's SMTP transport and `SMTP_*` settings. The owner receives a notification and the participant receives a request acknowledgment, explicitly stating that no seat is reserved and no payment is collected. Recipient selection is `CLASS_NOTIFICATION_TO`, then the existing `ORDER_NOTIFICATION_TO` / `CONTACT_NOTIFICATION_TO`, then the existing business fallback. Signed waiver text is kept in the private admin roster rather than emailed.
+
+Email runs after the registration is saved. SMTP failures are logged without rolling back the signup; no automatic mail retry is implemented. Replaying a registration request does not send duplicate emails. Local sample previews (`CLASSES_PREVIEW=true`) do not send mail. Integration tests use a local fake SMTP server and cover delivery, duplicate suppression, and failed delivery without losing the registration.
+
 Neither payment provider is connected. Registrations have `paymentStatus: not_connected`; a redirect or registration submission never counts as payment. Pending requests do not hold seats. The owner must arrange payment separately and confirm a seat manually. Status changes do not send email. Displayed availability subtracts confirmed seats only.
 
 When selecting a provider, add server-side checkout creation and verified payment reconciliation against registration IDs. Implement expiring seat holds and transactional confirmation before advertising instant booking. Preserve existing pre-made-item QuickBooks behavior. Recurring memberships, automated receipts/confirmation emails, refunds, and subscription lifecycle handling are not implemented by this classes release.

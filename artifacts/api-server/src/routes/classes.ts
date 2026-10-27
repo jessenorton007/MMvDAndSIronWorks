@@ -2,6 +2,7 @@ import { Router, type RequestHandler } from "express";
 import { randomUUID } from "node:crypto";
 import { isAdminRequest } from "./admin";
 import { classesTransaction } from "../lib/classes-store";
+import { sendRegistrationEmails } from "../lib/classes-email";
 import {
   consentText,
   seatsRemaining,
@@ -180,7 +181,7 @@ router.post(
           throw new Error(
             "This request has already been used. Reload the form.",
           );
-        return { id: previous.id, status: previous.status };
+        return { id: previous.id, status: previous.status, record: undefined };
       }
       const c = state.classes.find((c) => c.id === body.classId && c.published);
       const session = c?.sessions.find((s) => s.id === body.sessionId);
@@ -236,9 +237,12 @@ router.post(
         signedAt: timestamp,
       };
       state.registrations.push(record);
-      return { id: record.id, status: record.status };
+      return { id: record.id, status: record.status, record };
     });
-    res.status(201).json(result);
+    // Commit first. Email failures must never turn a saved signup into an error.
+    // Retries of the same request do not send duplicate notifications.
+    if (result.record) await sendRegistrationEmails(result.record);
+    res.status(201).json({ id: result.id, status: result.status });
   }),
 );
 router.patch(

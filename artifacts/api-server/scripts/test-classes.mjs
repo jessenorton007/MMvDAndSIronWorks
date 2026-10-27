@@ -15,6 +15,28 @@ test('classes registration, privacy, waiver history, and capacity integration', 
   const port = server.address().port; await new Promise(resolve => server.close(resolve));
   const env = { ...process.env, NODE_ENV: 'development', PORT: String(port), ADMIN_PASSWORD: 'classes-integration-test', ADMIN_SESSION_SECRET: randomUUID(), IRONWORKS_DATA_DIR: dir, IRONWORKS_UPLOAD_DIR: path.join(dir, 'uploads'), IRONWORKS_ANALYTICS_FILE: path.join(dir, 'analytics.json'), IRONWORKS_APP_STORAGE: 'false' };
   delete env.DATABASE_URL;
+  const mail = [];
+  let rejectMail = false;
+  const smtp = createServer(socket => {
+    socket.write('220 localhost test SMTP\r\n');
+    let buffer = '', data = false, lines = [];
+    socket.on('data', chunk => {
+      buffer += chunk;
+      while (buffer.includes('\r\n')) {
+        const end = buffer.indexOf('\r\n');
+        const line = buffer.slice(0, end); buffer = buffer.slice(end + 2);
+        if (data) {
+          if (line === '.') { mail.push(lines.join('\n')); data = false; lines = []; socket.write('250 accepted\r\n'); }
+          else lines.push(line);
+        } else if (line === 'DATA') { data = true; socket.write('354 send data\r\n'); }
+        else if (line === 'QUIT') socket.end('221 bye\r\n');
+        else if (rejectMail && line.startsWith('MAIL FROM')) socket.write('550 test rejection\r\n');
+        else socket.write('250 OK\r\n');
+      }
+    });
+  });
+  await new Promise(resolve => smtp.listen(0, '127.0.0.1', resolve));
+  Object.assign(env, { SMTP_HOST: '127.0.0.1', SMTP_PORT: String(smtp.address().port), SMTP_FROM: 'test@example.com', SMTP_SECURE: 'false', SMTP_STARTTLS: 'false', SMTP_USER: '', SMTP_PASS: '', CLASS_NOTIFICATION_TO: 'owner@example.com', CLASSES_PREVIEW: 'false' });
   const cwd = fileURLToPath(new URL('..', import.meta.url));
   let child, logs = '', cookie = '';
   async function start() {
@@ -56,9 +78,17 @@ test('classes registration, privacy, waiver history, and capacity integration', 
       assert.equal((await api('/classes/registrations', { ...body, signature: 'Someone Else' })).status, 400);
       assert.equal((await api('/classes/registrations', { ...body, waiverVersion: 'old' })).status, 400);
       first = await api('/classes/registrations', body); assert.equal(first.status, 201);
+      assert.equal(mail.length, 2);
+      assert.ok(mail.some(text => text.includes('To: owner@example.com') && text.includes('Reply-To: first@example.com')));
+      assert.ok(mail.some(text => text.includes('To: first@example.com') && text.includes('Your place is not confirmed yet.')));
+      assert.ok(mail.every(text => !text.includes('TEST ONLY — not a legal waiver.')));
       assert.equal((await api('/classes/registrations', body)).result.id, first.result.id);
       assert.equal((await api('/classes/registrations', { ...body, requestId: randomUUID() })).status, 400);
+      assert.equal(mail.length, 2, 'Retries and rejected duplicates must not send email');
+      rejectMail = true;
       second = await api('/classes/registrations', registration('Second')); assert.equal(second.status, 201);
+      assert.equal(mail.length, 2, 'SMTP failure must not prevent saving registration');
+      rejectMail = false;
     });
     await t.test('concurrent confirmations cannot overbook; cancellation frees capacity', async () => {
       const results = await Promise.all([first, second].map(r => api(`/admin/classes/registrations/${r.result.id}`, { status: 'confirmed' }, 'PATCH', true)));
@@ -102,5 +132,5 @@ test('classes registration, privacy, waiver history, and capacity integration', 
       const publicText = JSON.stringify((await api('/classes')).result);
       assert.equal(publicText.includes('first@example.com'), false); assert.equal(publicText.includes('"signature":'), false);
     });
-  } finally { await stop(); await rm(dir, { recursive: true, force: true }); }
+  } finally { await stop(); await new Promise(resolve => smtp.close(resolve)); await rm(dir, { recursive: true, force: true }); }
 });
