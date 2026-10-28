@@ -9,6 +9,7 @@ import {
   type Registration,
 } from "@/lib/classes";
 import "./classes.css";
+import { prerequisiteLevel, registrationLevel, qualifyingCompletions } from "../../../api-server/src/lib/classes-model";
 
 const initialClass = (): ForgeClass => ({
   id: crypto.randomUUID(),
@@ -87,13 +88,14 @@ export function ClassesAdmin() {
   async function changeStatus(
     record: Registration,
     status: Registration["status"],
+    completionId?: string,
   ) {
     setBusy(true);
     setError("");
     try {
       const updated = await classesApi<ClassesState>(
         `/admin/classes/registrations/${record.id}`,
-        { status },
+        completionId ? { action: "approve", completionId } : { status },
         "PATCH",
       );
       setState((current) =>
@@ -102,7 +104,7 @@ export function ClassesAdmin() {
           : updated,
       );
       setMessage(
-        "Registration updated. No payment was processed and no email was sent.",
+        completionId ? "Prerequisite approved. Create and send an individual QuickBooks invoice to this participant, then confirm their seat after verifying payment. No email was sent by this action." : "Registration updated. No payment was processed and no email was sent.",
       );
     } catch (e) {
       setError((e as Error).message);
@@ -159,8 +161,7 @@ export function ClassesAdmin() {
       <span className="classes-eyebrow">Class management</span>
       <h2>Classes & registrations</h2>
       <p>
-        Add projects, upload photos, and manage sessions. Payment provider:{" "}
-        <strong>Not connected</strong>. Confirming a seat does not mark it paid.
+        Add projects, upload photos, and manage sessions. Payments are checked manually in QuickBooks. Confirming a seat does not mark it paid.
       </p>
       {error && (
         <p role="alert" className="classes-error">
@@ -651,6 +652,10 @@ export function ClassesAdmin() {
           )}
           <h3>Registrations</h3>
           <p className="classes-small">
+            Beginner → Intermediate → Advanced. Date Night has no prerequisite.
+            Mark completed only after verifying attendance. For restricted classes, verify the participant's name and email against their completion record, approve eligibility, then send an individual invoice from QuickBooks. Do not share reusable Intermediate or Advanced payment links.
+          </p>
+          <p className="classes-small">
             Pending requests do not hold seats. Confirm only after arranging
             payment with the customer. Contact participants directly; status
             changes do not send emails.
@@ -670,7 +675,7 @@ export function ClassesAdmin() {
             .map((r) => (
               <article key={r.id} className="admin-record">
                 <span className="classes-eyebrow">
-                  {r.status} · Payment not connected
+                  {r.status} · Verify payment in QuickBooks
                 </span>
                 <h3>
                   {r.name} · {r.classTitle}
@@ -682,12 +687,25 @@ export function ClassesAdmin() {
                   {r.phone && ` · ${r.phone}`}
                 </p>
                 <p className="classes-small">Reference: {r.id}</p>
+                {prerequisiteLevel(registrationLevel(state, r)) ? (
+                  <div>
+                    <p>Requires completed {prerequisiteLevel(registrationLevel(state, r))}. {r.approvedAt ? "Eligibility approved; send an individual QuickBooks invoice and verify payment before confirming." : "Awaiting eligibility approval. Do not request payment yet."}</p>
+                    {r.status === "pending" && !r.approvedAt && (
+                      qualifyingCompletions(state, r).length ? qualifyingCompletions(state, r).map(completion => (
+                        <button key={completion.id} disabled={busy} onClick={() => {
+                          if (window.confirm(`Verify that ${r.name} (${r.email}) is the same participant who completed ${completion.classTitle} on ${sessionDate(completion.startsAt)}. Approve eligibility?`)) void changeStatus(r, r.status, completion.id);
+                        }}>Approve using {completion.classTitle} · {sessionDate(completion.startsAt)}</button>
+                      )) : <p className="classes-small">No matching completed attendance found. Search the roster and verify their earlier class. Payment or a confirmed booking alone does not qualify.</p>
+                    )}
+                  </div>
+                ) : <p className="classes-small">No prerequisite required.</p>}
+                {r.completedAt && <p className="classes-small">Attendance recorded completed: {sessionDate(r.completedAt)}</p>}
                 <div className="admin-actions">
                   {(["pending", "confirmed", "cancelled"] as const).map(
                     (status) => (
                       <button
                         key={status}
-                        disabled={busy || r.status === status}
+                        disabled={busy || r.status === status || r.status === "completed" || (status === "confirmed" && !!prerequisiteLevel(registrationLevel(state, r)) && !r.approvedAt)}
                         onClick={() => void changeStatus(r, status)}
                       >
                         {status === "confirmed"
@@ -697,6 +715,11 @@ export function ClassesAdmin() {
                             : "Mark pending"}
                       </button>
                     ),
+                  )}
+                  {r.status === "confirmed" && Date.parse(r.startsAt) <= Date.now() && (
+                    <button disabled={busy} onClick={() => {
+                      if (window.confirm(`Confirm ${r.name} actually attended and completed ${r.classTitle}? This is an attendance record, not a payment status.`)) void changeStatus(r, "completed");
+                    }}>Mark class completed</button>
                   )}
                   <button onClick={() => download(r)}>
                     Download signed waiver

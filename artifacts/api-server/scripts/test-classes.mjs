@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'node:net';
 import path from 'node:path';
@@ -131,6 +131,53 @@ test('classes registration, privacy, waiver history, and capacity integration', 
       assert.equal(state.registrations.length, 2);
       const publicText = JSON.stringify((await api('/classes')).result);
       assert.equal(publicText.includes('first@example.com'), false); assert.equal(publicText.includes('"signature":'), false);
+    });
+    await t.test('completion and manual approval enforce progression without accounts', async () => {
+      let state = (await api('/admin/classes', undefined, 'GET', true)).result;
+      state.waiver.enabled = true;
+      const template = state.classes[0];
+      for (const [id, level] of [['intermediate', 'Intermediate'], ['advanced', 'Advanced'], ['date-night', 'Date night']]) {
+        state.classes.push({ ...template, id, slug: id, title: level, level, sessions: [{ ...template.sessions[0], id: id + '-session', capacity: 5, closed: false }] });
+      }
+      assert.equal((await api('/admin/classes', state, 'PUT', true)).status, 200);
+      const request = (id, name = 'Second') => ({ ...registration(name), classId: id, sessionId: id + '-session', waiverVersion: 'test-v2' });
+      const intermediate = await api('/classes/registrations', request('intermediate'));
+      const advanced = await api('/classes/registrations', request('advanced'));
+      const dateNight = await api('/classes/registrations', request('date-night', 'DateGuest'));
+      const update = (r, body) => api(`/admin/classes/registrations/${r.result.id}`, body, 'PATCH', true);
+      assert.equal((await update(intermediate, { status: 'confirmed' })).status, 400);
+      assert.equal((await update(intermediate, { action: 'approve', completionId: second.result.id })).status, 400);
+      assert.equal((await update(dateNight, { status: 'confirmed' })).status, 200);
+      assert.equal((await update(dateNight, { status: 'completed' })).status, 400, 'Cannot complete a future session');
+      // Advance a fixture session into the past, simulating the actual class date passing.
+      const file = path.join(dir, 'classes.json');
+      let fixture = JSON.parse(await readFile(file, 'utf8'));
+      const beginner = fixture.registrations.find(r => r.id === second.result.id);
+      beginner.status = 'confirmed'; beginner.startsAt = new Date(Date.now() - 86400000).toISOString();
+      fixture.classes[0].sessions[0].startsAt = beginner.startsAt;
+      await writeFile(file, JSON.stringify(fixture));
+      assert.equal((await update(second, { status: 'completed' })).status, 200);
+      assert.equal((await update(intermediate, { action: 'approve', completionId: second.result.id })).status, 200);
+      assert.equal((await update(intermediate, { status: 'confirmed' })).status, 200);
+      assert.equal((await update(advanced, { action: 'approve', completionId: second.result.id })).status, 400, 'Beginner cannot qualify for Advanced');
+      assert.equal((await update(advanced, { action: 'approve', completionId: intermediate.result.id })).status, 400, 'Confirmed is not completed');
+      fixture = JSON.parse(await readFile(file, 'utf8'));
+      const attended = fixture.registrations.find(r => r.id === intermediate.result.id);
+      attended.startsAt = new Date(Date.now() - 3600000).toISOString();
+      fixture.classes.find(c => c.id === 'intermediate').sessions[0].startsAt = attended.startsAt;
+      await writeFile(file, JSON.stringify(fixture));
+      assert.equal((await update(intermediate, { status: 'completed' })).status, 200);
+      assert.equal((await update(advanced, { action: 'approve', completionId: intermediate.result.id })).status, 200);
+      assert.equal((await update(advanced, { status: 'confirmed' })).status, 200);
+      const stranger = await api('/classes/registrations', request('advanced', 'SomeoneElse'));
+      assert.equal(stranger.status, 201);
+      assert.equal((await update(stranger, { action: 'approve', completionId: intermediate.result.id })).status, 400, 'Cannot reuse another participant attendance');
+      await stop(); await start();
+      const persisted = (await api('/admin/classes', undefined, 'GET', true)).result;
+      assert.ok(persisted.registrations.find(r => r.id === advanced.result.id).approvedAt);
+      assert.ok(persisted.registrations.find(r => r.id === second.result.id).completedAt);
+      const publicData = JSON.stringify((await api('/classes')).result);
+      assert.equal(publicData.includes('prerequisiteCompletionId'), false);
     });
   } finally { await stop(); await new Promise(resolve => smtp.close(resolve)); await rm(dir, { recursive: true, force: true }); }
 });

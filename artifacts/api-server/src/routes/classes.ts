@@ -7,6 +7,9 @@ import {
   consentText,
   seatsRemaining,
   validateCatalog,
+  prerequisiteLevel,
+  registrationLevel,
+  qualifyingCompletions,
   type Registration,
 } from "../lib/classes-model";
 
@@ -105,6 +108,8 @@ router.put(
             throw new Error(
               "This class has registrations. Hide it instead of deleting it.",
             );
+          if (records.length && replacement?.level !== old.level)
+            throw new Error("A class with registrations cannot change category. Create a new class instead.");
           for (const session of old.sessions) {
             const booked = records.filter((r) => r.sessionId === session.id);
             const next = replacement?.sessions.find((s) => s.id === session.id);
@@ -115,7 +120,7 @@ router.put(
             if (
               next &&
               next.capacity <
-                booked.filter((r) => r.status === "confirmed").length
+                booked.filter((r) => r.status === "confirmed" || r.status === "completed").length
             )
               throw new Error(
                 "Capacity cannot be lower than confirmed attendance.",
@@ -221,6 +226,7 @@ router.post(
         requestId: body.requestId,
         classId: c.id,
         classTitle: c.title,
+        classLevel: c.level,
         sessionId: session.id,
         startsAt: session.startsAt,
         priceCents: c.priceCents,
@@ -249,13 +255,32 @@ router.patch(
   "/admin/classes/registrations/:id",
   admin,
   endpoint(async (req, res) => {
-    if (!["pending", "confirmed", "cancelled"].includes(req.body?.status))
+    if (req.body?.action !== "approve" && !["pending", "confirmed", "cancelled", "completed"].includes(req.body?.status))
       throw new Error("Invalid registration status.");
     res.json(
       await classesTransaction((state) => {
         const record = state.registrations.find((r) => r.id === req.params.id);
         if (!record) throw new Error("Registration not found.");
+        const required = prerequisiteLevel(registrationLevel(state, record));
+        if (req.body.action === "approve") {
+          if (record.status !== "pending" || !required) throw new Error("Only pending prerequisite requests need approval.");
+          const completion = qualifyingCompletions(state, record).find(r => r.id === req.body.completionId);
+          if (!completion) throw new Error(`Verify a completed ${required} registration for this participant before approval.`);
+          record.approvedAt = new Date().toISOString();
+          record.prerequisiteCompletionId = completion.id;
+          return state;
+        }
+        if (record.status === "completed" && req.body.status !== "completed")
+          throw new Error("Completed attendance cannot be changed through registration status controls.");
+        if (req.body.status === "completed") {
+          if (record.status !== "confirmed" || Date.parse(record.startsAt) > Date.now())
+            throw new Error("Only a confirmed session that has started can be marked completed. Verify actual attendance first.");
+          record.classLevel = registrationLevel(state, record);
+          record.completedAt = new Date().toISOString();
+        }
         if (req.body.status === "confirmed" && record.status !== "confirmed") {
+          if (required && (!record.approvedAt || !qualifyingCompletions(state, record).some(r => r.id === record.prerequisiteCompletionId)))
+            throw new Error(`Approve completed ${required} attendance before confirming this seat.`);
           const session = state.classes
             .find((c) => c.id === record.classId)
             ?.sessions.find((s) => s.id === record.sessionId);

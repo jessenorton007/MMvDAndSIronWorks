@@ -378,6 +378,11 @@ function ClassDetail({
             <h2 className={`${heading} mb-6`}>Before You Register</h2>
             <div className="text-white/50 font-sans text-sm leading-relaxed space-y-4">
               <p>
+                {item.level === "Intermediate" || item.level === "Advanced"
+                  ? `You must complete ${item.level === "Intermediate" ? "Beginner" : "Intermediate"} before taking this class. Use the same name and email as your earlier registration. D&S will verify completion and approve your request before sending an individual QuickBooks invoice. No account is needed.`
+                  : "No prerequisite class is required. No account is needed."}
+              </p>
+              <p>
                 Registration is currently for adults 18 and older. Each
                 participant must register and sign for themselves, including
                 both people attending a date night class.

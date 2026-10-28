@@ -36,7 +36,11 @@ export type Registration = {
   name: string;
   email: string;
   phone: string;
-  status: "pending" | "confirmed" | "cancelled";
+  status: "pending" | "confirmed" | "cancelled" | "completed";
+  classLevel?: ClassLevel;
+  completedAt?: string;
+  approvedAt?: string;
+  prerequisiteCompletionId?: string;
   paymentStatus: "not_connected";
   submittedAt: string;
   signature: string;
@@ -69,12 +73,27 @@ export function seatsRemaining(
         (r) =>
           r.classId === classId &&
           r.sessionId === session.id &&
-          r.status === "confirmed",
+          (r.status === "confirmed" || r.status === "completed"),
       ).length,
   );
 }
 export const consentText =
   "I have read and agree to the waiver above. I am at least 18 years old, I am signing for myself, and I agree that typing my full name is my electronic signature.";
+export function prerequisiteLevel(level?: ClassLevel): ClassLevel | undefined {
+  return level === "Intermediate" ? "Beginner" : level === "Advanced" ? "Intermediate" : undefined;
+}
+export function registrationLevel(state: ClassesState, record: Registration) {
+  return record.classLevel ?? state.classes.find(c => c.id === record.classId)?.level;
+}
+export function qualifyingCompletions(state: ClassesState, record: Registration) {
+  const required = prerequisiteLevel(registrationLevel(state, record));
+  if (!required) return [];
+  const normalize = (value: string) => value.trim().replace(/\s+/g, " ").toLowerCase();
+  return state.registrations.filter(r => r.id !== record.id && r.status === "completed"
+    && registrationLevel(state, r) === required
+    && normalize(r.email) === normalize(record.email) && normalize(r.name) === normalize(record.name)
+    && Date.parse(r.startsAt) < Date.parse(record.startsAt));
+}
 export function validateCatalog(value: unknown): {
   classes: ForgeClass[];
   waiver: Waiver;

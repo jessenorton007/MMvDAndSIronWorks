@@ -1,5 +1,6 @@
 import { sendSmtpMessage } from "./smtp";
 import type { Registration } from "./classes-model";
+import { prerequisiteLevel } from "./classes-model";
 
 export async function sendRegistrationEmails(record: Registration) {
   // Sample preview signups must not send real mail using inherited credentials.
@@ -14,6 +15,7 @@ export async function sendRegistrationEmails(record: Registration) {
     `Price per participant: $${(record.priceCents / 100).toFixed(2)}`,
     `Registration ID: ${record.id}`,
     "Status: Pending — no seat reserved and no payment collected.",
+    prerequisiteLevel(record.classLevel) ? `Requires completed ${prerequisiteLevel(record.classLevel)}. D&S must verify attendance and approve eligibility before sending an individual QuickBooks invoice.` : "No prerequisite class required.",
   ].join("\n");
   const messages = [
     {

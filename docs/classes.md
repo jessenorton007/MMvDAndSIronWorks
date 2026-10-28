@@ -10,7 +10,15 @@
 - Private registration roster with pending, confirmed, and cancelled states, search, and downloadable signed-waiver text.
 - Public HTML metadata, correct detail-page status codes, and dynamic sitemap entries.
 
-## Payment boundary
+## Prerequisites and attendance
+
+Beginner and Date Night require no prerequisite. Intermediate requires completed Beginner attendance; Advanced requires completed Intermediate attendance. The owner marks a confirmed registration completed after its session has started and after verifying actual attendance. The category is snapshotted on new registrations; classes with registrations cannot change category.
+
+Restricted requests remain pending until the owner verifies a matching name/email completion record and explicitly approves eligibility. Server-side confirmation checks require that approval and its qualifying completion record. Payment and confirmed attendance alone never qualify. Customers do not need accounts; the owner is responsible for checking identity, especially shared emails or name changes. Historical students without website attendance records currently need their earlier attendance recorded through a future migration workflow before this automated evidence check can approve them.
+
+After approval the owner creates and sends an individual invoice in QuickBooks, verifies payment there, then confirms the seat here. Approval itself sends no invoice or email and reserves no seat. Reusable restricted-class payment links are not exposed. This release does not create QuickBooks invoices or reconcile payments automatically. Completed attendance is protected from ordinary status changes.
+
+## Payment handling
 
 New registrations reuse the contact form's SMTP transport and `SMTP_*` settings. The owner receives a notification and the participant receives a request acknowledgment, explicitly stating that no seat is reserved and no payment is collected. Recipient selection is `CLASS_NOTIFICATION_TO`, then the existing `ORDER_NOTIFICATION_TO` / `CONTACT_NOTIFICATION_TO`, then the existing business fallback. Signed waiver text is kept in the private admin roster rather than emailed.
 
