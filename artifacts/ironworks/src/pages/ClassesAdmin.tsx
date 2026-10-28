@@ -231,7 +231,7 @@ export function ClassesAdmin() {
                   </select>
                 </label>
                 <label>
-                  Price per participant (USD)
+                  Price {editing.priceUnit === "couple" ? "per couple" : "per participant"} (USD)
                   <input
                     required
                     type="number"
@@ -277,6 +277,14 @@ export function ClassesAdmin() {
                   onChange={(e) => edit("description", e.target.value)}
                 />
               </label>
+              <label>
+                QuickBooks payment link
+                <input type="url" maxLength={2000} value={editing.paymentUrl ?? ""} placeholder="https://connect.intuit.com/pay/..." onChange={(e) => edit("paymentUrl", e.target.value)} />
+              </label>
+              {editing.level === "Date night" && <label>Price covers<select value={editing.priceUnit ?? "person"} onChange={e => edit("priceUnit", e.target.value as "person" | "couple")}><option value="person">One participant</option><option value="couple">One couple (two adults)</option></select></label>}
+              <p className="classes-small">
+                Beginner and Date Night show this link after registration. Intermediate and Advanced links are stored privately for reference only; send an individual QuickBooks invoice after eligibility approval. Verify the amount in QuickBooks when changing a website price—this field does not update QuickBooks.
+              </p>
               <label className="class-check">
                 <input
                   type="checkbox"
@@ -528,7 +536,7 @@ export function ClassesAdmin() {
                   </span>
                   <h3>{c.title}</h3>
                   <p>
-                    {price(c.priceCents)} per person · {c.sessions.length}{" "}
+                    {price(c.priceCents)} per {c.priceUnit === "couple" ? "couple" : "person"} · {c.sessions.length}{" "}
                     session(s)
                   </p>
                   <div className="admin-actions">
@@ -687,6 +695,7 @@ export function ClassesAdmin() {
                   {r.phone && ` · ${r.phone}`}
                 </p>
                 <p className="classes-small">Reference: {r.id}</p>
+                {r.priceUnit === "couple" && <p className="classes-small">{r.partnerRegistrationId ? `Partner registration: ${r.partnerRegistrationId}. Covered by that couple's payment; do not invoice twice.` : `Payment covers two adults. Partner: ${state.registrations.find(other => other.partnerRegistrationId === r.id && other.status !== "cancelled")?.name ?? "Awaiting separate partner waiver"}. Confirm each participant after verifying payment and both waivers.`}</p>}
                 {prerequisiteLevel(registrationLevel(state, r)) ? (
                   <div>
                     <p>Requires completed {prerequisiteLevel(registrationLevel(state, r))}. {r.approvedAt ? "Eligibility approved; send an individual QuickBooks invoice and verify payment before confirming." : "Awaiting eligibility approval. Do not request payment yet."}</p>

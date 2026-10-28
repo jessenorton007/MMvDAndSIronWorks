@@ -50,7 +50,7 @@ router.get(
         (state) => ({
           classes: state.classes
             .filter((c) => c.published)
-            .map((c) => ({
+            .map(({ paymentUrl: _privatePaymentUrl, ...c }) => ({
               ...c,
               sessions: c.sessions
                 .filter((s) => new Date(s.startsAt).getTime() > Date.now())
@@ -63,7 +63,7 @@ router.get(
             ? state.waiver
             : { version: "", text: "", enabled: false },
           consentText,
-          paymentProvider: "unconfigured",
+          paymentProvider: "quickbooks_manual",
           preview:
             process.env.NODE_ENV !== "production" &&
             process.env.CLASSES_PREVIEW === "true",
@@ -181,12 +181,13 @@ router.post(
           previous.email !== email ||
           previous.name !== name ||
           previous.classId !== body.classId ||
-          previous.sessionId !== body.sessionId
+          previous.sessionId !== body.sessionId || (previous.partnerRegistrationId ?? "") !== clean(body.partnerRegistrationId ?? "", 80)
         )
           throw new Error(
             "This request has already been used. Reload the form.",
           );
-        return { id: previous.id, status: previous.status, record: undefined };
+        const previousClass = state.classes.find(c => c.id === previous.classId);
+        return { id: previous.id, status: previous.status, record: undefined, paymentUrl: previous.status !== "cancelled" && !previous.partnerRegistrationId && previousClass && !prerequisiteLevel(previousClass.level) ? previousClass.paymentUrl : undefined };
       }
       const c = state.classes.find((c) => c.id === body.classId && c.published);
       const session = c?.sessions.find((s) => s.id === body.sessionId);
@@ -221,6 +222,14 @@ router.post(
           "You already have a registration for this session. Contact D&S for changes.",
         );
       const timestamp = new Date().toISOString();
+      const partnerRegistrationId = clean(body.partnerRegistrationId ?? "", 80);
+      if (c.priceUnit === "couple" && !partnerRegistrationId && seatsRemaining(state, c.id, session) < 2)
+        throw new Error("This session does not have two spaces available for a couple. Choose another date.");
+      if (partnerRegistrationId) {
+        const partner = state.registrations.find(r => r.id === partnerRegistrationId && r.classId === c.id && r.sessionId === session.id && r.status !== "cancelled" && !r.partnerRegistrationId);
+        if (c.priceUnit !== "couple" || !partner || partner.name.toLowerCase() === name.toLowerCase() || state.registrations.some(r => r.partnerRegistrationId === partnerRegistrationId && r.status !== "cancelled"))
+          throw new Error("Check your partner's registration reference and choose the same session. Each couple can have two participants.");
+      }
       const record: Registration = {
         id: randomUUID(),
         requestId: body.requestId,
@@ -229,7 +238,9 @@ router.post(
         classLevel: c.level,
         sessionId: session.id,
         startsAt: session.startsAt,
-        priceCents: c.priceCents,
+        priceCents: partnerRegistrationId ? 0 : c.priceCents,
+        priceUnit: c.priceUnit ?? "person",
+        ...(partnerRegistrationId ? { partnerRegistrationId } : {}),
         name,
         email,
         phone,
@@ -243,12 +254,12 @@ router.post(
         signedAt: timestamp,
       };
       state.registrations.push(record);
-      return { id: record.id, status: record.status, record };
+      return { id: record.id, status: record.status, record, paymentUrl: !partnerRegistrationId && !prerequisiteLevel(c.level) ? c.paymentUrl : undefined };
     });
     // Commit first. Email failures must never turn a saved signup into an error.
     // Retries of the same request do not send duplicate notifications.
-    if (result.record) await sendRegistrationEmails(result.record);
-    res.status(201).json({ id: result.id, status: result.status });
+    if (result.record) await sendRegistrationEmails(result.record, result.paymentUrl);
+    res.status(201).json({ id: result.id, status: result.status, paymentUrl: result.paymentUrl });
   }),
 );
 router.patch(
@@ -279,6 +290,8 @@ router.patch(
           record.completedAt = new Date().toISOString();
         }
         if (req.body.status === "confirmed" && record.status !== "confirmed") {
+          if (record.partnerRegistrationId && !state.registrations.some(r => r.id === record.partnerRegistrationId && (r.status === "confirmed" || r.status === "completed")))
+            throw new Error("Verify the couple's payment and confirm the first participant before confirming their partner.");
           if (required && (!record.approvedAt || !qualifyingCompletions(state, record).some(r => r.id === record.prerequisiteCompletionId)))
             throw new Error(`Approve completed ${required} attendance before confirming this seat.`);
           const session = state.classes

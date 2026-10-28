@@ -59,7 +59,11 @@ test('classes registration, privacy, waiver history, and capacity integration', 
     const login = await api('/admin/login', { password: env.ADMIN_PASSWORD }); assert.equal(login.status, 200); cookie = login.response.headers.get('set-cookie').split(';')[0];
     const initial = await api('/admin/classes', undefined, 'GET', true); assert.equal(initial.result.classes.length, 0);
     const catalog = { revision: 0, classes: [{ id: 'test-class', slug: 'test-class', title: 'Test class', level: 'Beginner', description: 'Test project', duration: '2 hours', location: 'Test forge', priceCents: 10000, published: true, images: [], sessions: [{ id: 'test-session', startsAt: new Date(Date.now() + 7 * 86400000).toISOString(), capacity: 1, closed: false }] }], waiver: { version: 'test-v1', text: 'TEST ONLY — not a legal waiver.', enabled: true } };
+    catalog.classes[0].paymentUrl = 'https://connect.intuit.com/pay/test/beginner';
+    const invalidCatalog = structuredClone(catalog); invalidCatalog.classes[0].paymentUrl = 'https://connect.intuit.com.evil.example/pay/test';
+    assert.equal((await api('/admin/classes', invalidCatalog, 'PUT', true)).status, 400);
     const saved = await api('/admin/classes', catalog, 'PUT', true); assert.equal(saved.status, 200, JSON.stringify(saved.result));
+    assert.equal(saved.result.classes[0].paymentUrl, catalog.classes[0].paymentUrl);
     await t.test('private records and mutations require authentication', async () => {
       assert.equal((await api('/admin/classes')).status, 401);
       assert.equal((await api('/admin/classes', catalog, 'PUT')).status, 401);
@@ -78,6 +82,7 @@ test('classes registration, privacy, waiver history, and capacity integration', 
       assert.equal((await api('/classes/registrations', { ...body, signature: 'Someone Else' })).status, 400);
       assert.equal((await api('/classes/registrations', { ...body, waiverVersion: 'old' })).status, 400);
       first = await api('/classes/registrations', body); assert.equal(first.status, 201);
+      assert.equal(first.result.paymentUrl, catalog.classes[0].paymentUrl);
       assert.equal(mail.length, 2);
       assert.ok(mail.some(text => text.includes('To: owner@example.com') && text.includes('Reply-To: first@example.com')));
       assert.ok(mail.some(text => text.includes('To: first@example.com') && text.includes('Your place is not confirmed yet.')));
@@ -137,17 +142,31 @@ test('classes registration, privacy, waiver history, and capacity integration', 
       state.waiver.enabled = true;
       const template = state.classes[0];
       for (const [id, level] of [['intermediate', 'Intermediate'], ['advanced', 'Advanced'], ['date-night', 'Date night']]) {
-        state.classes.push({ ...template, id, slug: id, title: level, level, sessions: [{ ...template.sessions[0], id: id + '-session', capacity: 5, closed: false }] });
+        state.classes.push({ ...template, id, slug: id, title: level, level, priceUnit: id === 'date-night' ? 'couple' : 'person', sessions: [{ ...template.sessions[0], id: id + '-session', capacity: 5, closed: false }] });
       }
       assert.equal((await api('/admin/classes', state, 'PUT', true)).status, 200);
       const request = (id, name = 'Second') => ({ ...registration(name), classId: id, sessionId: id + '-session', waiverVersion: 'test-v2' });
       const intermediate = await api('/classes/registrations', request('intermediate'));
       const advanced = await api('/classes/registrations', request('advanced'));
       const dateNight = await api('/classes/registrations', request('date-night', 'DateGuest'));
+      assert.equal(intermediate.result.paymentUrl, undefined);
+      assert.equal(advanced.result.paymentUrl, undefined);
+      assert.equal(dateNight.result.paymentUrl, template.paymentUrl);
+      assert.equal(JSON.stringify((await api('/classes')).result).includes('connect.intuit.com'), false, 'Catalog must not expose payment URLs');
       const update = (r, body) => api(`/admin/classes/registrations/${r.result.id}`, body, 'PATCH', true);
       assert.equal((await update(intermediate, { status: 'confirmed' })).status, 400);
       assert.equal((await update(intermediate, { action: 'approve', completionId: second.result.id })).status, 400);
       assert.equal((await update(dateNight, { status: 'confirmed' })).status, 200);
+      const partnerBody = { ...request('date-night', 'PartnerGuest'), partnerRegistrationId: dateNight.result.id };
+      const partner = await api('/classes/registrations', partnerBody);
+      assert.equal(partner.status, 201);
+      assert.equal(partner.result.paymentUrl, undefined, 'Partner must not get a second payment link');
+      assert.equal((await api('/classes/registrations', partnerBody)).result.paymentUrl, undefined);
+      assert.equal((await update(partner, { status: 'confirmed' })).status, 200);
+      assert.equal((await api('/classes/registrations', { ...request('date-night', 'ThirdGuest'), partnerRegistrationId: dateNight.result.id })).status, 400);
+      assert.equal((await api('/classes/registrations', { ...request('date-night', 'WrongRef'), partnerRegistrationId: 'missing' })).status, 400);
+      const pairState = (await api('/admin/classes', undefined, 'GET', true)).result;
+      assert.equal(pairState.registrations.find(r => r.id === partner.result.id).priceCents, 0);
       assert.equal((await update(dateNight, { status: 'completed' })).status, 400, 'Cannot complete a future session');
       // Advance a fixture session into the past, simulating the actual class date passing.
       const file = path.join(dir, 'classes.json');

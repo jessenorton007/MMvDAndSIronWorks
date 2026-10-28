@@ -2,7 +2,7 @@ import { sendSmtpMessage } from "./smtp";
 import type { Registration } from "./classes-model";
 import { prerequisiteLevel } from "./classes-model";
 
-export async function sendRegistrationEmails(record: Registration) {
+export async function sendRegistrationEmails(record: Registration, paymentUrl?: string) {
   // Sample preview signups must not send real mail using inherited credentials.
   if (process.env.NODE_ENV !== "production" && process.env.CLASSES_PREVIEW === "true") return;
   const owner = process.env.CLASS_NOTIFICATION_TO || process.env.ORDER_NOTIFICATION_TO || process.env.CONTACT_NOTIFICATION_TO || "dandsiron@yahoo.com";
@@ -12,7 +12,7 @@ export async function sendRegistrationEmails(record: Registration) {
   const details = [
     `Class: ${record.classTitle}`,
     `Session: ${date} (Mountain time)`,
-    `Price per participant: $${(record.priceCents / 100).toFixed(2)}`,
+    record.partnerRegistrationId ? `Covered by partner registration ${record.partnerRegistrationId}. Do not make a second payment.` : `Price per ${record.priceUnit === "couple" ? "couple (two adults)" : "participant"}: $${(record.priceCents / 100).toFixed(2)}`,
     `Registration ID: ${record.id}`,
     "Status: Pending — no seat reserved and no payment collected.",
     prerequisiteLevel(record.classLevel) ? `Requires completed ${prerequisiteLevel(record.classLevel)}. D&S must verify attendance and approve eligibility before sending an individual QuickBooks invoice.` : "No prerequisite class required.",
@@ -31,6 +31,8 @@ export async function sendRegistrationEmails(record: Registration) {
       replyTo: owner,
       subject: `Registration request received: ${record.classTitle}`,
       text: [`Hi ${record.name},`, "", "D&S Iron Works received your class registration request.", "", details,
+        ...(record.priceUnit === "couple" && !record.partnerRegistrationId ? ["Share your registration ID with your partner so they can register for the same session and sign their own waiver. One payment covers both adults."] : []),
+        ...(paymentUrl ? ["", `Pay with QuickBooks: ${paymentUrl}`, "Check the amount before paying. D&S will verify payment manually."] : []),
         "", "Your place is not confirmed yet. D&S will contact you to confirm availability and arrange payment.",
         "Questions? Reply to this email or call (435) 421-9033."].join("\n"),
     },

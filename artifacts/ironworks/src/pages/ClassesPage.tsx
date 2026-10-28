@@ -200,7 +200,7 @@ export function ClassesPage() {
                           <span className="font-display text-xl text-forge-gradient">
                             {price(c.priceCents)}
                             <span className="font-sans text-xs text-white/35 ml-2">
-                              / person
+                              / {c.priceUnit === "couple" ? "couple" : "person"}
                             </span>
                           </span>
                           <span className="text-xs text-white/40 font-sans">
@@ -258,6 +258,8 @@ function ClassDetail({
   catalog: PublicCatalog;
 }) {
   const [sessionId, setSessionId] = useState("");
+  const [paymentUrl, setPaymentUrl] = useState("");
+  const [partnerReference, setPartnerReference] = useState("");
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [receipt, setReceipt] = useState("");
@@ -270,7 +272,7 @@ function ClassDetail({
     setError("");
     const form = new FormData(event.currentTarget);
     try {
-      const result = await classesApi<{ id: string }>(
+      const result = await classesApi<{ id: string; paymentUrl?: string }>(
         "/classes/registrations",
         {
           requestId,
@@ -283,9 +285,11 @@ function ClassDetail({
           consent: form.get("consent") === "on",
           waiverVersion: catalog.waiver.version,
           website: form.get("website"),
+          partnerRegistrationId: partnerReference.trim(),
         },
       );
       setReceipt(result.id);
+      setPaymentUrl(result.paymentUrl ?? "");
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -316,7 +320,7 @@ function ClassDetail({
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="rounded-xl px-5 py-3 bg-white/[0.025] border border-white/10">
               <span className="block text-white/35 text-xs font-sans mb-1">
-                Per participant
+                {item.priceUnit === "couple" ? "Per couple (2 adults)" : "Per participant"}
               </span>
               <span className="font-display text-3xl text-forge-gradient">
                 {price(item.priceCents)}
@@ -387,6 +391,7 @@ function ClassDetail({
                 participant must register and sign for themselves, including
                 both people attending a date night class.
               </p>
+              {item.priceUnit === "couple" && <p>One payment covers two adults. The first person registers and shares their registration reference with their partner. The partner selects the same session and enters that reference below when signing their own waiver. Only the first person pays.</p>}
               <p>
                 Submitting a request does not reserve a seat or collect payment.
                 D&S will contact you to confirm availability and arrange
@@ -406,12 +411,19 @@ function ClassDetail({
               </p>
               <p className="text-white/40 font-sans text-sm leading-relaxed mb-5">
                 D&S will contact you using the details you provided. Save your
-                reference below; an automatic confirmation email is not sent
-                yet.
+                reference below. An acknowledgment is sent when email is configured; sample previews do not send email.
               </p>
               <code className="block break-all text-orange-200/70 text-xs mb-6">
                 {receipt}
               </code>
+              {item.priceUnit === "couple" && <p className="text-white/55 text-sm mb-5">{partnerReference.trim() ? "Your waiver is linked to your partner's registration. Do not make a second payment. D&S will verify the couple's payment and both registrations." : "Share this reference with your partner. They must select the same session, enter this reference, and sign their own waiver. Make only one payment for the two of you."}</p>}
+              {paymentUrl && (
+                <div className="mb-6 space-y-4">
+                  <p className="text-white/55 text-sm">Continue to QuickBooks to pay. Check the class and amount before paying. D&S verifies payment and confirms your seat manually; opening this link does not confirm payment or reserve a seat.</p>
+                  {catalog.preview && <p className="text-orange-300 text-sm">This is a real QuickBooks checkout link. Do not make a payment while testing this preview.</p>}
+                  <GlassButton href={paymentUrl} target="_blank" rel="noopener noreferrer">Pay with QuickBooks</GlassButton>
+                </div>
+              )}
               <GlassButton href="/classes">Browse Classes</GlassButton>
             </div>
           ) : (
@@ -434,6 +446,7 @@ function ClassDetail({
                 </p>
               ) : (
                 <form onSubmit={submit} className="space-y-5">
+                  {item.priceUnit === "couple" && <label className="block text-white/60 text-sm">Partner's registration reference (only if they already registered)<input className={field} value={partnerReference} maxLength={80} onChange={e => setPartnerReference(e.target.value)} placeholder="Leave blank if you are registering first" /><span className="block mt-2 text-xs">Use the same session as your partner. Entering their reference links your waiver and avoids a second payment.</span></label>}
                   <label className={label}>
                     Session
                     <select

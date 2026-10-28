@@ -24,7 +24,7 @@ New registrations reuse the contact form's SMTP transport and `SMTP_*` settings.
 
 Email runs after the registration is saved. SMTP failures are logged without rolling back the signup; no automatic mail retry is implemented. Replaying a registration request does not send duplicate emails. Local sample previews (`CLASSES_PREVIEW=true`) do not send mail. Integration tests use a local fake SMTP server and cover delivery, duplicate suppression, and failed delivery without losing the registration.
 
-Neither payment provider is connected. Registrations have `paymentStatus: not_connected`; a redirect or registration submission never counts as payment. Pending requests do not hold seats. The owner must arrange payment separately and confirm a seat manually. Status changes do not send email. Displayed availability subtracts confirmed seats only.
+QuickBooks hosted payment links are connected for Beginner and Date Night after signup. All four supplied URLs are retained in docs/class-payment-links.json and are editable per class in the admin panel; Intermediate and Advanced links remain private and are never returned to public signup responses. The owner sends individual invoices for those restricted classes. There is no automated payment reconciliation. Registrations have `paymentStatus: not_connected`; a redirect or registration submission never counts as payment. Pending requests do not hold seats. The owner must arrange payment separately and confirm a seat manually. Status changes do not send email. Displayed availability subtracts confirmed seats only.
 
 When selecting a provider, add server-side checkout creation and verified payment reconciliation against registration IDs. Implement expiring seat holds and transactional confirmation before advertising instant booking. Preserve existing pre-made-item QuickBooks behavior. Recurring memberships, automated receipts/confirmation emails, refunds, and subscription lifecycle handling are not implemented by this classes release.
 
@@ -32,7 +32,7 @@ When selecting a provider, add server-side checkout creation and verified paymen
 
 The production catalog starts empty and registration is disabled until the owner saves approved waiver wording, a version, and enables registration. Wording changes require a new version; previously signed copies are preserved. This implementation records typed signatures; it does not independently verify identity or certify legal enforceability. Confirm the business's required waiver process before launch.
 
-This release is for adults signing for themselves. Each date-night participant registers separately at the per-person price. Paired booking/checkout and parent/guardian signing are not included. Add those flows if needed before opening classes to minors or selling couples-only packages.
+This release is for adults signing for themselves. Date Night can be priced per couple (currently $210 in the preview, awaiting final amount verification). The first adult registers and receives the single payment link; the second enters that registration reference for the same session and signs independently. The second registration has no additional charge or checkout link. Only two active participants can share the reference; the first must be confirmed before the second. Both seats are confirmed manually after checking payment and both waivers. Parent/guardian signing is not included.
 
 ## Storage and privacy
 
@@ -56,4 +56,4 @@ Use `NODE_ENV=development`, a dedicated `IRONWORKS_DATA_DIR`, development-only a
 
 ## Remaining launch inputs
 
-Real class descriptions, project photos, dates, capacity, location, duration, pricing, approved waiver, cancellation policy, payment provider/account configuration, and the final registration/confirmation workflow. Do not deploy the local sample catalog.
+Real class descriptions, project photos, dates, capacity, location, duration, pricing, approved waiver, cancellation policy, verification of QuickBooks checkout amounts, and the final registration/confirmation workflow. Do not deploy the local sample catalog.

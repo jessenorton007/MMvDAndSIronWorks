@@ -20,6 +20,8 @@ export type ForgeClass = {
   duration: string;
   location: string;
   priceCents: number;
+  paymentUrl?: string;
+  priceUnit?: "person" | "couple";
   published: boolean;
   images: { src: string; alt: string }[];
   sessions: ClassSession[];
@@ -42,6 +44,8 @@ export type Registration = {
   approvedAt?: string;
   prerequisiteCompletionId?: string;
   paymentStatus: "not_connected";
+  partnerRegistrationId?: string;
+  priceUnit?: "person" | "couple";
   submittedAt: string;
   signature: string;
   waiverVersion: string;
@@ -138,6 +142,13 @@ export function validateCatalog(value: unknown): {
     )
       throw new Error("Use up to 12 photos and 100 sessions per class.");
     const sessionIds = new Set<string>();
+    const paymentUrl = text(c.paymentUrl ?? "", 2000);
+    if (paymentUrl) {
+      let url: URL;
+      try { url = new URL(paymentUrl); } catch { throw new Error("Enter a valid QuickBooks payment link."); }
+      if (url.protocol !== "https:" || url.hostname !== "connect.intuit.com" || !url.pathname.startsWith("/pay/") || url.username || url.password || url.port)
+        throw new Error("Use an HTTPS QuickBooks payment link from connect.intuit.com/pay/.");
+    }
     return {
       id,
       slug,
@@ -147,6 +158,8 @@ export function validateCatalog(value: unknown): {
       duration: text(c.duration, 100, c.published),
       location: text(c.location, 300, c.published),
       priceCents: c.priceCents,
+      paymentUrl,
+      priceUnit: c.level === "Date night" && c.priceUnit === "couple" ? "couple" as const : "person" as const,
       published: c.published,
       images: c.images.map((i) => {
         const src = text(i.src, 2000, true);
