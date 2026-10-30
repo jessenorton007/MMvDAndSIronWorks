@@ -1,0 +1,69 @@
+{
+  "classes": [
+    {
+      "id": "beginner",
+      "slug": "beginner",
+      "title": "Beginner",
+      "level": "Beginner",
+      "priceCents": 8500,
+      "paymentUrl": "https://connect.intuit.com/pay/DAndSIronWorksLlc/scs-v1-61cd08bb4cb54cfa9516de3d50503511cdce4e89548a4cfeb270b7ce61985e48170d6c1a0cd24ecd8e404f475a726b3e-0?locale=EN_US&cta=saveandcopylink",
+      "priceUnit": "person",
+      "published": false,
+      "description": "",
+      "duration": "",
+      "location": "",
+      "images": [],
+      "sessions": []
+    },
+    {
+      "id": "intermediate",
+      "slug": "intermediate",
+      "title": "Intermediate",
+      "level": "Intermediate",
+      "priceCents": 12000,
+      "paymentUrl": "https://connect.intuit.com/pay/DAndSIronWorksLlc/scs-v1-7eea2380f69343be83c6e4076c30481115326cdd26b846dd9bd1b599eb117a882fefc4d80ab84302a8b61e65d32350dc-0?locale=EN_US&cta=saveandcopylink",
+      "priceUnit": "person",
+      "published": false,
+      "description": "",
+      "duration": "",
+      "location": "",
+      "images": [],
+      "sessions": []
+    },
+    {
+      "id": "advanced",
+      "slug": "advanced",
+      "title": "Advanced",
+      "level": "Advanced",
+      "priceCents": 16000,
+      "paymentUrl": "https://connect.intuit.com/pay/DAndSIronWorksLlc/scs-v1-3e250206e822462eb02b3726c471cfec3b9d546fad58495ca8f9c886cadcfaac9089df0f360b4d788442e2d5f263e43a-0?locale=EN_US&cta=saveandcopylink",
+      "priceUnit": "person",
+      "published": false,
+      "description": "",
+      "duration": "",
+      "location": "",
+      "images": [],
+      "sessions": []
+    },
+    {
+      "id": "date-night",
+      "slug": "date-night",
+      "title": "Date Night",
+      "level": "Date night",
+      "priceCents": 21000,
+      "paymentUrl": "https://connect.intuit.com/pay/DAndSIronWorksLlc/scs-v1-84363a504a81463db6d3a89c5e70c3d46670c9d4d11445aa84a1ad14ceda308876892f1eb3304ef7828b99abfe295ffb-0?locale=EN_US&cta=saveandcopylink",
+      "priceUnit": "couple",
+      "published": false,
+      "description": "",
+      "duration": "",
+      "location": "",
+      "images": [],
+      "sessions": []
+    }
+  ],
+  "waiver": {
+    "version": "",
+    "text": "",
+    "enabled": false
+  }
+}

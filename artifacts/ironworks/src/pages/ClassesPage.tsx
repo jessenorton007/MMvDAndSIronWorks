@@ -80,8 +80,7 @@ export function ClassesPage() {
           </Link>
           {catalog?.preview && (
             <p className="mb-8 rounded-lg border border-orange-500/15 bg-orange-500/[0.04] px-4 py-3 text-xs text-orange-200/60 font-sans">
-              Development preview · Sample classes, dates, prices, and waiver.
-              No real bookings or payments.
+              Development preview · Sample dates and waiver. Payment buttons open real QuickBooks checkout pages; do not pay while testing.
             </p>
           )}
           {error && (
@@ -411,7 +410,7 @@ function ClassDetail({
               </p>
               <p className="text-white/40 font-sans text-sm leading-relaxed mb-5">
                 D&S will contact you using the details you provided. Save your
-                reference below. An acknowledgment is sent when email is configured; sample previews do not send email.
+                reference below. {catalog.preview ? "Sample previews do not send email." : "If you don’t receive an acknowledgment, contact D&S with this reference."}
               </p>
               <code className="block break-all text-orange-200/70 text-xs mb-6">
                 {receipt}

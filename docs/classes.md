@@ -32,7 +32,9 @@ When selecting a provider, add server-side checkout creation and verified paymen
 
 The production catalog starts empty and registration is disabled until the owner saves approved waiver wording, a version, and enables registration. Wording changes require a new version; previously signed copies are preserved. This implementation records typed signatures; it does not independently verify identity or certify legal enforceability. Confirm the business's required waiver process before launch.
 
-This release is for adults signing for themselves. Date Night can be priced per couple (currently $210 in the preview, awaiting final amount verification). The first adult registers and receives the single payment link; the second enters that registration reference for the same session and signs independently. The second registration has no additional charge or checkout link. Only two active participants can share the reference; the first must be confirmed before the second. Both seats are confirmed manually after checking payment and both waivers. Parent/guardian signing is not included.
+This release is for adults signing for themselves. Date Night is $210 per couple. All four hosted QuickBooks pages were read on October 30, 2026: Beginner $85, Intermediate $120, Advanced $160, and Date Night $210. These are the displayed payment amounts; no payment was made. Website price edits do not change the hosted checkout amount.
+
+The first adult registers and receives the single payment link; the second enters that registration reference for the same session and signs independently. The second registration has no additional charge or checkout link. Only two active participants can share the reference. Both adults must sign before the owner can confirm the first registration, which reserves both seats in one transaction after verifying payment. If only one seat remains, neither is confirmed. Partners may share an email address but must each use their own name and signature. Cancel or mark the partner pending before changing the first participant's confirmed status. Classes with registrations cannot switch between individual and couple pricing. Parent/guardian signing is not included.
 
 ## Storage and privacy
 
@@ -56,4 +58,18 @@ Use `NODE_ENV=development`, a dedicated `IRONWORKS_DATA_DIR`, development-only a
 
 ## Remaining launch inputs
 
-Real class descriptions, project photos, dates, capacity, location, duration, pricing, approved waiver, cancellation policy, verification of QuickBooks checkout amounts, and the final registration/confirmation workflow. Do not deploy the local sample catalog.
+Final class descriptions, project photos, dates, capacity, location, duration, approved waiver, and cancellation policy. Checkout prices have been verified. Do not deploy the local sample catalog.
+
+## Production setup and release verification
+
+The current live site still returns 404 for /classes and /api/classes as of October 30, 2026. This branch has not been deployed.
+
+1. Build the frontend and API using the existing production build. Keep the current production database and image bucket; do not copy work/classes-preview-data or use preview admin credentials.
+2. The server requires NODE_ENV=production, DATABASE_URL with the existing admin_content table, ADMIN_PASSWORD, ADMIN_SESSION_SECRET, and DEFAULT_OBJECT_STORAGE_BUCKET_ID. Retain the existing SMTP_HOST, SMTP_PORT, SMTP_FROM (or ORDER_NOTIFICATION_FROM), SMTP_USER, SMTP_PASS, and transport settings. No new database table is required.
+3. In Admin → Classes & Waivers, an empty catalog offers “Add Beginner, Intermediate, Advanced, and Date Night drafts.” This imports docs/classes-launch-catalog.json with verified prices and supplied links. It cannot overwrite existing classes, registrations, or waiver text. All listings start hidden, without dates, and registration disabled.
+4. Add the client's final class details and photos, actual dates and participant capacity, and approved waiver wording/version. Date Night capacity counts people, not couples. Include the client's cancellation policy in the description or approved terms.
+5. Open Launch checks in admin. The authenticated readiness endpoint checks configured database, photo-storage and SMTP settings and missing published-catalog inputs; it does not certify actual mail delivery, legal wording, or payment settlement.
+6. Verify admin edits and an uploaded image persist after a restart, public listing/detail routes and sitemap work, unpublished classes remain hidden, and signed waivers/rosters remain private. Test live email delivery with the owner's authorized test addresses before opening public registration. Recheck checkout amounts if the client changes the links.
+7. Review pending requests, verify payment in QuickBooks, then confirm seats and contact the customer. For Intermediate/Advanced, approve completed prerequisite attendance first and send an individual invoice. For Date Night, confirm both seats from the first registration after both waivers are present.
+
+Local verification passed: frontend/API type checks, frontend/API production builds, and 10 integration tests. Tests use isolated local persistence and a fake SMTP server; production PostgreSQL, live App Storage, and actual inbox delivery remain deployment checks. The Vite build retains an existing non-blocking tooltip sourcemap warning.

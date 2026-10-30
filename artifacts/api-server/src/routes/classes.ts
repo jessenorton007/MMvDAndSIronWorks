@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { isAdminRequest } from "./admin";
 import { classesTransaction } from "../lib/classes-store";
 import { sendRegistrationEmails } from "../lib/classes-email";
+import launchCatalog from "../../../../docs/classes-launch-catalog.json";
 import {
   consentText,
   seatsRemaining,
@@ -80,6 +81,36 @@ router.get(
     res.json(await classesTransaction((s) => s, false));
   }),
 );
+// Explicit setup action only; never overwrite an existing production catalog or import preview registrations.
+router.post("/admin/classes/setup", admin, endpoint(async (_req, res) => {
+  res.json(await classesTransaction(state => {
+    if (state.classes.length || state.registrations.length || state.waiver.text)
+      throw new Error("Starter setup is only available for an empty catalog.");
+    const catalog = validateCatalog(launchCatalog);
+    state.classes = catalog.classes;
+    state.waiver = catalog.waiver;
+    state.revision++;
+    return state;
+  }));
+}));
+router.get("/admin/classes/readiness", admin, endpoint(async (_req, res) => {
+  const issues = await classesTransaction(state => {
+    const issues: string[] = [];
+    if (!state.waiver.enabled || !state.waiver.text || !state.waiver.version) issues.push("Save the approved waiver and enable registration.");
+    if (!state.classes.some(c => c.published)) issues.push("Publish at least one completed class listing.");
+    for (const c of state.classes.filter(c => c.published)) {
+      if (!c.images.length) issues.push(`${c.title}: add project photos.`);
+      if (!c.sessions.some(s => !s.closed && Date.parse(s.startsAt) > Date.now() && s.capacity >= (c.priceUnit === "couple" ? 2 : 1))) issues.push(`${c.title}: add an upcoming open session with enough capacity.`);
+      if (!prerequisiteLevel(c.level) && c.priceCents > 0 && !c.paymentUrl) issues.push(`${c.title}: add the QuickBooks payment link.`);
+    }
+    return issues;
+  }, false);
+  if (!process.env.DATABASE_URL) issues.push("Persistent PostgreSQL storage is not configured on this server.");
+  if (!process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID) issues.push("Persistent photo storage is not configured on this server.");
+  if (!process.env.SMTP_HOST || !(process.env.SMTP_FROM || process.env.ORDER_NOTIFICATION_FROM)) issues.push("SMTP email is not configured on this server.");
+  if (process.env.NODE_ENV !== "production") issues.push("This is a development server; live hosting still needs verification.");
+  res.json({ issues, note: "Configuration checks only. Verify checkout amounts, final class details, approved waiver, image uploads, and live email delivery before opening registration." });
+}));
 router.put(
   "/admin/classes",
   admin,
@@ -110,6 +141,8 @@ router.put(
             );
           if (records.length && replacement?.level !== old.level)
             throw new Error("A class with registrations cannot change category. Create a new class instead.");
+          if (records.length && (replacement?.priceUnit ?? "person") !== (old.priceUnit ?? "person"))
+            throw new Error("A class with registrations cannot switch between individual and couple pricing. Create a new class instead.");
           for (const session of old.sessions) {
             const booked = records.filter((r) => r.sessionId === session.id);
             const next = replacement?.sessions.find((s) => s.id === session.id);
@@ -215,6 +248,7 @@ router.post(
             r.classId === c.id &&
             r.sessionId === session.id &&
             r.email === email &&
+            r.name.trim().replace(/\s+/g, " ").toLowerCase() === name.replace(/\s+/g, " ").toLowerCase() &&
             r.status !== "cancelled",
         )
       )
@@ -283,6 +317,8 @@ router.patch(
         }
         if (record.status === "completed" && req.body.status !== "completed")
           throw new Error("Completed attendance cannot be changed through registration status controls.");
+        if (["pending", "cancelled"].includes(req.body.status) && state.registrations.some(r => r.partnerRegistrationId === record.id && (r.status === "confirmed" || r.status === "completed")))
+          throw new Error("Cancel or mark the partner pending first. Their confirmed seat depends on this couple registration.");
         if (req.body.status === "completed") {
           if (record.status !== "confirmed" || Date.parse(record.startsAt) > Date.now())
             throw new Error("Only a confirmed session that has started can be marked completed. Verify actual attendance first.");
@@ -290,6 +326,11 @@ router.patch(
           record.completedAt = new Date().toISOString();
         }
         if (req.body.status === "confirmed" && record.status !== "confirmed") {
+          const partner = record.priceUnit === "couple" && !record.partnerRegistrationId
+            ? state.registrations.find(r => r.partnerRegistrationId === record.id && r.status !== "cancelled")
+            : undefined;
+          if (record.priceUnit === "couple" && !record.partnerRegistrationId && !partner)
+            throw new Error("Both adults must register and sign their own waiver before confirming this couple.");
           if (record.partnerRegistrationId && !state.registrations.some(r => r.id === record.partnerRegistrationId && (r.status === "confirmed" || r.status === "completed")))
             throw new Error("Verify the couple's payment and confirm the first participant before confirming their partner.");
           if (required && (!record.approvedAt || !qualifyingCompletions(state, record).some(r => r.id === record.prerequisiteCompletionId)))
@@ -301,9 +342,11 @@ router.patch(
             !session ||
             session.closed ||
             Date.parse(session.startsAt) <= Date.now() ||
-            seatsRemaining(state, record.classId, session) < 1
+            seatsRemaining(state, record.classId, session) < (partner && partner.status === "pending" ? 2 : 1)
           )
             throw new Error("This session is full, closed, or in the past.");
+          // Reserve both places in the same transaction; never split a couple across the last seat.
+          if (partner && partner.status === "pending") partner.status = "confirmed";
         }
         record.status = req.body.status;
         return state;

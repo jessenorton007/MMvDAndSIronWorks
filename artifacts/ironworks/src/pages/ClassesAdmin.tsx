@@ -33,6 +33,7 @@ const localDate = (iso: string) => {
 export function ClassesAdmin() {
   const [state, setState] = useState<ClassesState>();
   const [editing, setEditing] = useState<ForgeClass>();
+  const [readiness, setReadiness] = useState<{ issues: string[]; note: string }>();
   const [error, setError] = useState(""),
     [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false),
@@ -50,6 +51,18 @@ export function ClassesAdmin() {
   useEffect(() => {
     void load();
   }, []);
+  useEffect(() => {
+    if (state) void classesApi<{ issues: string[]; note: string }>("/admin/classes/readiness").then(setReadiness).catch(() => setReadiness(undefined));
+  }, [state?.revision]);
+  async function setup() {
+    setBusy(true);
+    setError("");
+    try {
+      setState(await classesApi<ClassesState>("/admin/classes/setup", {}));
+      setMessage("Four draft classes added with the supplied QuickBooks links and verified prices. Add final descriptions, photos, dates, and waiver before publishing.");
+    } catch (e) { setError((e as Error).message); }
+    finally { setBusy(false); }
+  }
   useEffect(() => {
     const warn = (e: BeforeUnloadEvent) => {
       if (editing || dirty) {
@@ -104,7 +117,7 @@ export function ClassesAdmin() {
           : updated,
       );
       setMessage(
-        completionId ? "Prerequisite approved. Create and send an individual QuickBooks invoice to this participant, then confirm their seat after verifying payment. No email was sent by this action." : "Registration updated. No payment was processed and no email was sent.",
+        completionId ? "Prerequisite approved. Create and send an individual QuickBooks invoice to this participant, then confirm their seat after verifying payment. No email was sent by this action." : "Registration updated. Confirming the first member of a couple confirms both signed registrations together. No payment was processed and no email was sent.",
       );
     } catch (e) {
       setError((e as Error).message);
@@ -173,6 +186,7 @@ export function ClassesAdmin() {
           {message}
         </p>
       )}
+      {readiness && <details><summary>Launch checks · {readiness.issues.length} item(s) to review</summary><p className="classes-small">{readiness.note}</p><ul>{readiness.issues.map(issue => <li key={issue}>{issue}</li>)}</ul></details>}
       {!state ? (
         <button onClick={load}>Load classes</button>
       ) : (
@@ -525,9 +539,9 @@ export function ClassesAdmin() {
                 </button>
               </div>
               {!state.classes.length && (
-                <p>
+                <div><p>
                   No classes yet. Add your first class; it starts as a draft.
-                </p>
+                </p><button disabled={busy || dirty} onClick={() => void setup()}>Add Beginner, Intermediate, Advanced, and Date Night drafts</button></div>
               )}
               {state.classes.map((c) => (
                 <article key={c.id}>
@@ -695,7 +709,7 @@ export function ClassesAdmin() {
                   {r.phone && ` · ${r.phone}`}
                 </p>
                 <p className="classes-small">Reference: {r.id}</p>
-                {r.priceUnit === "couple" && <p className="classes-small">{r.partnerRegistrationId ? `Partner registration: ${r.partnerRegistrationId}. Covered by that couple's payment; do not invoice twice.` : `Payment covers two adults. Partner: ${state.registrations.find(other => other.partnerRegistrationId === r.id && other.status !== "cancelled")?.name ?? "Awaiting separate partner waiver"}. Confirm each participant after verifying payment and both waivers.`}</p>}
+                {r.priceUnit === "couple" && <p className="classes-small">{r.partnerRegistrationId ? `Partner registration: ${r.partnerRegistrationId}. Covered by that couple's payment; do not invoice twice.` : `Payment covers two adults. Partner: ${state.registrations.find(other => other.partnerRegistrationId === r.id && other.status !== "cancelled")?.name ?? "Awaiting separate partner waiver"}. After verifying payment and both waivers, use Confirm both seats on this registration.`}</p>}
                 {prerequisiteLevel(registrationLevel(state, r)) ? (
                   <div>
                     <p>Requires completed {prerequisiteLevel(registrationLevel(state, r))}. {r.approvedAt ? "Eligibility approved; send an individual QuickBooks invoice and verify payment before confirming." : "Awaiting eligibility approval. Do not request payment yet."}</p>
@@ -718,7 +732,7 @@ export function ClassesAdmin() {
                         onClick={() => void changeStatus(r, status)}
                       >
                         {status === "confirmed"
-                          ? "Confirm seat"
+                          ? r.priceUnit === "couple" && !r.partnerRegistrationId ? "Confirm both seats" : "Confirm seat"
                           : status === "cancelled"
                             ? "Cancel registration"
                             : "Mark pending"}
