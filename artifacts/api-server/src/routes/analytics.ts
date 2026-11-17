@@ -14,7 +14,7 @@ const endpoint = (handler: RequestHandler): RequestHandler => async (req, res, n
   try { await handler(req, res, next); }
   catch { if (!res.headersSent) res.status(503).json({ error: "Analytics storage is unavailable. Try again later." }); }
 };
-const validId = (v: unknown): v is string => typeof v === "string" && /^[a-zA-Z0-9_-]{1,100}$/.test(v) && !["__proto__", "constructor", "prototype"].includes(v);
+const validId = (v: unknown): v is string => typeof v === "string" && /^[a-zA-Z0-9_-]{1,100}$/.test(v) && !(v in Object.prototype) && v !== "prototype";
 const allowedTypes = new Set(["session_start", "pageview", "click", "scroll_depth", "form_submit", "product_hover", "tab_hidden", "tab_visible", "idle", "active", "rage_click"]);
 const cleanEventData = (data: Record<string, unknown>) => Object.fromEntries(Object.entries(data).filter(([k, v]) =>
   ["entry", "exit", "path", "duration", "device", "browser", "screen", "timezone", "language", "connection", "referrer", "utm_source", "utm_medium", "utm_campaign", "fingerprint", "isReturning", "productId", "productTitle", "action", "href", "text", "el", "x", "y", "count", "depth", "form"].includes(k)
@@ -114,9 +114,10 @@ router.post("/analytics/event", endpoint(async (req, res) => {
       visitor.sessionCount += 1;
     }
     const session = store.sessions[ev.sessionId];
+    if (ev.ts < session.startedAt) session.landingPage = ev.page;
+    if (ev.ts >= session.lastSeen) session.exitPage = ev.page;
     session.startedAt = Math.min(session.startedAt, ev.ts);
     session.lastSeen = Math.max(session.lastSeen, ev.ts);
-    session.exitPage = ev.page || session.exitPage;
     session.duration = session.lastSeen - session.startedAt;
 
     // Enrich session with device data from session_start
@@ -128,10 +129,13 @@ router.post("/analytics/event", endpoint(async (req, res) => {
       session.timezone = d.timezone || session.timezone;
       session.language = d.language || session.language;
       session.connection = d.connection || session.connection;
-      session.referrer = d.referrer || session.referrer;
-      session.utm_source = d.utm_source || session.utm_source;
-      session.utm_medium = d.utm_medium || session.utm_medium;
-      session.utm_campaign = d.utm_campaign || session.utm_campaign;
+      // Refreshes emit another session_start. Preserve the original acquisition.
+      if (ev.ts <= session.startedAt || !session.referrer) {
+        session.referrer = d.referrer || session.referrer;
+        session.utm_source = d.utm_source || "";
+        session.utm_medium = d.utm_medium || "";
+        session.utm_campaign = d.utm_campaign || "";
+      }
       session.fingerprint = d.fingerprint || session.fingerprint;
       session.isReturning = !!(d as any).isReturning;
       visitor.fingerprint = session.fingerprint;

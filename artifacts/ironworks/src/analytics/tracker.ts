@@ -76,7 +76,7 @@ const SID_KEY = 'ds_asid';
 const LOCAL_EVENTS_KEY = 'ds_local_analytics_events_v1';
 const LOCAL_EVENT_LIMIT = 3000;
 
-function getOrCreate(storage: Storage, key: string, prefix: string): string {
+function getOrCreate(storage: Storage | undefined, key: string, prefix: string): string {
   let v = safeGet(storage, key);
   if (!v) {
     v = `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
@@ -115,8 +115,14 @@ let _flushing = false;
 const SESSION_TIMEOUT = 30 * 60 * 1000;
 const LAST_EVENT_KEY = 'ds_asid_last';
 const PENDING_KEY = 'ds_pending_analytics_v2';
-function safeGet(storage: Storage, key: string) { try { return storage.getItem(key); } catch { return null; } }
-function safeSet(storage: Storage, key: string, value: string) { try { storage.setItem(key, value); } catch {} }
+// Some privacy modes throw when accessing the storage property itself.
+function browserStorage(kind: 'localStorage' | 'sessionStorage'): Storage | undefined {
+  try { return window[kind]; } catch { return undefined; }
+}
+const localStorage = browserStorage('localStorage');
+const sessionStorage = browserStorage('sessionStorage');
+function safeGet(storage: Storage | undefined, key: string) { try { return storage?.getItem(key) ?? null; } catch { return null; } }
+function safeSet(storage: Storage | undefined, key: string, value: string) { try { storage?.setItem(key, value); } catch {} }
 const adminPage = (path: string) => /^\/admin(?:\/|$)/.test(path);
 function persistQueue() { safeSet(sessionStorage, PENDING_KEY, JSON.stringify(_queue.slice(-1000))); }
 
@@ -145,9 +151,9 @@ function push(type: EvType, data: Record<string, unknown> = {}) {
 
 function storeLocalEvents(events: TEvent[]) {
   try {
-    const current = JSON.parse(localStorage.getItem(LOCAL_EVENTS_KEY) || '[]') as TEvent[];
+    const current = JSON.parse(safeGet(localStorage, LOCAL_EVENTS_KEY) || '[]') as TEvent[];
     const updated = [...current, ...events].slice(-LOCAL_EVENT_LIMIT);
-    localStorage.setItem(LOCAL_EVENTS_KEY, JSON.stringify(updated));
+    safeSet(localStorage, LOCAL_EVENTS_KEY, JSON.stringify(updated));
   } catch {
     /* Local analytics should never interrupt the site. */
   }
@@ -377,7 +383,7 @@ export function init() {
     _activeMs += document.hidden ? 0 : Date.now() - _lastActiveAt;
     push('pageview', { path: _page, exit: true, duration: Date.now() - _pageEnteredAt });
     flush(true);
-    if (_flushTimer) clearInterval(_flushTimer);
+    // Do not cancel the timer: Back/Forward Cache can restore this document.
   });
 
   // Start immediately so short visits are not lost before the first timer fires.

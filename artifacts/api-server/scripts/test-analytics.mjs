@@ -32,7 +32,7 @@ test('analytics counts, privacy, retries, and durable writes', async t => {
     });
     await t.test('retries are deduplicated and admin events ignored',async()=>{
       assert.equal((await api('/analytics/event',{events})).data.ingested,0);
-      assert.equal((await api('/analytics/event',{events:[event('admin','adminsession','pageview',{entry:true},now,'/admin'),{...event('bad','bad'),data:null},event('__proto__','bad')]})).data.ingested,0);
+      assert.equal((await api('/analytics/event',{events:[event('admin','adminsession','pageview',{entry:true},now,'/admin'),{...event('bad','bad'),data:null},event('__proto__','bad'),event('toString','bad'),event('valueOf','bad')]})).data.ingested,0);
       assert.equal((await dashboard()).data.totalPageviews,3);
     });
     await t.test('concurrent batches persist before acknowledgment and survive immediate restart',async()=>{
@@ -46,6 +46,13 @@ test('analytics counts, privacy, retries, and durable writes', async t => {
     await t.test('calendar date ranges honor Mountain DST and inclusive end dates',async()=>{
       const d=(await api('/analytics/dashboard?from=2026-11-01&to=2026-11-01',undefined,true)).data;
       assert.equal(d.report.from,'2026-11-01T06:00:00.000Z');assert.equal(d.report.to,'2026-11-02T06:59:59.999Z');
+    });
+    await t.test('refresh preserves acquisition and late events preserve landing and exit pages',async()=>{
+      const batch=[event('attribution','attribution','session_start',{referrer:'google.com',utm_source:'google'},now-40000,'/landing'),event('attribution','attribution','session_start',{referrer:'https://dandsironworks.com/landing'},now-20000,'/contact'),event('attribution','attribution','pageview',{entry:true},now-30000,'/shop')];
+      assert.equal((await api('/analytics/event',{events:batch})).data.ingested,3);
+      const row=(await dashboard()).data.recentSessions.find(s=>s.id==='attribution');
+      assert.equal(row.referrer,'google.com');assert.equal(row.utm_source,'google');
+      assert.equal(row.landingPage,'/landing');assert.equal(row.exitPage,'/contact');
     });
     await t.test('storage corruption returns an error instead of silently resetting counts',async()=>{
       const {writeFile}=await import('node:fs/promises');await writeFile(env.IRONWORKS_ANALYTICS_FILE,'not json');assert.equal((await dashboard()).status,503);

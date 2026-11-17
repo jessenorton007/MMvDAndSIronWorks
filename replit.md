@@ -65,3 +65,11 @@ Validation: frontend/API type checks and builds; scripts/test-analytics.mjs in a
 ## Pointers
 
 - See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+
+### Analytics second verification pass — November 17, 2026
+
+Fixed additional edge cases: browser storage getters throwing in privacy mode, reporting timers stopping after Back/Forward Cache navigation, refreshes overwriting original acquisition source, out-of-order events overwriting the exit page, and inherited-object names being accepted as visitor/session identifiers. Added regression coverage for each.
+
+Validation: analytics API suite passes 9 tests (including its parent test); tracker suite passes 5 tests. Both TypeScript checks pass. API build passes. Live read-only checks returned 200 for homepage, health endpoint, and the Google tag. An empty event batch was rejected with 400 and created no traffic. Google tag still enables automatic history pageviews. Live dashboard still returns 200 without authentication and has no new report metadata; live bundle remains index-Bi1xgm4I.js, confirming these fixes are not deployed. Live counts at inspection were 5 visitors and 8 pageviews for seven days; no synthetic visits were inserted.
+
+The connected Replit account lists MMvDAndSIronWorks and confirms its current deployment is successful at https://dandsironworks.com. This does not establish that the local fixes have been uploaded or that the production database migration has run. Do not simply republish the unchanged remote app. Before release: back up surviving production analytics JSON, apply the analytics-only patch, verify DATABASE_URL and admin_content schema on the deployment, then build and deploy. After release, verify unauthenticated analytics is 401, authenticated dashboard reports the new source/range metadata, and a controlled visit persists across restart. Confirm receipt in GA4 Realtime/DebugView with account access. Production database writes and GA4 account-side receipt are not yet verified; local persistence tests use the local-file path.
