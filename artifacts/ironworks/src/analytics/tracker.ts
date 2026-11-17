@@ -1,6 +1,6 @@
 // D&S Iron Works — client-side analytics tracker
 // Handles bot filtering, fingerprinting, session management, and behavioral event collection.
-import { initGa4, trackGaEvent } from './ga4';
+import { initGa4, trackGaEvent, setGaPage } from './ga4';
 
 const BOT_PATTERN = /bot|crawl|spider|google|bing|slurp|duckduck|baidu|yandex|facebookexternalhit|twitterbot|linkedinbot|whatsapp|headless|phantomjs|selenium|playwright|puppeteer|lighthouse|wget|curl|python-requests/i;
 
@@ -77,10 +77,10 @@ const LOCAL_EVENTS_KEY = 'ds_local_analytics_events_v1';
 const LOCAL_EVENT_LIMIT = 3000;
 
 function getOrCreate(storage: Storage, key: string, prefix: string): string {
-  let v = storage.getItem(key);
+  let v = safeGet(storage, key);
   if (!v) {
     v = `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
-    storage.setItem(key, v);
+    safeSet(storage, key, v);
   }
   return v;
 }
@@ -89,6 +89,7 @@ type EvType = 'pageview' | 'click' | 'scroll_depth' | 'form_submit' | 'product_h
   | 'tab_hidden' | 'tab_visible' | 'idle' | 'active' | 'rage_click' | 'text_copy' | 'session_start';
 
 interface TEvent {
+  id: string;
   type: EvType;
   sessionId: string;
   visitorId: string;
@@ -109,12 +110,37 @@ let _activeMs = 0;
 let _lastActiveAt = 0;
 let _flushTimer: ReturnType<typeof setInterval> | null = null;
 let _inited = false;
+let _lastEventAt = 0;
+let _flushing = false;
+const SESSION_TIMEOUT = 30 * 60 * 1000;
+const LAST_EVENT_KEY = 'ds_asid_last';
+const PENDING_KEY = 'ds_pending_analytics_v2';
+function safeGet(storage: Storage, key: string) { try { return storage.getItem(key); } catch { return null; } }
+function safeSet(storage: Storage, key: string, value: string) { try { storage.setItem(key, value); } catch {} }
+const adminPage = (path: string) => /^\/admin(?:\/|$)/.test(path);
+function persistQueue() { safeSet(sessionStorage, PENDING_KEY, JSON.stringify(_queue.slice(-1000))); }
 
 // Recent clicks for rage detection
 const _recentClicks: Array<{ x: number; y: number; ts: number }> = [];
 
 function push(type: EvType, data: Record<string, unknown> = {}) {
-  _queue.push({ type, sessionId: _sid, visitorId: _vid, page: _page, ts: Date.now(), data });
+  if (adminPage(_page)) return;
+  const now = Date.now();
+  if (type !== 'session_start' && now - _lastEventAt > SESSION_TIMEOUT) {
+    const activeEvent = (type === 'pageview' && data.entry) || ['click', 'active', 'tab_visible', 'scroll_depth', 'product_hover', 'form_submit'].includes(type);
+    if (!activeEvent) return;
+    _sid = `s_${crypto.randomUUID()}`;
+    safeSet(sessionStorage, SID_KEY, _sid);
+    _lastEventAt = now;
+    const d = getDeviceInfo();
+    push('session_start', { ...d, device: d.type, isReturning: true });
+    if (!(type === 'pageview' && data.entry)) push('pageview', {path: _page, entry: true});
+  }
+  _lastEventAt = now;
+  safeSet(sessionStorage, LAST_EVENT_KEY, String(now));
+  _queue.push({ id: crypto.randomUUID(), type, sessionId: _sid, visitorId: _vid, page: _page, ts: now, data });
+  if (_queue.length > 1000) _queue.splice(0, _queue.length - 1000);
+  persistQueue();
 }
 
 function storeLocalEvents(events: TEvent[]) {
@@ -128,20 +154,28 @@ function storeLocalEvents(events: TEvent[]) {
 }
 
 async function flush(keepalive = false) {
-  if (_queue.length === 0) return;
-  const batch = _queue.splice(0, _queue.length);
-  storeLocalEvents(batch);
+  if (_queue.length === 0 || _flushing) return;
+  _flushing = true;
+  const batch = _queue.slice(0, 20);
   try {
-    await fetch('/api/analytics/event', {
+    const response = await fetch('/api/analytics/event', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ events: batch }),
       keepalive,
     });
-  } catch { /* API may be down — fail silently */ }
+    if (!response.ok) throw new Error('Analytics unavailable');
+    const ids = new Set(batch.map(e => e.id));
+    _queue = _queue.filter(e => !ids.has(e.id));
+    persistQueue();
+    storeLocalEvents(batch);
+  } catch { /* Retain the same IDs for retry; the server deduplicates them. */ }
+  finally { _flushing = false; }
 }
 
 function trackPageView(path: string) {
+  setGaPage(path);
+  initGa4();
   if (path === _page) return;
   if (_page) {
     const spent = Date.now() - _pageEnteredAt + _activeMs;
@@ -152,13 +186,8 @@ function trackPageView(path: string) {
   _activeMs = 0;
   _scrollMilestones = new Set();
   push('pageview', { path, entry: true });
-  window.setTimeout(() => {
-    trackGaEvent('page_view', {
-      page_location: window.location.href,
-      page_path: `${window.location.pathname}${window.location.search}`,
-      page_title: document.title,
-    });
-  }, 50);
+  // GA4 enhanced measurement already tracks History API navigation for this stream.
+  // Sending a manual page_view here doubled route views in Google Analytics.
 }
 
 function resetIdle() {
@@ -180,7 +209,7 @@ function resetIdle() {
 }
 
 export function trackProductHover(productId: string, productTitle: string, entered: boolean) {
-  if (!_inited) return;
+  if (!_inited || adminPage(_page)) return;
   if (entered) {
     push('product_hover', { productId, productTitle, action: 'enter' });
   } else {
@@ -189,7 +218,7 @@ export function trackProductHover(productId: string, productTitle: string, enter
 }
 
 export function identifyVisitor(info: { name?: string; email?: string; phone?: string }) {
-  if (!_inited) return;
+  if (!_inited || adminPage(_page) || _page.startsWith('/classes')) return;
   const trimmed: Record<string, string> = {};
   if (info.name?.trim()) trimmed.name = info.name.trim();
   if (info.email?.trim()) trimmed.email = info.email.trim();
@@ -210,7 +239,10 @@ export function init() {
   initGa4();
 
   _vid = getOrCreate(localStorage, VID_KEY, 'v');
+  _lastEventAt = Number(safeGet(sessionStorage, LAST_EVENT_KEY) || 0);
+  if (Date.now() - _lastEventAt > SESSION_TIMEOUT) safeSet(sessionStorage, SID_KEY, `s_${crypto.randomUUID()}`);
   _sid = getOrCreate(sessionStorage, SID_KEY, 's');
+  try { const pending = JSON.parse(safeGet(sessionStorage, PENDING_KEY) || '[]'); if (Array.isArray(pending)) _queue = pending.slice(-1000).filter(e => e && typeof e.id === 'string'); } catch {}
   _page = window.location.pathname;
   _pageEnteredAt = Date.now();
   _lastActiveAt = Date.now();
@@ -231,15 +263,24 @@ export function init() {
     utm_medium: device.utm_medium,
     utm_campaign: device.utm_campaign,
     fingerprint: device.fingerprint,
-    isReturning: !!localStorage.getItem(`${VID_KEY}_seen`),
+    isReturning: !!safeGet(localStorage, `${VID_KEY}_seen`),
   });
-  localStorage.setItem(`${VID_KEY}_seen`, '1');
+  safeSet(localStorage, `${VID_KEY}_seen`, '1');
   push('pageview', { path: _page, entry: true });
 
   // Patch history for SPA navigation
   const origPush = history.pushState.bind(history);
   history.pushState = (...args) => {
+    const next = args[2] ? new URL(String(args[2]), window.location.href).pathname : window.location.pathname;
+    setGaPage(next);
     origPush(...args);
+    setTimeout(() => trackPageView(window.location.pathname), 0);
+  };
+  const origReplace = history.replaceState.bind(history);
+  history.replaceState = (...args) => {
+    const next = args[2] ? new URL(String(args[2]), window.location.href).pathname : window.location.pathname;
+    setGaPage(next);
+    origReplace(...args);
     setTimeout(() => trackPageView(window.location.pathname), 0);
   };
   window.addEventListener('popstate', () => trackPageView(window.location.pathname));
@@ -265,6 +306,7 @@ export function init() {
 
   // Click tracking + rage click detection
   document.addEventListener('click', (e) => {
+    if (adminPage(window.location.pathname)) return;
     resetIdle();
     const target = e.target as HTMLElement;
     const el = target.tagName.toLowerCase();
@@ -291,17 +333,12 @@ export function init() {
     if (_recentClicks.length > 20) _recentClicks.splice(0, 10);
   }, true);
 
-  // Text copy
-  document.addEventListener('copy', () => {
-    const sel = window.getSelection()?.toString().slice(0, 200).trim() || '';
-    if (sel) push('text_copy', { text: sel, path: _page });
-  });
-
   // Tab visibility
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       _activeMs += Date.now() - _lastActiveAt;
       push('tab_hidden', { path: _page });
+      void flush(true);
     } else {
       _lastActiveAt = Date.now();
       push('tab_visible', { path: _page });
@@ -316,6 +353,7 @@ export function init() {
 
   // Form submission interception for visitor identification
   document.addEventListener('submit', (e) => {
+    if (adminPage(window.location.pathname) || window.location.pathname.startsWith('/classes')) return;
     const form = e.target as HTMLFormElement;
     const data: Record<string, string> = {};
     const fd = new FormData(form);
@@ -342,6 +380,6 @@ export function init() {
     if (_flushTimer) clearInterval(_flushTimer);
   });
 
-  // First flush after 3s to capture session_start
-  setTimeout(() => flush(), 3_000);
+  // Start immediately so short visits are not lost before the first timer fires.
+  void flush();
 }
