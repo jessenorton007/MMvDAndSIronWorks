@@ -26,7 +26,24 @@ export type ForgeClass = {
   images: { src: string; alt: string }[];
   sessions: ClassSession[];
 };
-export type Waiver = { version: string; text: string; enabled: boolean };
+export type Waiver = { version: string; text: string; enabled: boolean; collectAdultDetails?: boolean };
+export type AdultDetails = { dateOfBirth: string; ageAtSigning: number; address: string; cityStateZip: string; emergencyContact: string; medicalConditions: string; medications: string };
+export function validateAdultDetails(value: unknown, now = new Date()): AdultDetails {
+  const data = value as Record<string, unknown> | undefined;
+  const field = (key: string, max: number) => {
+    const v = data?.[key];
+    if (typeof v !== "string" || !v.trim() || v.length > max) throw new Error("Complete every participant and emergency-information field. Write None where appropriate.");
+    return v.trim();
+  };
+  const dateOfBirth = field("dateOfBirth", 10);
+  const dob = new Date(dateOfBirth + "T00:00:00Z");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth) || !Number.isFinite(dob.getTime()) || dob.toISOString().slice(0, 10) !== dateOfBirth)
+    throw new Error("Enter a valid date of birth.");
+  let ageAtSigning = now.getUTCFullYear() - dob.getUTCFullYear();
+  if (now.getUTCMonth() < dob.getUTCMonth() || (now.getUTCMonth() === dob.getUTCMonth() && now.getUTCDate() < dob.getUTCDate())) ageAtSigning--;
+  if (ageAtSigning < 18) throw new Error("This waiver is for participants age 18 and older.");
+  return { dateOfBirth, ageAtSigning, address: field("address", 300), cityStateZip: field("cityStateZip", 200), emergencyContact: field("emergencyContact", 300), medicalConditions: field("medicalConditions", 2000), medications: field("medications", 2000) };
+}
 export type Registration = {
   id: string;
   requestId: string;
@@ -52,6 +69,7 @@ export type Registration = {
   waiverText: string;
   consentText: string;
   signedAt: string;
+  adultDetails?: AdultDetails;
 };
 export type ClassesState = {
   revision: number;
@@ -198,6 +216,7 @@ export function validateCatalog(value: unknown): {
     version: text(data.waiver.version, 80),
     text: text(data.waiver.text, 30000),
     enabled: data.waiver.enabled === true,
+    collectAdultDetails: data.waiver.collectAdultDetails === true,
   };
   if (waiver.enabled && (!waiver.version || !waiver.text))
     throw new Error(

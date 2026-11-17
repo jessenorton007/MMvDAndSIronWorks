@@ -285,6 +285,7 @@ function ClassDetail({
           waiverVersion: catalog.waiver.version,
           website: form.get("website"),
           partnerRegistrationId: partnerReference.trim(),
+          ...(catalog.waiver.collectAdultDetails ? { adultDetails: Object.fromEntries(["dateOfBirth", "address", "cityStateZip", "emergencyContact", "medicalConditions", "medications"].map(key => [key, form.get(key)])) } : {}),
         },
       );
       setReceipt(result.id);
@@ -496,15 +497,25 @@ function ClassDetail({
                     />
                   </label>
                   <label className={label}>
-                    Phone (optional)
+                    {catalog.waiver.collectAdultDetails ? "Phone" : "Phone (optional)"}
                     <input
                       className={field}
                       name="phone"
+                      required={catalog.waiver.collectAdultDetails}
                       type="tel"
                       maxLength={50}
                       autoComplete="tel"
                     />
                   </label>
+                  {catalog.waiver.collectAdultDetails && <>
+                    <p className="text-white/55 text-sm">Participant information required by the adult waiver. Your selected session supplies the class date and time, and your age is calculated from your date of birth.</p>
+                    <label className={label}>Date of birth<input className={field} type="date" name="dateOfBirth" required /></label>
+                    <label className={label}>Street address<input className={field} name="address" autoComplete="street-address" maxLength={300} required /></label>
+                    <label className={label}>City, state, ZIP<input className={field} name="cityStateZip" maxLength={200} required /></label>
+                    <label className={label}>Emergency contact name and phone<input className={field} name="emergencyContact" maxLength={300} required /></label>
+                    <label className={label}>Known allergies or medical conditions (write None if none)<textarea className={field} name="medicalConditions" maxLength={2000} required /></label>
+                    <label className={label}>Current medications (write None if none)<textarea className={field} name="medications" maxLength={2000} required /></label>
+                  </>}
                   <div hidden aria-hidden="true">
                     <input name="website" tabIndex={-1} autoComplete="off" />
                   </div>
@@ -542,7 +553,7 @@ function ClassDetail({
                     <span>{catalog.consentText}</span>
                   </label>
                   <p className="text-xs text-white/35 font-sans leading-relaxed">
-                    Your contact details and signed waiver are stored for D&S to
+                    Your participant details and signed waiver are stored privately for D&S to
                     manage your class registration.
                   </p>
                   <p className="rounded-lg border border-orange-500/15 bg-orange-500/[0.04] p-4 text-xs text-orange-200/65 font-sans leading-relaxed">

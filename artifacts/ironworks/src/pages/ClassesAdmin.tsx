@@ -159,7 +159,9 @@ export function ClassesAdmin() {
   const edit = <K extends keyof ForgeClass>(key: K, value: ForgeClass[K]) =>
     setEditing((c) => (c ? { ...c, [key]: value } : c));
   function download(record: Registration) {
-    const text = `D&S Iron Works — signed class waiver\nRegistration: ${record.id}\nClass: ${record.classTitle}\nSession: ${sessionDate(record.startsAt)}\nParticipant: ${record.name}\nEmail: ${record.email}\nSigned: ${record.signedAt}\nWaiver version: ${record.waiverVersion}\n\n${record.waiverText}\n\n${record.consentText}\nElectronic signature: ${record.signature}\n`;
+    const details = record.adultDetails;
+    const participantDetails = details ? `\nDate of birth: ${details.dateOfBirth}\nAge at signing: ${details.ageAtSigning}\nStreet address: ${details.address}\nCity, state, ZIP: ${details.cityStateZip}\nEmergency contact: ${details.emergencyContact}\nKnown allergies or medical conditions: ${details.medicalConditions}\nCurrent medications: ${details.medications}\n` : "";
+    const text = `D&S Iron Works — signed class waiver\nRegistration: ${record.id}\nClass: ${record.classTitle}\nSession: ${sessionDate(record.startsAt)}\nParticipant: ${record.name}\nEmail: ${record.email}\nPhone: ${record.phone}\n${participantDetails}\nSigned: ${record.signedAt}\nWaiver version: ${record.waiverVersion}\n\n${record.waiverText}\n\n${record.consentText}\nElectronic signature: ${record.signature}\n`;
     const url = URL.createObjectURL(
       new Blob([text], { type: "text/plain;charset=utf-8" }),
     );
@@ -476,7 +478,7 @@ export function ClassesAdmin() {
                         startsAt: new Date(
                           Date.now() + 7 * 86400000,
                         ).toISOString(),
-                        capacity: 6,
+                        capacity: editing.level === "Date night" ? 4 : 5,
                         closed: false,
                       },
                     ])
@@ -650,6 +652,10 @@ export function ClassesAdmin() {
                 />
               </label>
               <label className="class-check">
+                <input type="checkbox" checked={!!state.waiver.collectAdultDetails} onChange={e => { setDirty(true); setState({ ...state, waiver: { ...state.waiver, collectAdultDetails: e.target.checked } }); }} />
+                Collect the adult waiver's date of birth, address, required phone, emergency contact, medical conditions, and medications. Change the waiver version when changing this setting.
+              </label>
+              <label className="class-check">
                 <input
                   type="checkbox"
                   checked={state.waiver.enabled}
@@ -758,6 +764,7 @@ export function ClassesAdmin() {
                     {"\n\n"}
                     {r.consentText}
                   </pre>
+                  {r.adultDetails && <dl>{Object.entries({ "Date of birth": r.adultDetails.dateOfBirth, "Age at signing": r.adultDetails.ageAtSigning, "Street address": r.adultDetails.address, "City, state, ZIP": r.adultDetails.cityStateZip, "Emergency contact": r.adultDetails.emergencyContact, "Medical conditions": r.adultDetails.medicalConditions, "Medications": r.adultDetails.medications }).map(([label, value]) => <div key={label}><dt>{label}</dt><dd className="whitespace-pre-wrap break-words">{value}</dd></div>)}</dl>}
                 </details>
               </article>
             ))}

@@ -11,6 +11,7 @@ import {
   prerequisiteLevel,
   registrationLevel,
   qualifyingCompletions,
+  validateAdultDetails,
   type Registration,
 } from "../lib/classes-model";
 
@@ -124,7 +125,7 @@ router.put(
           );
         if (
           state.waiver.text &&
-          state.waiver.text !== catalog.waiver.text &&
+          (state.waiver.text !== catalog.waiver.text || !!state.waiver.collectAdultDetails !== !!catalog.waiver.collectAdultDetails) &&
           state.waiver.version === catalog.waiver.version
         )
           throw new Error(
@@ -256,6 +257,8 @@ router.post(
           "You already have a registration for this session. Contact D&S for changes.",
         );
       const timestamp = new Date().toISOString();
+      const adultDetails = state.waiver.collectAdultDetails ? validateAdultDetails(body.adultDetails) : undefined;
+      if (adultDetails && !phone) throw new Error("Enter your phone number as required by the waiver.");
       const partnerRegistrationId = clean(body.partnerRegistrationId ?? "", 80);
       if (c.priceUnit === "couple" && !partnerRegistrationId && seatsRemaining(state, c.id, session) < 2)
         throw new Error("This session does not have two spaces available for a couple. Choose another date.");
@@ -286,6 +289,7 @@ router.post(
         waiverText: state.waiver.text,
         consentText,
         signedAt: timestamp,
+        ...(adultDetails ? { adultDetails } : {}),
       };
       state.registrations.push(record);
       return { id: record.id, status: record.status, record, paymentUrl: !partnerRegistrationId && !prerequisiteLevel(c.level) ? c.paymentUrl : undefined };

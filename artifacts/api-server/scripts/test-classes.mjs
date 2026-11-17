@@ -228,5 +228,30 @@ test('classes registration, privacy, waiver history, and capacity integration', 
       const publicData = JSON.stringify((await api('/classes')).result);
       assert.equal(publicData.includes('prerequisiteCompletionId'), false);
     });
+    await t.test('adult waiver fields are validated, preserved privately, and excluded from email', async () => {
+      await stop(); await start();
+      const state = (await api('/admin/classes', undefined, 'GET', true)).result;
+      state.waiver = { version: 'adult-test-v1', text: 'TEST ONLY adult information waiver.', enabled: true, collectAdultDetails: true };
+      state.classes.push({ ...state.classes[0], id: 'adult-test', slug: 'adult-test', sessions: [{ id: 'adult-session', startsAt: new Date(Date.now() + 86400000).toISOString(), capacity: 5, closed: false }] });
+      assert.equal((await api('/admin/classes', state, 'PUT', true)).status, 200);
+      const body = { ...registration('AdultTester'), classId: 'adult-test', sessionId: 'adult-session', waiverVersion: 'adult-test-v1', phone: '555-0100' };
+      assert.equal((await api('/classes/registrations', body)).status, 400);
+      body.adultDetails = { dateOfBirth: '2000-01-01', address: 'PRIVATE ADDRESS', cityStateZip: 'PRIVATE CITY', emergencyContact: 'PRIVATE EMERGENCY', medicalConditions: 'PRIVATE MEDICAL', medications: 'PRIVATE MEDICATION' };
+      assert.equal((await api('/classes/registrations', { ...body, phone: '' })).status, 400);
+      assert.equal((await api('/classes/registrations', { ...body, adultDetails: { ...body.adultDetails, dateOfBirth: '2099-01-01' } })).status, 400);
+      assert.equal((await api('/classes/registrations', { ...body, adultDetails: { ...body.adultDetails, dateOfBirth: '2000-02-30' } })).status, 400);
+      assert.equal((await api('/classes/registrations', { ...body, adultDetails: { ...body.adultDetails, medications: '' } })).status, 400);
+      const result = await api('/classes/registrations', body); assert.equal(result.status, 201);
+      assert.equal(JSON.stringify(result.result).includes('PRIVATE'), false);
+      assert.ok(mail.every(m => !m.includes('PRIVATE')));
+      await stop(); await start();
+      const saved = (await api('/admin/classes', undefined, 'GET', true)).result;
+      const record = saved.registrations.find(r => r.id === result.result.id);
+      assert.equal(record.adultDetails.medications, 'PRIVATE MEDICATION');
+      assert.ok(record.adultDetails.ageAtSigning >= 18);
+      assert.equal(JSON.stringify((await api('/classes')).result).includes('PRIVATE'), false);
+      saved.waiver.collectAdultDetails = false;
+      assert.equal((await api('/admin/classes', saved, 'PUT', true)).status, 400, 'Changing required waiver fields needs a new version');
+    });
   } finally { await stop(); await new Promise(resolve => smtp.close(resolve)); await rm(dir, { recursive: true, force: true }); }
 });

@@ -30,6 +30,10 @@ When selecting a provider, add server-side checkout creation and verified paymen
 
 ## Waiver setup
 
+On November 17, 2026 the owner supplied `DandS_Ironworks_Adult_Blacksmithing_Waiver.pages`. All ten sections were extracted without rewriting into `docs/waivers/adult-2026-11-17.txt` and the launch catalog, version `2026-11-17-draft`. The original footer labels it a draft. The user explicitly requested keeping it staged: registration remains disabled. No real dates have been provided; draft classes may have no sessions, and the owner can add dates later in admin. New sessions default to five participants, or four people (two couples) for Date Night, with editable capacity.
+
+The staged waiver enables the optional adult-information form: date of birth (age calculated at signing), address, city/state/ZIP, required phone, emergency contact name/phone, medical conditions, and medications. The server validates required fields and adult age. These fields are stored only with the private registration and included in the private signed-waiver view/download, never in notification emails or public responses. Changing whether these fields are required needs a new waiver version. Previously signed records remain unchanged. The class/session, participant name, typed signature, and signing timestamp supply the document's corresponding blanks.
+
 The production catalog starts empty and registration is disabled until the owner saves approved waiver wording, a version, and enables registration. Wording changes require a new version; previously signed copies are preserved. This implementation records typed signatures; it does not independently verify identity or certify legal enforceability. Confirm the business's required waiver process before launch.
 
 This release is for adults signing for themselves. Date Night is $210 per couple. All four hosted QuickBooks pages were read on October 30, 2026: Beginner $85, Intermediate $120, Advanced $160, and Date Night $210. These are the displayed payment amounts; no payment was made. Website price edits do not change the hosted checkout amount.
