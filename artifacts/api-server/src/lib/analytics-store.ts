@@ -2,6 +2,8 @@ import { mkdir, readFile, writeFile, rename } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Store } from "./analytics-types";
+import { readPrivateAnalyticsRecovery } from "./analytics-recovery-source";
+import { ensureAnalyticsState } from "./analytics-state-init";
 
 // Private: never add this key to generic public content collections.
 const key = "private-analytics-state";
@@ -9,7 +11,13 @@ const file = process.env.IRONWORKS_ANALYTICS_FILE || join(dirname(fileURLToPath(
 let queue: Promise<unknown> = Promise.resolve();
 async function readLegacy(): Promise<Store> {
   try {
-    const data = JSON.parse(await readFile(file, "utf8"));
+    const hasExplicitLegacyFile = Boolean(process.env.IRONWORKS_ANALYTICS_FILE);
+    const privateRecovery = hasExplicitLegacyFile ? null : await readPrivateAnalyticsRecovery();
+    if (!hasExplicitLegacyFile && !privateRecovery && process.env.NODE_ENV === "production") {
+      throw new Error("Private analytics recovery input is unavailable.");
+    }
+    const raw = privateRecovery ?? await readFile(file, "utf8");
+    const data = JSON.parse(raw);
     if (!data.visitors || !data.sessions || !Array.isArray(data.events)) throw new Error("Invalid analytics storage");
     return data;
   } catch (error) {
@@ -23,13 +31,7 @@ export async function analyticsTransaction<T>(action: (store: Store) => T, write
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
-      const existing = await client.query("SELECT key FROM admin_content WHERE key=$1", [key]);
-      if (!existing.rowCount) {
-        // Import a surviving legacy file only when initializing the database row.
-        await client.query("INSERT INTO admin_content (key,payload) VALUES ($1,$2::jsonb) ON CONFLICT (key) DO NOTHING", [key, JSON.stringify(await readLegacy())]);
-      }
-      const result = await client.query("SELECT payload FROM admin_content WHERE key=$1 FOR UPDATE", [key]);
-      const state = result.rows[0].payload as Store;
+      const state = await ensureAnalyticsState(client, key, readLegacy);
       const output = action(state);
       if (write) await client.query("UPDATE admin_content SET payload=$2::jsonb, version=version+1, updated_at=now() WHERE key=$1", [key, JSON.stringify(state)]);
       await client.query("COMMIT");
