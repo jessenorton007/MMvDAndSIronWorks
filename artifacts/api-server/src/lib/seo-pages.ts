@@ -33,7 +33,7 @@ const localBusiness = {
   email: "dandsiron@yahoo.com",
   areaServed: "Utah",
   sameAs: [
-    "https://www.facebook.com/DallanGoffBlacksmith",
+    "https://www.facebook.com/share/18ZNnQANzX/?mibextid=wwXIfr",
     "https://www.etsy.com/shop/dandsironworks",
   ],
 };
@@ -70,7 +70,7 @@ const staticPages: SeoPage[] = [
       + '<li><a href="tel:+14354219033">Call (435) 421-9033</a></li>'
       + '<li><a href="sms:+14354219033">Text (435) 421-9033</a></li>'
       + '<li><a href="mailto:dandsiron@yahoo.com">Email dandsiron@yahoo.com</a></li>'
-      + '<li><a href="https://www.facebook.com/DallanGoffBlacksmith">Dallan Goff Blacksmith on Facebook</a></li></ul>',
+      + '<li><a href="https://www.facebook.com/share/18ZNnQANzX/?mibextid=wwXIfr">D&S Iron Works on Facebook</a></li></ul>',
   },
   {
     path: "/admin",
