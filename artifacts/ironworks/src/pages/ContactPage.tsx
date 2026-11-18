@@ -166,7 +166,7 @@ export function ContactPage() {
                 </a>
 
                 <a
-                  href="https://www.facebook.com/DallanGoffBlacksmith"
+                  href="https://www.facebook.com/share/18ZNnQANzX/?mibextid=wwXIfr"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-4 group"
@@ -177,7 +177,7 @@ export function ContactPage() {
                   </div>
                   <div>
                     <p className="text-xs font-display tracking-widest uppercase text-white/35 mb-0.5">Facebook</p>
-                    <p className="text-white font-sans group-hover:text-orange-300 transition-colors">@DallanGoffBlacksmith</p>
+                    <p className="text-white font-sans group-hover:text-orange-300 transition-colors">D&S Iron Works on Facebook</p>
                   </div>
                 </a>
               </div>

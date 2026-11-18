@@ -10,8 +10,13 @@ declare global {
 const defaultMeasurementId = 'G-QW2GMHN0GZ';
 const measurementId = String(import.meta.env.VITE_GA4_MEASUREMENT_ID ?? defaultMeasurementId).trim();
 const isConfigured = /^G-[A-Z0-9]+$/i.test(measurementId);
+export function setGaPage(path: string) {
+  (window as unknown as Record<string, unknown>)[`ga-disable-${measurementId}`] = /^\/admin(?:\/|$)/.test(path);
+}
 
 export function initGa4() {
+  if (typeof window !== 'undefined') setGaPage(window.location.pathname);
+  if (typeof window !== 'undefined' && /^\/admin(?:\/|$)/.test(window.location.pathname)) return false;
   if (!isConfigured || typeof window === 'undefined' || window.gtag) return false;
   if (!['dandsironworks.com', 'www.dandsironworks.com'].includes(window.location.hostname)) return false;
 
@@ -29,6 +34,7 @@ export function initGa4() {
 
 export function trackGaEvent(name: string, params: GaEventParams = {}) {
   if (!isConfigured || typeof window === 'undefined') return;
+  if (!['dandsironworks.com', 'www.dandsironworks.com'].includes(window.location.hostname) || /^\/admin(?:\/|$)/.test(window.location.pathname)) return;
   window.gtag?.('event', name, { page_path: window.location.pathname, ...params });
 }
 
