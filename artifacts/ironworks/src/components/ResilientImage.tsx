@@ -19,6 +19,8 @@ export function ResilientImage({ src, fallbackSrc, onError, onLoad, ...props }: 
       {...props}
       src={!originalOnly && optimized ? optimized.src : currentSrc}
       srcSet={!originalOnly && variants ? variants.map(image => `${image.src} ${image.width}w`).join(', ') : props.srcSet}
+      width={props.width ?? optimized?.width}
+      height={props.height ?? optimized?.height}
       sizes={props.sizes ?? '(max-width: 767px) 100vw, 50vw'}
       decoding={props.decoding ?? 'async'}
       loading={props.loading ?? 'lazy'}

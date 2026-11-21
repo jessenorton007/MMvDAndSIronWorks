@@ -17,6 +17,8 @@ const etsyProductRoutes = [...productData.matchAll(/id: '([^']+)'/g)]
 const routes = [
   '/',
   '/services',
+  '/pre-made',
+  '/shop',
   '/services/custom-ironwork-utah',
   '/services/custom-fire-pits',
   '/services/forged-railings',

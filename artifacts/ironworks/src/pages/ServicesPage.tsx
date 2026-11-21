@@ -1,3 +1,4 @@
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { ResilientImage } from '@/components/ResilientImage';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Phone, PocketKnife } from 'lucide-react';
@@ -46,6 +47,7 @@ export function ServicesPage() {
       <main className="relative pt-28 pb-24">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,77,0,0.06)_0%,transparent_62%)] pointer-events-none" />
         <div className="container mx-auto px-5 sm:px-6 md:px-12 relative z-10">
+          <Breadcrumbs path="/services" title="Custom Metalwork Services in Utah" />
           <button
             onClick={returnHome}
             className="flex items-center gap-2 text-white/35 hover:text-white transition-colors mb-10 group font-display tracking-wider text-sm uppercase"

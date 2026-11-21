@@ -1,3 +1,4 @@
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Phone, Mail, MessageSquare, Facebook, Send, ArrowLeft, CheckCircle } from 'lucide-react';
@@ -93,6 +94,7 @@ export function ContactPage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,77,0,0.06)_0%,transparent_60%)] pointer-events-none" />
 
         <div className="container mx-auto px-6 md:px-12 max-w-6xl relative z-10">
+          <Breadcrumbs path="/contact" title="Contact D&S Iron Works" />
           <motion.button
             initial={{ opacity: 0, x: -12 }}
             animate={{ opacity: 1, x: 0 }}

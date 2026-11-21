@@ -1,3 +1,4 @@
+import { collections, collectionSchema } from './seo-structure';
 import source from './seo-source-data.json';
 import { readAdminContent } from './admin-content-store';
 import { escapeHtml } from './service-content';
@@ -48,5 +49,16 @@ export function etsySeo(item: Etsy): SeoPage {
       + paragraph('Confirm the current price, options, and availability on Etsy before purchasing.')
       + section('About This Product', paragraph(item.description))
       + '<p><a href="/services/blacksmith-commissions">Ask about a custom blacksmith commission</a></p>',
+  };
+}
+
+export function collectionSeo(path: keyof typeof collections, products: (PreMade | Etsy)[]): SeoPage {
+  const info = collections[path];
+  return { path, title: info.title, heading: info.heading, description: info.description, image: products[0]?.image,
+    jsonLd: collectionSchema(path, products),
+    contentHtml: paragraph(info.intro) + (products.length ? products.map((item, i) => `<article><h2><a href="${path}/${escapeHtml(item.id)}">${escapeHtml(item.title)}</a></h2>`
+      + `<a href="${path}/${escapeHtml(item.id)}">${imageHtml(item.image, item.title, i < 3)}</a>` + paragraph(item.priceLabel) + paragraph(productDescription(item.description)) + '</article>').join('') : paragraph('No products are listed right now. Ask Dallan about availability.'))
+      + section(info.adviceTitle, paragraph(info.advice))
+      + `<p><a href="${info.relatedPath}">${info.relatedLabel}</a> · <a href="/contact">Ask Dallan a question</a></p>`,
   };
 }
