@@ -1,3 +1,4 @@
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, CheckCircle, MapPin, Phone, PocketKnife } from 'lucide-react';
 import { Link, useParams } from 'wouter';
@@ -12,13 +13,14 @@ import NotFound from './not-found';
 
 export function ServiceDetailPage() {
   const params = useParams<{ slug: string }>();
-  const { services } = useAdminServices();
+  const { services, loading } = useAdminServices();
   const service = services.find((item) => item.slug === params.slug);
   const relatedServices = service?.relatedSlugs
     ?.map((slug) => services.find((item) => item.slug === slug))
     .filter((item): item is NonNullable<typeof item> => Boolean(item)) ?? [];
 
   useSeo({
+    enabled: !loading,
     title: service?.metaTitle ?? 'Custom Ironwork Services | D&S Iron Works',
     description: service?.metaDescription ?? 'Custom ironwork, forged metal art, fire pits, signs, railings, and blacksmith commissions by D&S Iron Works.',
     path: service ? `/services/${service.slug}` : undefined,
@@ -44,6 +46,8 @@ export function ServiceDetailPage() {
       : undefined,
   });
 
+  if (loading && !service) return <div role="status" className="min-h-screen bg-background text-white/60 pt-32 text-center">Loading current details…</div>;
+
   if (!service) return <NotFound />;
 
   return (
@@ -55,6 +59,7 @@ export function ServiceDetailPage() {
       <main className="relative pt-28 pb-24">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,77,0,0.06)_0%,transparent_62%)] pointer-events-none" />
         <div className="container mx-auto px-5 sm:px-6 md:px-12 relative z-10">
+          <Breadcrumbs path={`/services/${service.slug}`} title={service.title} />
           <Link
             href="/services"
             className="flex items-center gap-2 text-white/35 hover:text-white transition-colors mb-10 group font-display tracking-wider text-sm uppercase"

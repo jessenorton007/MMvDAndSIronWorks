@@ -1,4 +1,5 @@
-import { useParams, useLocation } from 'wouter';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { Link, useParams, useLocation } from 'wouter';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ExternalLink, CheckCircle } from 'lucide-react';
 import { useEtsyProducts } from '@/hooks/useAdminProducts';
@@ -7,23 +8,19 @@ import { FormattedDescription } from '@/components/FormattedDescription';
 import { Navigation } from '@/components/Navigation';
 import { FloatingContactBanner } from '@/components/FloatingContactBanner';
 import { useSeo } from '@/lib/seo';
+import { ResilientImage } from '@/components/ResilientImage';
 import { productSchema, productDescription, reliableProductDetails } from '@/lib/product-seo';
 
 export function ProductPage() {
   const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
-  const { products } = useEtsyProducts();
+  const { products, loading } = useEtsyProducts();
   const product = products.find(p => p.id === params.id);
   const reliableDetails = reliableProductDetails(product?.details);
-  const returnToShop = () => {
-    if (window.history.length > 1) {
-      window.history.back();
-      return;
-    }
-    navigate('/#shop');
-  };
+
 
   useSeo({
+    enabled: !loading,
     title: product ? `${product.title} | D&S Iron Works` : 'Hand-Forged Products | D&S Iron Works',
     description: product ? productDescription(product.description) : 'Hand-forged iron goods, jewelry, hooks, bells, and custom metalwork from D&S Iron Works in Utah.',
     path: product ? `/shop/${product.id}` : undefined,
@@ -32,6 +29,8 @@ export function ProductPage() {
     type: 'product',
     jsonLd: product ? productSchema(product, `/shop/${product.id}`, product.etsyUrl) : undefined,
   });
+
+  if (loading && !product) return <div role="status" className="min-h-screen bg-background text-white/60 pt-32 text-center">Loading current details…</div>;
 
   if (!product) {
     return (
@@ -51,15 +50,14 @@ export function ProductPage() {
 
       <div className="pt-28 pb-24">
         <div className="container mx-auto px-4 max-w-5xl">
-          <motion.button
-            initial={{ opacity: 0, x: -12 }}
-            animate={{ opacity: 1, x: 0 }}
-            onClick={returnToShop}
+          <Breadcrumbs path={`/shop/${product.id}`} title={product.title} />
+          <Link
+            href="/shop"
             className="flex items-center gap-2 text-white/40 hover:text-white transition-colors mb-10 group font-display tracking-wider text-sm uppercase"
           >
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
             Back to Shop
-          </motion.button>
+          </Link>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
             <motion.div
@@ -73,7 +71,7 @@ export function ProductPage() {
                 style={{ border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,140,26,0.05)' }}
               >
                 {product.image
-                  ? <img fetchPriority="high" decoding="async" src={product.image} alt={product.title} className="w-full h-full object-cover" />
+                  ? <ResilientImage loading="eager" fetchPriority="high" src={product.image} alt={product.title} className="w-full h-full object-cover" />
                   : <div className="w-full h-full bg-white/5 flex items-center justify-center"><span className="text-white/20 font-display uppercase">No image</span></div>
                 }
                 <div className="absolute inset-0 shadow-[inset_0_0_60px_rgba(0,0,0,0.3)] pointer-events-none rounded-2xl" />

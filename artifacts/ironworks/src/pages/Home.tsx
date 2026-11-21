@@ -392,7 +392,7 @@ export function Home() {
   });
 
   useSeo({
-    title: 'D&S Iron Works | Custom Ironwork, Fire Pits & Rocket Stoves in Utah',
+    title: 'Custom Ironwork & Fire Pits in Utah | D&S Iron Works',
     description: 'D&S Iron Works by Dallan Goff creates custom ironwork, pre-built fire pits, rocket stoves, metal signs, forged railings, sculptural ironwork, and hand-forged goods in Utah.',
     path: '/',
     jsonLd: {
@@ -482,8 +482,8 @@ export function Home() {
               transition={{ duration: 0.9, delay: 0.45 }}
               className="text-white/70 text-lg leading-relaxed mb-10 font-sans font-light max-w-md"
             >
-              Bespoke metal craft, custom fireplaces, forged art, and one-of-a-kind ironwork.
-              Raw, honest, built to last generations.
+              Custom ironwork by Dallan Goff in Utah: forged railings, fire pits, metal signs,
+              and one-of-a-kind steel projects. Talk directly with the maker about your next piece.
             </motion.p>
 
             <motion.div
@@ -505,7 +505,7 @@ export function Home() {
                 <span className="relative z-10">View Custom Work</span>
                 <div className="absolute inset-0 bg-white/0 hover:bg-white/10 transition-colors rounded-full" />
               </motion.button>
-              <GlassButton onClick={() => scrollTo('pre-made')} className="bg-white/3">
+              <GlassButton href="/pre-made" className="bg-white/3">
                 Pre-Made Items
               </GlassButton>
             </motion.div>
