@@ -10,6 +10,8 @@ out-tsc
 
 # dependencies
 node_modules
+.pnpm-store/
+/artifacts/admin-data/
 
 # IDEs and editors
 /.idea
