@@ -262,6 +262,8 @@ function ClassDetail({
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [receipt, setReceipt] = useState("");
+  const [signingRole, setSigningRole] = useState("participant");
+  const [copyEmailStatus, setCopyEmailStatus] = useState("");
   const [requestId] = useState(() => crypto.randomUUID());
   const available = item.sessions.filter((s) => !s.closed && s.remaining > 0);
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -271,7 +273,7 @@ function ClassDetail({
     setError("");
     const form = new FormData(event.currentTarget);
     try {
-      const result = await classesApi<{ id: string; paymentUrl?: string }>(
+      const result = await classesApi<{ id: string; paymentUrl?: string; waiverEmailStatus?: string }>(
         "/classes/registrations",
         {
           requestId,
@@ -285,9 +287,10 @@ function ClassDetail({
           waiverVersion: catalog.waiver.version,
           website: form.get("website"),
           partnerRegistrationId: partnerReference.trim(),
-          ...(catalog.waiver.collectAdultDetails ? { adultDetails: Object.fromEntries(["dateOfBirth", "address", "cityStateZip", "emergencyContact", "medicalConditions", "medications"].map(key => [key, form.get(key)])) } : {}),
+          ...(catalog.waiver.collectAdultDetails ? { adultDetails: Object.fromEntries(["dateOfBirth", "address", "cityStateZip", "emergencyContact", "medicalConditions", "medications", "role", "healthDisclosure", "photoPermission"].map(key => [key, form.get(key)])) } : {}),
         },
       );
+      setCopyEmailStatus(result.waiverEmailStatus ?? "");
       setReceipt(result.id);
       setPaymentUrl(result.paymentUrl ?? "");
     } catch (e) {
@@ -416,7 +419,8 @@ function ClassDetail({
               <code className="block break-all text-orange-200/70 text-xs mb-6">
                 {receipt}
               </code>
-              {item.priceUnit === "couple" && <p className="text-white/55 text-sm mb-5">{partnerReference.trim() ? "Your waiver is linked to your partner's registration. Do not make a second payment. D&S will verify the couple's payment and both registrations." : "Share this reference with your partner. They must select the same session, enter this reference, and sign their own waiver. Make only one payment for the two of you."}</p>}
+              <p className="text-white/60 text-sm mb-5">{copyEmailStatus === "sent" ? "Your signed copy has been submitted to our mail server for delivery. Check your inbox and spam folder." : "Your signed copy is saved. Email delivery is not confirmed; contact D&S for a copy if it does not arrive."}</p>
+              {signingRole !== "observer" && item.priceUnit === "couple" && <p className="text-white/55 text-sm mb-5">{partnerReference.trim() ? "Your waiver is linked to your partner's registration. Do not make a second payment. D&S will verify the couple's payment and both registrations." : "Share this reference with your partner. They must select the same session, enter this reference, and sign their own waiver. Make only one payment for the two of you."}</p>}
               {paymentUrl && (
                 <div className="mb-6 space-y-4">
                   <p className="text-white/55 text-sm">Continue to QuickBooks to pay. Check the class and amount before paying. D&S verifies payment and confirms your seat manually; opening this link does not confirm payment or reserve a seat.</p>
@@ -513,8 +517,14 @@ function ClassDetail({
                     <label className={label}>Street address<input className={field} name="address" autoComplete="street-address" maxLength={300} required /></label>
                     <label className={label}>City, state, ZIP<input className={field} name="cityStateZip" maxLength={200} required /></label>
                     <label className={label}>Emergency contact name and phone<input className={field} name="emergencyContact" maxLength={300} required /></label>
+                    {catalog.waiver.formKind === "adult-release-2026-11" ? <>
+                      <label className={label}>Participant or observer<select className={field} name="role" required defaultValue="" onChange={e => { setSigningRole(e.target.value); if (e.target.value === "observer") setPartnerReference(""); }}><option value="" disabled>Choose one</option><option value="participant">Participant — I will work at the forge and anvil.</option><option value="observer">Observer — I will watch only, without handling tools or hot metal.</option></select><span className="block text-xs mt-2">Observation must be arranged with D&S. Observers receive no payment link and do not earn prerequisite class credit.</span></label>
+                      <fieldset><legend className={label}>Is there anything about your health that the instructor should know to keep you safe?</legend><label className="block mt-2"><input type="radio" name="healthDisclosure" value="no" required /> No.</label><label className="block mt-2"><input type="radio" name="healthDisclosure" value="in_person" required /> Yes. I will tell the instructor in person before class begins.</label></fieldset>
+                      <fieldset><legend className={label}>Photos (optional)</legend><label className="block mt-2"><input type="radio" name="photoPermission" value="yes" /> Yes. D&S may use photos and videos as described in section 8 below.</label><label className="block mt-2"><input type="radio" name="photoPermission" value="no" /> No. Please do not use photos or videos of me.</label><label className="block mt-2"><input type="radio" name="photoPermission" value="not_selected" defaultChecked /> Leave unanswered — no permission granted.</label></fieldset>
+                    </> : <>
                     <label className={label}>Known allergies or medical conditions (write None if none)<textarea className={field} name="medicalConditions" maxLength={2000} required /></label>
                     <label className={label}>Current medications (write None if none)<textarea className={field} name="medications" maxLength={2000} required /></label>
+                    </>}
                   </>}
                   <div hidden aria-hidden="true">
                     <input name="website" tabIndex={-1} autoComplete="off" />
@@ -528,7 +538,7 @@ function ClassDetail({
                     </p>
                     <div
                       tabIndex={0}
-                      className="max-h-64 overflow-auto whitespace-pre-wrap rounded-lg bg-black/20 border border-white/10 p-4 text-white/55 text-sm font-sans leading-relaxed"
+                      className="whitespace-pre-wrap break-words rounded-lg bg-black/20 border border-white/10 p-4 text-white/55 text-sm font-sans leading-relaxed"
                     >
                       {catalog.waiver.text}
                     </div>
@@ -554,7 +564,7 @@ function ClassDetail({
                   </label>
                   <p className="text-xs text-white/35 font-sans leading-relaxed">
                     Your participant details and signed waiver are stored privately for D&S to
-                    manage your class registration.
+                    manage your class registration. A full copy will be emailed to the address you enter.
                   </p>
                   <p className="rounded-lg border border-orange-500/15 bg-orange-500/[0.04] p-4 text-xs text-orange-200/65 font-sans leading-relaxed">
                     No payment is collected here. Your seat is only confirmed

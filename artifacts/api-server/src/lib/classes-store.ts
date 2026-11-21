@@ -1,3 +1,4 @@
+import { protectSignedRecords } from "./waiver-record";
 import { mkdir, readFile, writeFile, rename } from "node:fs/promises";
 import path from "node:path";
 import { adminDataDir } from "./upload-dir";
@@ -24,7 +25,9 @@ export async function classesTransaction<T>(
         [key],
       );
       const state = result.rows[0].payload as ClassesState;
+      const originals = structuredClone(state.registrations);
       const output = action(state);
+      protectSignedRecords(originals, state.registrations);
       if (write)
         await client.query(
           "UPDATE admin_content SET payload=$2::jsonb, version=version+1, updated_at=now() WHERE key=$1",
@@ -50,7 +53,9 @@ export async function classesTransaction<T>(
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
       state = emptyClassesState();
     }
+    const originals = structuredClone(state.registrations);
     const output = action(state);
+    protectSignedRecords(originals, state.registrations);
     if (write) {
       await mkdir(path.dirname(file), { recursive: true });
       await writeFile(file + ".tmp", JSON.stringify(state));

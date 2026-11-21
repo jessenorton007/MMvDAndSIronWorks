@@ -26,9 +26,9 @@ export type ForgeClass = {
   images: { src: string; alt: string }[];
   sessions: ClassSession[];
 };
-export type Waiver = { version: string; text: string; enabled: boolean; collectAdultDetails?: boolean };
-export type AdultDetails = { dateOfBirth: string; ageAtSigning: number; address: string; cityStateZip: string; emergencyContact: string; medicalConditions: string; medications: string };
-export function validateAdultDetails(value: unknown, now = new Date()): AdultDetails {
+export type Waiver = { version: string; text: string; enabled: boolean; collectAdultDetails?: boolean; formKind?: "adult-release-2026-11" };
+export type AdultDetails = { dateOfBirth: string; ageAtSigning: number; address: string; cityStateZip: string; emergencyContact: string; medicalConditions?: string; medications?: string; role?: "participant" | "observer"; healthDisclosure?: "no" | "in_person"; photoPermission?: "yes" | "no" | "not_selected" };
+export function validateAdultDetails(value: unknown, now = new Date(), revised = false): AdultDetails {
   const data = value as Record<string, unknown> | undefined;
   const field = (key: string, max: number) => {
     const v = data?.[key];
@@ -42,7 +42,8 @@ export function validateAdultDetails(value: unknown, now = new Date()): AdultDet
   let ageAtSigning = now.getUTCFullYear() - dob.getUTCFullYear();
   if (now.getUTCMonth() < dob.getUTCMonth() || (now.getUTCMonth() === dob.getUTCMonth() && now.getUTCDate() < dob.getUTCDate())) ageAtSigning--;
   if (ageAtSigning < 18) throw new Error("This waiver is for participants age 18 and older.");
-  return { dateOfBirth, ageAtSigning, address: field("address", 300), cityStateZip: field("cityStateZip", 200), emergencyContact: field("emergencyContact", 300), medicalConditions: field("medicalConditions", 2000), medications: field("medications", 2000) };
+  if (revised && (!['participant', 'observer'].includes(String(data?.role)) || !['no', 'in_person'].includes(String(data?.healthDisclosure)) || !['yes', 'no', 'not_selected'].includes(String(data?.photoPermission)))) throw new Error("Choose participant or observer and answer the health question. Photo permission is optional.");
+  return { dateOfBirth, ageAtSigning, address: field("address", 300), cityStateZip: field("cityStateZip", 200), emergencyContact: field("emergencyContact", 300), ...(revised ? { role: data!.role as "participant" | "observer", healthDisclosure: data!.healthDisclosure as "no" | "in_person", photoPermission: data!.photoPermission as "yes" | "no" | "not_selected" } : { medicalConditions: field("medicalConditions", 2000), medications: field("medications", 2000) }) };
 }
 export type Registration = {
   id: string;
@@ -70,6 +71,9 @@ export type Registration = {
   consentText: string;
   signedAt: string;
   adultDetails?: AdultDetails;
+  signedCopy?: string;
+  signedCopySha256?: string;
+  waiverEmail?: { status: "pending" | "sent" | "failed"; attemptedAt?: string; sentAt?: string };
 };
 export type ClassesState = {
   revision: number;
@@ -112,7 +116,7 @@ export function qualifyingCompletions(state: ClassesState, record: Registration)
   if (!required) return [];
   const normalize = (value: string) => value.trim().replace(/\s+/g, " ").toLowerCase();
   return state.registrations.filter(r => r.id !== record.id && r.status === "completed"
-    && registrationLevel(state, r) === required
+    && r.adultDetails?.role !== "observer" && registrationLevel(state, r) === required
     && normalize(r.email) === normalize(record.email) && normalize(r.name) === normalize(record.name)
     && Date.parse(r.startsAt) < Date.parse(record.startsAt));
 }
@@ -217,7 +221,9 @@ export function validateCatalog(value: unknown): {
     text: text(data.waiver.text, 30000),
     enabled: data.waiver.enabled === true,
     collectAdultDetails: data.waiver.collectAdultDetails === true,
+    ...(data.waiver.formKind === "adult-release-2026-11" ? { formKind: "adult-release-2026-11" as const } : {}),
   };
+  if (waiver.formKind && !waiver.collectAdultDetails) throw new Error("The revised adult release requires adult details.");
   if (waiver.enabled && (!waiver.version || !waiver.text))
     throw new Error(
       "Add approved waiver text and a version before enabling registration.",

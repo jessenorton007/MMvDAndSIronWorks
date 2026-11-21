@@ -1,3 +1,5 @@
+import { signedWaiverCopy } from "../../../api-server/src/lib/waiver-record";
+import launchCatalog from "../../../../docs/classes-launch-catalog.json";
 import { useEffect, useState } from "react";
 import {
   classesApi,
@@ -159,9 +161,7 @@ export function ClassesAdmin() {
   const edit = <K extends keyof ForgeClass>(key: K, value: ForgeClass[K]) =>
     setEditing((c) => (c ? { ...c, [key]: value } : c));
   function download(record: Registration) {
-    const details = record.adultDetails;
-    const participantDetails = details ? `\nDate of birth: ${details.dateOfBirth}\nAge at signing: ${details.ageAtSigning}\nStreet address: ${details.address}\nCity, state, ZIP: ${details.cityStateZip}\nEmergency contact: ${details.emergencyContact}\nKnown allergies or medical conditions: ${details.medicalConditions}\nCurrent medications: ${details.medications}\n` : "";
-    const text = `D&S Iron Works — signed class waiver\nRegistration: ${record.id}\nClass: ${record.classTitle}\nSession: ${sessionDate(record.startsAt)}\nParticipant: ${record.name}\nEmail: ${record.email}\nPhone: ${record.phone}\n${participantDetails}\nSigned: ${record.signedAt}\nWaiver version: ${record.waiverVersion}\n\n${record.waiverText}\n\n${record.consentText}\nElectronic signature: ${record.signature}\n`;
+    const text = signedWaiverCopy(record);
     const url = URL.createObjectURL(
       new Blob([text], { type: "text/plain;charset=utf-8" }),
     );
@@ -636,6 +636,7 @@ export function ClassesAdmin() {
                   }}
                 />
               </label>
+              <button onClick={() => { setDirty(true); setState({ ...state, waiver: { ...launchCatalog.waiver, formKind: "adult-release-2026-11", enabled: false } }); }}>Load Rev. Nov. 2026 release (keep registration closed)</button>
               <label>
                 Approved waiver text
                 <textarea
@@ -652,8 +653,8 @@ export function ClassesAdmin() {
                 />
               </label>
               <label className="class-check">
-                <input type="checkbox" checked={!!state.waiver.collectAdultDetails} onChange={e => { setDirty(true); setState({ ...state, waiver: { ...state.waiver, collectAdultDetails: e.target.checked } }); }} />
-                Collect the adult waiver's date of birth, address, required phone, emergency contact, medical conditions, and medications. Change the waiver version when changing this setting.
+                <input type="checkbox" disabled={!!state.waiver.formKind} checked={!!state.waiver.collectAdultDetails} onChange={e => { setDirty(true); setState({ ...state, waiver: { ...state.waiver, collectAdultDetails: e.target.checked } }); }} />
+                Collect required adult details. The Rev. Nov. 2026 form uses participant/observer, in-person health disclosure, and optional photo permission instead of medical-history fields. Change the waiver version when changing this setting.
               </label>
               <label className="class-check">
                 <input
@@ -734,7 +735,7 @@ export function ClassesAdmin() {
                     (status) => (
                       <button
                         key={status}
-                        disabled={busy || r.status === status || r.status === "completed" || (status === "confirmed" && !!prerequisiteLevel(registrationLevel(state, r)) && !r.approvedAt)}
+                        disabled={busy || r.status === status || r.status === "completed" || (status === "confirmed" && r.adultDetails?.role !== "observer" && !!prerequisiteLevel(registrationLevel(state, r)) && !r.approvedAt)}
                         onClick={() => void changeStatus(r, status)}
                       >
                         {status === "confirmed"
@@ -750,6 +751,8 @@ export function ClassesAdmin() {
                       if (window.confirm(`Confirm ${r.name} actually attended and completed ${r.classTitle}? This is an attendance record, not a payment status.`)) void changeStatus(r, "completed");
                     }}>Mark class completed</button>
                   )}
+                  <p>Signed-copy email: {r.waiverEmail?.status ?? "Not recorded"}{r.waiverEmail?.sentAt ? ` · SMTP accepted ${r.waiverEmail.sentAt}` : ""}</p>
+                  <button disabled={busy} onClick={async () => { setBusy(true); try { setState(await classesApi<ClassesState>(`/admin/classes/registrations/${r.id}/resend-waiver`, {})); setMessage("Email retry completed. Check delivery status; SMTP acceptance does not guarantee inbox delivery."); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } }}>Resend signed copy</button>
                   <button onClick={() => download(r)}>
                     Download signed waiver
                   </button>
@@ -759,12 +762,8 @@ export function ClassesAdmin() {
                   <p className="classes-small">
                     {r.signature} · {r.signedAt} · Version {r.waiverVersion}
                   </p>
-                  <pre>
-                    {r.waiverText}
-                    {"\n\n"}
-                    {r.consentText}
-                  </pre>
-                  {r.adultDetails && <dl>{Object.entries({ "Date of birth": r.adultDetails.dateOfBirth, "Age at signing": r.adultDetails.ageAtSigning, "Street address": r.adultDetails.address, "City, state, ZIP": r.adultDetails.cityStateZip, "Emergency contact": r.adultDetails.emergencyContact, "Medical conditions": r.adultDetails.medicalConditions, "Medications": r.adultDetails.medications }).map(([label, value]) => <div key={label}><dt>{label}</dt><dd className="whitespace-pre-wrap break-words">{value}</dd></div>)}</dl>}
+                  <pre>{signedWaiverCopy(r)}</pre>
+                  {r.signedCopySha256 && <p className="classes-small break-words">Copy SHA-256: {r.signedCopySha256}</p>}
                 </details>
               </article>
             ))}

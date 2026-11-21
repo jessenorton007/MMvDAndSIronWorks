@@ -77,3 +77,15 @@ The current live site still returns 404 for /classes and /api/classes as of Octo
 7. Review pending requests, verify payment in QuickBooks, then confirm seats and contact the customer. For Intermediate/Advanced, approve completed prerequisite attendance first and send an individual invoice. For Date Night, confirm both seats from the first registration after both waivers are present.
 
 Local verification passed: frontend/API type checks, frontend/API production builds, and 10 integration tests. Tests use isolated local persistence and a fake SMTP server; production PostgreSQL, live App Storage, and actual inbox delivery remain deployment checks. The Vite build retains an existing non-blocking tooltip sourcemap warning.
+
+## November 21, 2026 revised adult release (staged)
+
+The supplied DandS_Adult_Blacksmithing_Release_Rev_2026-11.pdf replaces the earlier draft. Its original PDF and extracted complete text are in docs/waivers/adult-release-2026-11.*. The starter catalog uses Rev. Nov. 2026 and remains disabled with unpublished classes and no real dates. Existing catalogs can load this release from the admin waiver editor without opening registration.
+
+The revised form collects participant/observer status, a no/in-person health disclosure, and optional photo permission. No photo consent is preselected; unanswered means no permission. Detailed medical history and medications are no longer collected for this revision. Legacy signed records retain their original fields. Observers receive no checkout link, must arrange observation with D&S, and do not earn prerequisite completion credit. Confirmed observers count toward shop capacity.
+
+Every new submission stores a fixed signedCopy, its SHA-256, exact waiver text/revision, consent, choices and server UTC timestamp. The transaction layer rejects edits/deletion of signed evidence; status, eligibility and mail tracking remain separately mutable. Admin views/downloads and signer emails use the same fixed copy. This is application-level immutability, not WORM storage or protection against a privileged database administrator; backups and database access controls remain necessary.
+
+The signer now automatically receives the complete signed copy through SMTP; the owner notification still excludes private adult details. Mail status is saved separately and visible in admin, with an authenticated resend action. SMTP failures preserve registration and show failed/pending status; there is no scheduled automatic retry worker. SMTP acceptance is not proof of inbox delivery. Preview mode suppresses real mail.
+
+Local integration testing used synthetic data and a fake SMTP receiver, including initial failure and successful retry. Review outputs are outside the repository under task outputs/Waiver Review. No real participant signed and no attorney message was sent. Keep registration closed until the review record is approved, live SMTP inbox delivery and production persistence are verified, and actual dates are entered. Keep printed copies of the original PDF for offline use.

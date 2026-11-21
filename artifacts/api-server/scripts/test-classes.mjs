@@ -1,3 +1,4 @@
+import { createRequire } from "node:module";
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -100,9 +101,10 @@ test('classes registration, privacy, waiver history, and capacity integration', 
       first = await api('/classes/registrations', body); assert.equal(first.status, 201);
       assert.equal(first.result.paymentUrl, catalog.classes[0].paymentUrl);
       assert.equal(mail.length, 2);
-      assert.ok(mail.some(text => text.includes('To: owner@example.com') && text.includes('Reply-To: first@example.com')));
-      assert.ok(mail.some(text => text.includes('To: first@example.com') && text.includes('Your place is not confirmed yet.')));
-      assert.ok(mail.every(text => !text.includes('TEST ONLY — not a legal waiver.')));
+      assert.ok(mail.some(text => /^To: owner@example.com$/m.test(text) && text.includes('Reply-To: first@example.com')));
+      assert.ok(mail.some(text => /^To: first@example.com$/m.test(text) && text.includes('Your place is not confirmed yet.')));
+      assert.ok(mail.find(text => /^To: first@example.com$/m.test(text)).includes('TEST ONLY — not a legal waiver.'));
+      assert.ok(!mail.find(text => /^To: owner@example.com$/m.test(text)).includes('TEST ONLY — not a legal waiver.'));
       assert.equal((await api('/classes/registrations', body)).result.id, first.result.id);
       assert.equal((await api('/classes/registrations', { ...body, requestId: randomUUID() })).status, 400);
       assert.equal(mail.length, 2, 'Retries and rejected duplicates must not send email');
@@ -228,7 +230,7 @@ test('classes registration, privacy, waiver history, and capacity integration', 
       const publicData = JSON.stringify((await api('/classes')).result);
       assert.equal(publicData.includes('prerequisiteCompletionId'), false);
     });
-    await t.test('adult waiver fields are validated, preserved privately, and excluded from email', async () => {
+    await t.test('legacy adult details are validated and included only in the signer copy', async () => {
       await stop(); await start();
       const state = (await api('/admin/classes', undefined, 'GET', true)).result;
       state.waiver = { version: 'adult-test-v1', text: 'TEST ONLY adult information waiver.', enabled: true, collectAdultDetails: true };
@@ -243,7 +245,8 @@ test('classes registration, privacy, waiver history, and capacity integration', 
       assert.equal((await api('/classes/registrations', { ...body, adultDetails: { ...body.adultDetails, medications: '' } })).status, 400);
       const result = await api('/classes/registrations', body); assert.equal(result.status, 201);
       assert.equal(JSON.stringify(result.result).includes('PRIVATE'), false);
-      assert.ok(mail.every(m => !m.includes('PRIVATE')));
+      assert.ok(mail.filter(m => /^To: owner@example.com$/m.test(m)).every(m => !m.includes('PRIVATE')));
+      assert.ok(mail.find(m => /^To: adulttester@example.com$/m.test(m)).includes('PRIVATE ADDRESS'));
       await stop(); await start();
       const saved = (await api('/admin/classes', undefined, 'GET', true)).result;
       const record = saved.registrations.find(r => r.id === result.result.id);
@@ -253,5 +256,58 @@ test('classes registration, privacy, waiver history, and capacity integration', 
       saved.waiver.collectAdultDetails = false;
       assert.equal((await api('/admin/classes', saved, 'PUT', true)).status, 400, 'Changing required waiver fields needs a new version');
     });
+    await t.test('revised release captures choices, emails exact saved copy, retries failures, and exports a synthetic review record', async () => {
+      await stop(); await start();
+      let state = (await api('/admin/classes', undefined, 'GET', true)).result;
+      const launch = JSON.parse(await readFile(new URL('../../../docs/classes-launch-catalog.json', import.meta.url), 'utf8'));
+      state.waiver = { ...launch.waiver, enabled: true };
+      state.classes.push({ ...state.classes[0], id: 'review', slug: 'review', title: 'Beginner (TEST ONLY)', sessions: [{ id: 'review-session', startsAt: new Date(Date.now()+7*86400000).toISOString(), capacity: 5, closed: false }] });
+      assert.equal((await api('/admin/classes', state, 'PUT', true)).status,200);
+      const body = { ...registration('Waiver Review Test'), email:'waiver-review@example.com', classId:'review', sessionId:'review-session', waiverVersion:'Rev. Nov. 2026', phone:'202-555-0100', adultDetails:{ dateOfBirth:'1990-01-01', address:'123 Test Street', cityStateZip:'Test City, UT 00000', emergencyContact:'Emergency Test, 202-555-0101', role:'participant', healthDisclosure:'in_person', photoPermission:'no' } };
+      assert.equal((await api('/classes/registrations',{...body, adultDetails:{...body.adultDetails,role:''}})).status,400);
+      assert.equal((await api('/classes/registrations',{...body, adultDetails:{...body.adultDetails,healthDisclosure:''}})).status,400);
+      rejectMail=true;
+      const registered=await api('/classes/registrations',body); assert.equal(registered.status,201);assert.equal(registered.result.waiverEmailStatus,'failed');
+      rejectMail=false;
+      const endpoint=`/admin/classes/registrations/${registered.result.id}/resend-waiver`;
+      assert.equal((await api(endpoint,{})).status,401);
+      const retry=await api(endpoint,{},'POST',true);assert.equal(retry.status,200);
+      const record=retry.result.registrations.find(r=>r.id===registered.result.id);
+      assert.equal(record.waiverEmail.status,'sent');assert.equal(record.adultDetails.medications,undefined);
+      assert.equal(record.waiverText,launch.waiver.text.trim());
+      assert.ok(record.signedCopy.includes('Rev. Nov. 2026'));assert.ok(record.signedCopy.includes('Photos (optional): No.'));
+      const {createHash}=await import('node:crypto');assert.equal(record.signedCopySha256,createHash('sha256').update(record.signedCopy).digest('hex'));
+      const message=mail.find(m=>/^To: waiver-review@example.com$/m.test(m));
+      assert.ok(message.includes(record.signedCopy.trimEnd()));
+      const edited=await api(`/admin/classes/registrations/${record.id}`,{status:'pending',signature:'Changed signature',waiverText:'Changed text'},'PATCH',true);
+      assert.equal(edited.status,200);assert.equal(edited.result.registrations.find(r=>r.id===record.id).signedCopy,record.signedCopy);
+      await stop();await start();
+      assert.equal((await api('/admin/classes',undefined,'GET',true)).result.registrations.find(r=>r.id===record.id).signedCopy,record.signedCopy);
+      const observer=await api('/classes/registrations',{...body,requestId:randomUUID(),name:'Observer Test',signature:'Observer Test',email:'observer@example.com',adultDetails:{...body.adultDetails,role:'observer',photoPermission:'not_selected'}});
+      assert.equal(observer.status,201);assert.equal(observer.result.paymentUrl,undefined);
+      const observerRecord=(await api('/admin/classes',undefined,'GET',true)).result.registrations.find(r=>r.id===observer.result.id);
+      assert.ok(observerRecord.signedCopy.includes('Not selected — no permission granted.'));
+      if(process.env.WAIVER_REVIEW_OUTPUT) {
+        const out=path.resolve(process.env.WAIVER_REVIEW_OUTPUT); await mkdir(out,{recursive:true});
+        await writeFile(path.join(out,'TEST ONLY Signed Waiver.txt'),record.signedCopy);
+        await writeFile(path.join(out,'TEST ONLY Stored Record.json'),JSON.stringify({testOnly:true,environment:'isolated local test; not a real signature or live email',record},null,2));
+        await writeFile(path.join(out,'TEST ONLY Signer Email.eml'),message);
+      }
+    });
   } finally { await stop(); await new Promise(resolve => smtp.close(resolve)); await rm(dir, { recursive: true, force: true }); }
+});
+
+
+test('signed evidence cannot be rewritten or removed by storage transactions', async () => {
+  const { transform } = createRequire(new URL('../package.json', import.meta.url))('esbuild');
+  const source = await readFile(new URL('../src/lib/waiver-record.ts',import.meta.url),'utf8');
+  const {code} = await transform(source,{loader:'ts',format:'esm'});
+  const {protectSignedRecords} = await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));
+  const record={id:'test',signature:'Test Signer',waiverText:'Original',signedAt:'2026-11-21T12:00:00Z',adultDetails:{photoPermission:'no'},signedCopy:'fixed copy',status:'pending'};
+  for(const field of ['signature','waiverText','signedAt','signedCopy','adultDetails']) {
+    const changed={...record,[field]:'changed'};
+    assert.throws(()=>protectSignedRecords([record],[changed]),/cannot be changed/);
+  }
+  assert.throws(()=>protectSignedRecords([record],[]),/cannot be changed/);
+  assert.doesNotThrow(()=>protectSignedRecords([record],[{...record,status:'confirmed',waiverEmail:{status:'sent'}}]));
 });

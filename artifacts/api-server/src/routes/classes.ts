@@ -1,8 +1,9 @@
 import { Router, type RequestHandler } from "express";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { isAdminRequest } from "./admin";
 import { classesTransaction } from "../lib/classes-store";
-import { sendRegistrationEmails } from "../lib/classes-email";
+import { signedWaiverCopy } from "../lib/waiver-record";
+import { sendRegistrationEmails, resendWaiverCopy } from "../lib/classes-email";
 import launchCatalog from "../../../../docs/classes-launch-catalog.json";
 import {
   consentText,
@@ -125,7 +126,7 @@ router.put(
           );
         if (
           state.waiver.text &&
-          (state.waiver.text !== catalog.waiver.text || !!state.waiver.collectAdultDetails !== !!catalog.waiver.collectAdultDetails) &&
+          (state.waiver.text !== catalog.waiver.text || !!state.waiver.collectAdultDetails !== !!catalog.waiver.collectAdultDetails || state.waiver.formKind !== catalog.waiver.formKind) &&
           state.waiver.version === catalog.waiver.version
         )
           throw new Error(
@@ -221,7 +222,7 @@ router.post(
             "This request has already been used. Reload the form.",
           );
         const previousClass = state.classes.find(c => c.id === previous.classId);
-        return { id: previous.id, status: previous.status, record: undefined, paymentUrl: previous.status !== "cancelled" && !previous.partnerRegistrationId && previousClass && !prerequisiteLevel(previousClass.level) ? previousClass.paymentUrl : undefined };
+        return { id: previous.id, status: previous.status, record: undefined, paymentUrl: previous.status !== "cancelled" && previous.adultDetails?.role !== "observer" && !previous.partnerRegistrationId && previousClass && !prerequisiteLevel(previousClass.level) ? previousClass.paymentUrl : undefined };
       }
       const c = state.classes.find((c) => c.id === body.classId && c.published);
       const session = c?.sessions.find((s) => s.id === body.sessionId);
@@ -257,10 +258,12 @@ router.post(
           "You already have a registration for this session. Contact D&S for changes.",
         );
       const timestamp = new Date().toISOString();
-      const adultDetails = state.waiver.collectAdultDetails ? validateAdultDetails(body.adultDetails) : undefined;
+      const adultDetails = state.waiver.collectAdultDetails ? validateAdultDetails(body.adultDetails, new Date(timestamp), state.waiver.formKind === "adult-release-2026-11") : undefined;
       if (adultDetails && !phone) throw new Error("Enter your phone number as required by the waiver.");
+      const observer = adultDetails?.role === "observer";
       const partnerRegistrationId = clean(body.partnerRegistrationId ?? "", 80);
-      if (c.priceUnit === "couple" && !partnerRegistrationId && seatsRemaining(state, c.id, session) < 2)
+      if (observer && partnerRegistrationId) throw new Error("Observers cannot join a couple payment. Contact D&S to arrange observation.");
+      if (!observer && c.priceUnit === "couple" && !partnerRegistrationId && seatsRemaining(state, c.id, session) < 2)
         throw new Error("This session does not have two spaces available for a couple. Choose another date.");
       if (partnerRegistrationId) {
         const partner = state.registrations.find(r => r.id === partnerRegistrationId && r.classId === c.id && r.sessionId === session.id && r.status !== "cancelled" && !r.partnerRegistrationId);
@@ -275,8 +278,8 @@ router.post(
         classLevel: c.level,
         sessionId: session.id,
         startsAt: session.startsAt,
-        priceCents: partnerRegistrationId ? 0 : c.priceCents,
-        priceUnit: c.priceUnit ?? "person",
+        priceCents: observer || partnerRegistrationId ? 0 : c.priceCents,
+        priceUnit: observer ? "person" : c.priceUnit ?? "person",
         ...(partnerRegistrationId ? { partnerRegistrationId } : {}),
         name,
         email,
@@ -291,13 +294,21 @@ router.post(
         signedAt: timestamp,
         ...(adultDetails ? { adultDetails } : {}),
       };
+      record.signedCopy = signedWaiverCopy(record);
+      record.signedCopySha256 = createHash("sha256").update(record.signedCopy, "utf8").digest("hex");
+      record.waiverEmail = { status: "pending" };
       state.registrations.push(record);
-      return { id: record.id, status: record.status, record, paymentUrl: !partnerRegistrationId && !prerequisiteLevel(c.level) ? c.paymentUrl : undefined };
+      return { id: record.id, status: record.status, record, paymentUrl: !observer && !partnerRegistrationId && !prerequisiteLevel(c.level) ? c.paymentUrl : undefined };
     });
     // Commit first. Email failures must never turn a saved signup into an error.
     // Retries of the same request do not send duplicate notifications.
-    if (result.record) await sendRegistrationEmails(result.record, result.paymentUrl);
-    res.status(201).json({ id: result.id, status: result.status, paymentUrl: result.paymentUrl });
+    let waiverEmailStatus = "previously_saved";
+    if (result.record) {
+      const delivery = await sendRegistrationEmails(result.record, result.paymentUrl);
+      waiverEmailStatus = delivery.status;
+      await classesTransaction(state => { const saved = state.registrations.find(r => r.id === result.id)!; saved.waiverEmail = delivery; });
+    }
+    res.status(201).json({ id: result.id, status: result.status, paymentUrl: result.paymentUrl, waiverEmailStatus });
   }),
 );
 router.patch(
@@ -310,7 +321,7 @@ router.patch(
       await classesTransaction((state) => {
         const record = state.registrations.find((r) => r.id === req.params.id);
         if (!record) throw new Error("Registration not found.");
-        const required = prerequisiteLevel(registrationLevel(state, record));
+        const required = record.adultDetails?.role === "observer" ? undefined : prerequisiteLevel(registrationLevel(state, record));
         if (req.body.action === "approve") {
           if (record.status !== "pending" || !required) throw new Error("Only pending prerequisite requests need approval.");
           const completion = qualifyingCompletions(state, record).find(r => r.id === req.body.completionId);
@@ -326,7 +337,7 @@ router.patch(
         if (req.body.status === "completed") {
           if (record.status !== "confirmed" || Date.parse(record.startsAt) > Date.now())
             throw new Error("Only a confirmed session that has started can be marked completed. Verify actual attendance first.");
-          record.classLevel = registrationLevel(state, record);
+          // Keep the class category frozen at signing.
           record.completedAt = new Date().toISOString();
         }
         if (req.body.status === "confirmed" && record.status !== "confirmed") {
@@ -358,4 +369,10 @@ router.patch(
     );
   }),
 );
+router.post("/admin/classes/registrations/:id/resend-waiver", admin, endpoint(async (req, res) => {
+  const record = await classesTransaction(state => state.registrations.find(r => r.id === req.params.id), false);
+  if (!record) throw new Error("Registration not found.");
+  const delivery = await resendWaiverCopy(record);
+  res.json(await classesTransaction(state => { state.registrations.find(r => r.id === record.id)!.waiverEmail = delivery; return state; }));
+}));
 export default router;
