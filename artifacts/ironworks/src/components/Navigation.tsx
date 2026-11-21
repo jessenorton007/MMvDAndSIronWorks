@@ -38,9 +38,9 @@ export function Navigation() {
   const navLinks = [
     { name: 'Classes', href: '/classes', action: () => { setMobileMenuOpen(false); navigate('/classes'); } },
     { name: 'Custom', href: '/#custom-designs', action: () => scrollTo('custom-designs') },
-    { name: 'Pre-Made', href: '/#pre-made', action: () => scrollTo('pre-made') },
+    { name: 'Pre-Made', href: '/pre-made', action: () => { setMobileMenuOpen(false); navigate('/pre-made'); } },
     { name: 'Services', href: '/services', action: goServices },
-    { name: 'Shop', href: '/#shop', action: () => scrollTo('shop') },
+    { name: 'Shop', href: '/shop', action: () => { setMobileMenuOpen(false); navigate('/shop'); } },
     { name: 'Contact', href: '/contact', action: goContact },
   ];
 

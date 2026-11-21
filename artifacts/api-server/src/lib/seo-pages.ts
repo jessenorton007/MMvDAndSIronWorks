@@ -41,7 +41,7 @@ const localBusiness = {
 const staticPages: SeoPage[] = [
   {
     path: "/",
-    title: "D&S Iron Works | Custom Ironwork, Fire Pits & Rocket Stoves in Utah",
+    title: "Custom Ironwork & Fire Pits in Utah | D&S Iron Works",
     description: "D&S Iron Works by Dallan Goff creates custom ironwork, pre-built fire pits, rocket stoves, metal signs, forged railings, sculptural ironwork, and hand-forged goods in Utah.",
     heading: "Custom Ironwork by D&S Iron Works",
     image: "/opengraph.jpg",

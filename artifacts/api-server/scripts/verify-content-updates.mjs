@@ -41,6 +41,9 @@ try {
   assert.ok(sitemap.body.includes('/pre-made/seo-regression-test-item</loc>'));
   assert.ok(!sitemap.body.includes('/pre-made/iron-rocket-xl</loc>'));
   assert.equal((await get('/pre-made/seo-regression-test-item')).status, 200);
+  const collection = await get('/pre-made');
+  assert.ok(collection.body.includes('/pre-made/seo-regression-test-item'));
+  assert.ok(!collection.body.includes('href="/pre-made/iron-rocket-xl"'));
   assert.equal((await get('/pre-made/iron-rocket-xl')).status, 404);
 
   data['premade-products'].payload = [];
@@ -51,7 +54,8 @@ try {
   assert.ok(!sitemap.body.includes('/pre-made/') && !sitemap.body.includes('/shop/') && !sitemap.body.includes('/services/'));
   const urls = [...sitemap.body.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]);
   assert.equal(new Set(urls).size, urls.length);
-  assert.equal(urls.length, 4, 'Only the four permanent public pages should remain.');
+  assert.equal(urls.length, 6, 'Only permanent public pages and collection hubs should remain.');
+  for (const route of ['/pre-made', '/shop']) { const empty = await get(route); assert.equal(empty.status, 200); assert.ok(empty.body.includes('No products are listed right now')); assert.ok(empty.body.includes('"numberOfItems":0')); }
   const contact = await get('/contact');
   for (const link of ['tel:+14354219033', 'sms:+14354219033', 'mailto:dandsiron@yahoo.com']) assert.ok(contact.body.includes(`href="${link}"`));
   assert.ok(contact.body.includes('"@type":"ContactPage"'));

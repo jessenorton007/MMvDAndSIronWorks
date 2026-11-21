@@ -262,3 +262,18 @@ Reviewed current primary guidance: https://developers.google.com/search/docs/fun
 ## September 22, 2026 — Put products before long descriptions
 
 At the user's request, pre-made and Etsy detail pages now place full descriptions below product images, price, purchasing controls, and the pre-made gallery. Homepage pre-made and signature cards keep their descriptions in a native expandable section beneath the product, so lengthy copy does not block browsing the next item. Stored product descriptions and metadata remain intact. Initial server product HTML follows the same media-before-description order.
+
+## November 21, 2026 — Collection discovery and technical SEO update
+
+Verified the repository is jessenorton007/MMvDAndSIronWorks and based this work on production main (5e6f3c1). Classes and the draft waiver remain excluded.
+
+- Added crawlable Pre-Made and Shop category pages using current admin-managed products, matching the existing design. Added introductory buying guidance, current product links, CollectionPage/ItemList markup, and related service/contact links. Navigation now links to these pages.
+- Added visible breadcrumbs and BreadcrumbList markup across category, product, service, contact, and project pages. Product return links now lead directly to their category.
+- Added shared WebSite identity markup, social site/locale/image descriptions, and large search-image preview permission. Refined the homepage title and introduction around actual Utah ironwork services.
+- Added product, service, and project images to the dynamic XML sitemap. It now includes 56 public canonical pages (previously 54), and still updates with admin edits without rebuilding.
+- Prevented temporary missing-product/noindex metadata while live catalog content loads. Redirected index.html permanently to the homepage while preserving query strings. Content-store failures return temporary 503 responses with Retry-After instead of stale catalog HTML.
+- Added image dimensions to reduce layout movement, responsive eager-loading for the main shop product image, and immutable caching for fingerprinted build assets. Restored mobile zoom.
+
+Validation: frontend/API type checks and builds passed; all 56 sitemap routes and canonical tags passed; 43 products, two collections, 49 breadcrumb checks, seven services, 17 service answers, nine product answers, 50 responsive image entries and 22 related service links passed. Isolated catalog-edit tests covered additions/removals, empty collections and current specifications. A separate production-mode storage-failure test verified eight routes return 503 without stale data. Browser checks confirmed collection layout, mobile fit, product navigation and updated canonical metadata. No forms or payments were submitted. Four existing Etsy title duplications represent distinct listings and were not merged or given invented distinctions.
+
+Local screenshot retained with the task outputs. Publication and live verification are recorded in the release response. Google recrawling, rankings, Search Console performance and Core Web Vitals scores are not claimed by these checks. No customer/admin database records were modified by this update.

@@ -36,6 +36,7 @@ export async function generateSeoData() {
   );
   await writeFile(path.resolve(artifactDir, 'src/lib/product-guides.ts'),
     await readFile(path.resolve(artifactDir, '../ironworks/src/data/product-guides.ts'), 'utf8'), 'utf8');
+  await writeFile(path.resolve(artifactDir, 'src/lib/seo-structure.ts'), await readFile(path.resolve(artifactDir, '../ironworks/src/lib/seo-structure.ts'), 'utf8'), 'utf8');
   await writeFile(path.resolve(artifactDir, 'src/lib/product-seo.ts'),
     await readFile(path.resolve(artifactDir, '../ironworks/src/lib/product-seo.ts'), 'utf8'), 'utf8');
 }

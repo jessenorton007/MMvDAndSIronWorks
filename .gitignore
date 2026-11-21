@@ -53,6 +53,10 @@ Thumbs.db
 # local runtime artifacts
 /work/
 /artifacts/commerce-data.json
+/artifacts/analytics-data.json
+/artifacts/**/analytics-recovery*.json
+/artifacts/**/private-analytics-*.json
+/.local/private-backups/
 /artifacts/ironworks/vite-*.log
 /artifacts/ironworks/public/images/client-upload-railings/img_*.jpeg
 

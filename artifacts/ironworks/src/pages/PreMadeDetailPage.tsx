@@ -1,7 +1,8 @@
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, CheckCircle, Phone, X } from 'lucide-react';
-import { useLocation, useParams } from 'wouter';
+import { Link, useLocation, useParams } from 'wouter';
 import { Navigation } from '@/components/Navigation';
 import { FloatingContactBanner } from '@/components/FloatingContactBanner';
 import { FormattedDescription } from '@/components/FormattedDescription';
@@ -19,17 +20,16 @@ import NotFound from './not-found';
 export function PreMadeDetailPage() {
   const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
-  const { products } = usePreMadeProducts();
+  const { products, loading } = usePreMadeProducts();
   const item = products.find((product) => product.id === params.id);
   const features = publicFeatures(item?.features ?? []);
   const fallbackItem = getFallbackPreMadeItem(params.id);
   const [purchaseOpen, setPurchaseOpen] = useState(false);
   const [expandedImage, setExpandedImage] = useState<{ src: string; alt: string } | null>(null);
-  const returnToPreMade = () => {
-    window.location.assign('/#pre-made');
-  };
+
 
   useSeo({
+    enabled: !loading,
     title: item ? `${item.title} | D&S Iron Works Pre-Made Steel` : 'Pre-Made Steel Items | D&S Iron Works',
     description: item
       ? productDescription(item.description)
@@ -40,6 +40,8 @@ export function PreMadeDetailPage() {
     type: 'product',
     jsonLd: item ? productSchema(item, `/pre-made/${item.id}`) : undefined,
   });
+
+  if (loading && !item) return <div role="status" className="min-h-screen bg-background text-white/60 pt-32 text-center">Loading current details…</div>;
 
   if (!item) return <NotFound />;
 
@@ -52,13 +54,14 @@ export function PreMadeDetailPage() {
       <main className="relative pt-28 pb-24">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,77,0,0.06)_0%,transparent_62%)] pointer-events-none" />
         <div className="container mx-auto px-5 sm:px-6 md:px-12 relative z-10">
-          <button
-            onClick={returnToPreMade}
+          <Breadcrumbs path={`/pre-made/${item.id}`} title={item.title} />
+          <Link
+            href="/pre-made"
             className="flex items-center gap-2 text-white/35 hover:text-white transition-colors mb-10 group font-display tracking-wider text-sm uppercase"
           >
             <ArrowLeft size={15} className="group-hover:-translate-x-1 transition-transform" />
             Pre-Made Items
-          </button>
+          </Link>
 
           <div className="grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-10 lg:gap-14 items-center mb-16">
             <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}>
