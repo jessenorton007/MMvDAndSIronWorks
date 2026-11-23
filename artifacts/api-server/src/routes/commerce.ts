@@ -81,7 +81,7 @@ function requireText(value: unknown, label: string, max = 500) {
 }
 
 function notificationRecipient() {
-  return process.env["ORDER_NOTIFICATION_TO"] || process.env["CONTACT_NOTIFICATION_TO"] || "dandsiron@yahoo.com";
+  return process.env["ORDER_NOTIFICATION_TO"] || process.env["CONTACT_NOTIFICATION_TO"] || "dandsiron@gmail.com";
 }
 
 function purchaseEmail(order: PurchaseIntent) {

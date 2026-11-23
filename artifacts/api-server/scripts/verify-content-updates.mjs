@@ -57,7 +57,7 @@ try {
   assert.equal(urls.length, 6, 'Only permanent public pages and collection hubs should remain.');
   for (const route of ['/pre-made', '/shop']) { const empty = await get(route); assert.equal(empty.status, 200); assert.ok(empty.body.includes('No products are listed right now')); assert.ok(empty.body.includes('"numberOfItems":0')); }
   const contact = await get('/contact');
-  for (const link of ['tel:+14354219033', 'sms:+14354219033', 'mailto:dandsiron@yahoo.com']) assert.ok(contact.body.includes(`href="${link}"`));
+  for (const link of ['tel:+14354219033', 'sms:+14354219033', 'mailto:dandsiron@gmail.com']) assert.ok(contact.body.includes(`href="${link}"`));
   assert.ok(contact.body.includes('"@type":"ContactPage"'));
   assert.ok(contact.body.includes('https://dandsironworks.com/#business'));
   console.log('PASS: current dimensions, cross-product comparison, removed links, new/removed sitemap URLs, empty collections, and contact HTML.');

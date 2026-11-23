@@ -30,7 +30,7 @@ const localBusiness = {
   url: `${SITE_ORIGIN}/`,
   image: `${SITE_ORIGIN}/opengraph.jpg`,
   telephone: "+1-435-421-9033",
-  email: "dandsiron@yahoo.com",
+  email: "dandsiron@gmail.com",
   areaServed: "Utah",
   sameAs: [
     "https://www.facebook.com/share/18ZNnQANzX/?mibextid=wwXIfr",
@@ -69,7 +69,7 @@ const staticPages: SeoPage[] = [
       + '<h2>Contact Dallan Goff</h2><ul>'
       + '<li><a href="tel:+14354219033">Call (435) 421-9033</a></li>'
       + '<li><a href="sms:+14354219033">Text (435) 421-9033</a></li>'
-      + '<li><a href="mailto:dandsiron@yahoo.com">Email dandsiron@yahoo.com</a></li>'
+      + '<li><a href="mailto:dandsiron@gmail.com">Email dandsiron@gmail.com</a></li>'
       + '<li><a href="https://www.facebook.com/share/18ZNnQANzX/?mibextid=wwXIfr">D&S Iron Works on Facebook</a></li></ul>',
   },
   {

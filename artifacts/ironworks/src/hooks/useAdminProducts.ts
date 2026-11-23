@@ -44,7 +44,7 @@ export interface SiteSettings {
 
 export const defaultSiteSettings: SiteSettings = {
   phone: '(435) 421-9033',
-  email: 'dandsiron@yahoo.com',
+  email: 'dandsiron@gmail.com',
   facebook: 'D&S Iron Works on Facebook',
 };
 

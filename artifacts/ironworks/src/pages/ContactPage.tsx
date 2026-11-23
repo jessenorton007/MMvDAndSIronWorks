@@ -33,7 +33,7 @@ export function ContactPage() {
       '@type': 'ContactPage',
       name: 'Contact D&S Iron Works',
       url: 'https://dandsironworks.com/contact',
-      mainEntity: { '@type': 'LocalBusiness', '@id': 'https://dandsironworks.com/#business', name: 'D&S Iron Works', telephone: '+1-435-421-9033', email: 'dandsiron@yahoo.com', areaServed: 'Utah' },
+      mainEntity: { '@type': 'LocalBusiness', '@id': 'https://dandsironworks.com/#business', name: 'D&S Iron Works', telephone: '+1-435-421-9033', email: 'dandsiron@gmail.com', areaServed: 'Utah' },
       description: 'Start a custom ironwork project or ask about pre-made fire pits, Iron Rocket Stove, and Iron Rocket XL from D&S Iron Works.',
     },
   });
@@ -140,7 +140,7 @@ export function ContactPage() {
                 </a>
 
                 <a
-                  href="mailto:dandsiron@yahoo.com"
+                  href="mailto:dandsiron@gmail.com"
                   className="flex items-center gap-4 group"
                 >
                   <div className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 transition-colors duration-200 group-hover:bg-orange-500/15"
@@ -149,7 +149,7 @@ export function ContactPage() {
                   </div>
                   <div>
                     <p className="text-xs font-display tracking-widest uppercase text-white/35 mb-0.5">Email</p>
-                    <p className="text-white font-sans group-hover:text-orange-300 transition-colors">dandsiron@yahoo.com</p>
+                    <p className="text-white font-sans group-hover:text-orange-300 transition-colors">dandsiron@gmail.com</p>
                   </div>
                 </a>
 
