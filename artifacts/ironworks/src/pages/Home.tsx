@@ -404,7 +404,7 @@ export function Home() {
       url: 'https://dandsironworks.com/',
       image: 'https://dandsironworks.com/opengraph.jpg',
       telephone: '+1-435-421-9033',
-      email: 'dandsiron@yahoo.com',
+      email: 'dandsiron@gmail.com',
       areaServed: 'Utah',
       sameAs: ['https://www.facebook.com/share/18ZNnQANzX/?mibextid=wwXIfr', 'https://www.etsy.com/shop/dandsironworks'],
     },
@@ -967,7 +967,7 @@ export function Home() {
               <h4 className="font-display text-xs tracking-[0.3em] uppercase text-orange-400/60 mb-5">Contact</h4>
               <div className="space-y-3">
                 <a href="tel:+14354219033" className="block text-white/55 hover:text-white transition-colors font-sans text-sm">(435) 421-9033</a>
-                <a href="mailto:dandsiron@yahoo.com" className="block text-white/55 hover:text-white transition-colors font-sans text-sm">dandsiron@yahoo.com</a>
+                <a href="mailto:dandsiron@gmail.com" className="block text-white/55 hover:text-white transition-colors font-sans text-sm">dandsiron@gmail.com</a>
                 <a href="https://www.facebook.com/share/18ZNnQANzX/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="block text-white/55 hover:text-white transition-colors font-sans text-sm">D&S Iron Works on Facebook</a>
               </div>
             </div>

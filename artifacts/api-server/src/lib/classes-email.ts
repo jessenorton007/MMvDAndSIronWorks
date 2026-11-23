@@ -6,7 +6,7 @@ import { prerequisiteLevel } from "./classes-model";
 export async function sendRegistrationEmails(record: Registration, paymentUrl?: string) {
   // Sample preview signups must not send real mail using inherited credentials.
   if (process.env.NODE_ENV !== "production" && process.env.CLASSES_PREVIEW === "true") return { status: "pending" as const };
-  const owner = process.env.CLASS_NOTIFICATION_TO || process.env.ORDER_NOTIFICATION_TO || process.env.CONTACT_NOTIFICATION_TO || "dandsiron@yahoo.com";
+  const owner = process.env.CLASS_NOTIFICATION_TO || process.env.ORDER_NOTIFICATION_TO || process.env.CONTACT_NOTIFICATION_TO || "dandsiron@gmail.com";
   const date = new Intl.DateTimeFormat("en-US", {
     dateStyle: "full", timeStyle: "short", timeZone: "America/Denver",
   }).format(new Date(record.startsAt));
